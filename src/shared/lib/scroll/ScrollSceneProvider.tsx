@@ -13,9 +13,7 @@ type ScrollSceneContextValue = {
   subscribe: (listener: FrameListener) => () => void;
 };
 
-export const ScrollSceneContext = createContext<ScrollSceneContextValue | null>(
-  null,
-);
+export const ScrollSceneContext = createContext<ScrollSceneContextValue | null>(null);
 
 interface ScrollSceneProviderProps {
   children: ReactNode;
@@ -45,15 +43,8 @@ export const ScrollSceneProvider = ({ children }: ScrollSceneProviderProps) => {
     const emit = () => {
       rafIdRef.current = null;
       const layout = computeStageLayout(window.innerWidth, window.innerHeight);
-      const isReducedMotion = window.matchMedia(
-        "(prefers-reduced-motion: reduce)",
-      ).matches;
-      const frame = createFrame(
-        window.scrollY,
-        layout,
-        sectionsRef.current,
-        isReducedMotion,
-      );
+      const isReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const frame = createFrame(window.scrollY, layout, sectionsRef.current, isReducedMotion);
       listenersRef.current.forEach((listener) => listener(frame));
     };
 
@@ -75,7 +66,12 @@ export const ScrollSceneProvider = ({ children }: ScrollSceneProviderProps) => {
     return () => {
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", handleResize);
-      if (rafIdRef.current != null) cancelAnimationFrame(rafIdRef.current);
+      if (rafIdRef.current != null) {
+        // StrictMode(dev)에서 effect가 mount→cleanup→mount로 다시 실행되므로,
+        // 취소한 rAF id를 null로 되돌려야 재마운트 시 schedule()이 다시 예약한다.
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
     };
   }, []);
 
@@ -84,9 +80,5 @@ export const ScrollSceneProvider = ({ children }: ScrollSceneProviderProps) => {
     return () => listenersRef.current.delete(listener);
   };
 
-  return (
-    <ScrollSceneContext.Provider value={{ subscribe }}>
-      {children}
-    </ScrollSceneContext.Provider>
-  );
+  return <ScrollSceneContext.Provider value={{ subscribe }}>{children}</ScrollSceneContext.Provider>;
 };
