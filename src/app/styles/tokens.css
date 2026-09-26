@@ -1,0 +1,17 @@
+/**
+ * 디자인 토큰 (`docs/design/spec.md` §6). 여기 없는 값은 아직 디자인 원본에서
+ * 확정되지 않은 것이므로 지어내지 않는다 — `docs/design/reference/`로 원본을
+ * 받은 뒤 이 파일에 채운다.
+ */
+:root {
+  /* Primary — Main 50 (heddy Design System, 확정값) */
+  --main-50: 65 190 142; /* rgb(65,190,142) */
+
+  /*
+   * TODO(design-sync): Main 램프(97~10), Neutral(99~5), label/line/fill/
+   * background/status 시맨틱 토큰(라이트·다크)은 spec.md에 이름만 있고 실제
+   * 값이 없다. `docs/design/reference/`에 원본이 들어오면 이 자리에 추가한다.
+   */
+
+  --radius-default: 8px;
+}
