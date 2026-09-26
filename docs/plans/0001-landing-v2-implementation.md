@@ -18,6 +18,7 @@ Claude Design "Heddy Landing v2"를 실제 Next.js 사이트로 옮긴다. 폰 �
 ## 할 일
 
 - [ ] 로고 PNG 넣기 (`public/brand/`) · 디자인 원본 HTML 넣기 (`docs/design/reference/`)
+- [ ] 디자인 토큰 값 채우기: Main 램프(97~10), Neutral(99~5), label/line/fill/background/status 시맨틱 토큰(라이트·다크). `docs/design/reference/`가 들어와야 값을 알 수 있어 `src/app/styles/tokens.css`에 TODO로만 남겨둠
 - [ ] record: 좌측 레일 + "핀 진행 %" + 큰 날짜 색 보간 + 포커스 밴드(12행, 가운데만 선명) — `TIMELINE.record`
 - [ ] report: 지표 막대 3개 scaleX 스태거 (섹션 카피 + 폰 화면 둘 다) — `TIMELINE.report`
 - [ ] recommend: 기록 3건 → 추천 선 드로잉(strokeDashoffset) — `TIMELINE.recommend`
@@ -36,3 +37,4 @@ Claude Design "Heddy Landing v2"를 실제 Next.js 사이트로 옮긴다. 폰 �
 ## 변경 기록
 
 - 2026-09-26: 하네스 세팅과 함께 생성.
+- 2026-09-27: 셋업 프롬프트 완료 — FSD 구조 이동, `shared/config`(sections/motion/copy), 스크롤 엔진(`shared/lib/motion`, `shared/lib/scroll`), 폰 스테이지 수렴 모션(`widgets/phone-stage`, `scene.test.ts` 6건 통과), 섹션 8종·헤더·download-app·entities/record 뼈대, vitest·steiger·prettier·playwright 도구 추가. `pnpm verify`·`pnpm build` 통과, `pnpm snap --only=hero,archive,share` 스크린샷으로 V자 수렴→중심 일치→나란히 배치 확인(`.snapshots/desktop/`). 로고 PNG와 디자인 원본이 아직 없어 위 항목은 이 계획에 남겨둠.
