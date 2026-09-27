@@ -46,3 +46,8 @@ next-env.d.ts
 
 # claude
 .claude/settings.local.json
+
+# AI 어시스턴트용 프로젝트 지침 (팀 저장소에는 커밋하지 않고 로컬에만 둔다)
+/CLAUDE.md
+/AGENTS.md
+/.claude/CLAUDE.md
