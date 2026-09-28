@@ -6,6 +6,8 @@
 
 @theme inline {
   --color-main-50: rgb(var(--main-50));
+  --color-phone-frame: rgb(var(--phone-frame));
+  --color-phone-screen: rgb(var(--phone-screen));
   --radius-DEFAULT: var(--radius-default);
 
   --font-sans: "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;

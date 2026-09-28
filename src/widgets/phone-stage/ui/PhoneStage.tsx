@@ -2,15 +2,12 @@
 
 import { useRef, type ReactNode } from "react";
 
+import { PHONE } from "@/shared/config";
 import { useSceneFrame } from "@/shared/lib/scroll";
 import { PhoneFrame } from "@/shared/ui";
 
 import { computePhones, computeScreens } from "../model/scene";
-import type {
-  PhoneAScreenKey,
-  PhoneBScreenKey,
-  PhonePose,
-} from "../model/scene";
+import type { PhoneAScreenKey, PhoneBScreenKey, PhonePose } from "../model/scene";
 import {
   ArScreen,
   BScanScreen,
@@ -40,7 +37,7 @@ const B_SCREENS: readonly { key: PhoneBScreenKey; node: ReactNode }[] = [
 /** pose를 폰 프레임 엘리먼트의 transform/opacity에 그대로 반영한다. spec §2: translate(x-150,y-307.5) rotate(r) scale(S) */
 const applyPose = (el: HTMLDivElement | null, pose: PhonePose): void => {
   if (!el) return;
-  el.style.transform = `translate(${pose.x - 150}px, ${pose.y - 307.5}px) rotate(${pose.rotate}deg) scale(${pose.scale})`;
+  el.style.transform = `translate(${pose.x - PHONE.width / 2}px, ${pose.y - PHONE.pivot}px) rotate(${pose.rotate}deg) scale(${pose.scale})`;
   el.style.opacity = String(pose.opacity);
   el.classList.remove("invisible");
 };
@@ -50,12 +47,8 @@ export const PhoneStage = () => {
   const phoneARef = useRef<HTMLDivElement>(null);
   const phoneBRef = useRef<HTMLDivElement>(null);
   const qrFlightRef = useRef<HTMLDivElement>(null);
-  const aScreenRefs = useRef<
-    Partial<Record<PhoneAScreenKey, HTMLDivElement | null>>
-  >({});
-  const bScreenRefs = useRef<
-    Partial<Record<PhoneBScreenKey, HTMLDivElement | null>>
-  >({});
+  const aScreenRefs = useRef<Partial<Record<PhoneAScreenKey, HTMLDivElement | null>>>({});
+  const bScreenRefs = useRef<Partial<Record<PhoneBScreenKey, HTMLDivElement | null>>>({});
 
   useSceneFrame((frame) => {
     const { a, b, qrFlight } = computePhones(frame);

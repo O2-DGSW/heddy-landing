@@ -32,9 +32,7 @@ export const HomeScreen = () => {
 export const RecordScreen = () => {
   return (
     <div className="flex h-full flex-col gap-3 p-4">
-      <p className="text-14 font-medium">
-        {COPY.phoneScreens.record.titleFor(MOCK_RECORDS.length)}
-      </p>
+      <p className="text-14 font-medium">{COPY.phoneScreens.record.titleFor(MOCK_RECORDS.length)}</p>
       <div className="flex flex-col gap-3">
         {MOCK_RECORDS.map((record) => (
           <RecordRow key={record.id} record={record} />
@@ -93,14 +91,11 @@ export const RecommendScreen = () => {
 export const ArScreen = () => {
   const { ar } = COPY.phoneScreens;
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-4 bg-[#1C1E20] p-4 text-white">
+    <div className="bg-phone-frame flex h-full flex-col items-center justify-center gap-4 p-4 text-white">
       <p className="text-14">{ar.scanning}</p>
       <div className="flex gap-2">
         {ar.styles.map((style) => (
-          <span
-            key={style}
-            className="text-12 rounded-DEFAULT border border-white/40 px-2 py-1"
-          >
+          <span key={style} className="text-12 rounded-DEFAULT border border-white/40 px-2 py-1">
             {style}
           </span>
         ))}
@@ -116,10 +111,7 @@ export const QrShareScreen = () => {
     <div className="flex h-full flex-col gap-3 p-4">
       <p className="text-14 font-medium">{qrShare.title}</p>
       <p className="text-12">{qrShare.subtitle}</p>
-      <div
-        className="mx-auto my-4 h-[140px] w-[140px] rounded-DEFAULT border"
-        aria-label="QR"
-      />
+      <div className="mx-auto my-4 h-[140px] w-[140px] rounded-DEFAULT border" aria-label="QR" />
       <p className="text-12">{qrShare.expiry}</p>
       <p className="text-12">{qrShare.sharedRecordsCount}</p>
       <p className="text-12">{qrShare.latestTreatment}</p>
