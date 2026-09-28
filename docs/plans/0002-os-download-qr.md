@@ -1,5 +1,5 @@
 ---
-status: 진행
+status: 완료
 owner: 강민
 created: 2026-09-27
 ---
@@ -30,7 +30,7 @@ QR = https://<도메인>/download?src=<유입경로>      ← QR에 박히는 �
 
 ## 할 일
 
-- [ ] `src/shared/config/store.ts` (그리고 `shared/config/index.ts`에서 export)
+- [x] `src/shared/config/store.ts` (그리고 `shared/config/index.ts`에서 export)
   ```ts
   /** 배포 도메인. QR에 박히는 유일한 값이라 확정 후 절대 바꾸지 않는다 */
   export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://heddy.site";
@@ -44,32 +44,32 @@ QR = https://<도메인>/download?src=<유입경로>      ← QR에 박히는 �
   export const downloadUrl = (src: string) => `${SITE_URL}${downloadPath(src)}`;
   ```
   스토어 주소 상수는 만들지 않는다.
-- [ ] `src/features/download-app/lib/detectPlatform.ts` + 테스트 — `(ua) => "ios" | "android" | "desktop"`. `/iPhone|iPad|iPod/` → ios, `/Android/` → android, 나머지 desktop. 실제 UA로: 아이폰 사파리·카톡 인앱 → ios / 갤럭시 크롬·삼성인터넷·네이버 인앱 → android / Mac·Windows·null → desktop.
-- [ ] `src/features/download-app/lib/resolveStoreUrl.ts` + 테스트 — **테스트 먼저**
+- [x] `src/features/download-app/lib/detectPlatform.ts` + 테스트 — `(ua) => "ios" | "android" | "desktop"`. `/iPhone|iPad|iPod/` → ios, `/Android/` → android, 나머지 desktop. 실제 UA로: 아이폰 사파리·카톡 인앱 → ios / 갤럭시 크롬·삼성인터넷·네이버 인앱 → android / Mac·Windows·null → desktop.
+- [x] `src/features/download-app/lib/resolveStoreUrl.ts` + 테스트 — **테스트 먼저**
   ```ts
   export type StoreEnv = { APP_STORE_URL?: string; ONE_STORE_URL?: string };
   /** 링크가 아직 없으면 null → "출시 준비 중". 우선순위: ?store= 지정 → 기기 OS → PC는 null */
   export const resolveStoreUrl = (platform: Platform, store: string | null | undefined, env: StoreEnv): string | null
   ```
   테스트: 아이폰 → App Store, 안드로이드 → 원스토어 / `?store=`가 OS보다 우선 / PC + 지정 없음 → null / 환경변수 없음·빈 문자열 → null / 모르는 store 값은 무시하고 OS로.
-- [ ] `pnpm add qrcode.react` → `features/download-app/ui/DownloadQr.tsx`(client, `interface DownloadQrProps { source: string; size?: number }`): `QRCodeSVG value={downloadUrl(source)} level="H" marginSize={0}`, 가운데 `/brand/logo-symbol.png` 22% 크기 `excavate: true`.
-- [ ] `shared/ui/StoreButtons` — Props에 `source` 추가, 버튼 두 개 "App Store" → `downloadPath(source, "appstore")`, "원스토어" → `downloadPath(source, "onestore")`. Google Play 버튼 제거. 사용처(헤더 팝오버 `header`, closing `closing`)에 source 전달.
-- [ ] `DownloadButton` — `handleClick`: `matchMedia("(pointer: coarse)")`면 `location.href = downloadPath("header")`, 아니면 팝오버 토글. 팝오버에 `<DownloadQr source="header" />`.
-- [ ] `features/download-app/ui/IpadStoreRedirect.tsx`(client): `Macintosh` UA + `maxTouchPoints > 1`이면 `location.replace(downloadPath("ipad", "appstore"))`.
-- [ ] `copy.ts`의 `DOWNLOAD_COPY`에 `comingSoon` 추가 (문구는 사람에게 확인. 임시: "헤디는 출시 준비 중이에요").
-- [ ] `src/pages/download/ui/DownloadPage.tsx`(async 서버 컴포넌트, `interface DownloadPageProps { searchParams: Promise<{ store?: string }> }`)
+- [x] `pnpm add qrcode.react` → `features/download-app/ui/DownloadQr.tsx`(client, `interface DownloadQrProps { source: string; size?: number }`): `QRCodeSVG value={downloadUrl(source)} level="H" marginSize={0}`, 가운데 `/brand/logo-symbol.png` 22% 크기 `excavate: true`.
+- [x] `shared/ui/StoreButtons` — Props에 `source` 추가, 버튼 두 개 "App Store" → `downloadPath(source, "appstore")`, "원스토어" → `downloadPath(source, "onestore")`. Google Play 버튼 제거. 사용처(헤더 팝오버 `header`, closing `closing`)에 source 전달.
+- [x] `DownloadButton` — `handleClick`: `matchMedia("(pointer: coarse)")`면 `location.href = downloadPath("header")`, 아니면 팝오버 토글. 팝오버에 `<DownloadQr source="header" />`.
+- [x] `features/download-app/ui/IpadStoreRedirect.tsx`(client): `Macintosh` UA + `maxTouchPoints > 1`이면 `location.replace(downloadPath("ipad", "appstore"))`.
+- [x] `copy.ts`의 `DOWNLOAD_COPY`에 `comingSoon` 추가 (문구는 사람에게 확인. 임시: "헤디는 출시 준비 중이에요").
+- [x] `src/pages/download/ui/DownloadPage.tsx`(async 서버 컴포넌트, `interface DownloadPageProps { searchParams: Promise<{ store?: string }> }`)
   - `resolveStoreUrl(detectPlatform(UA), store, { APP_STORE_URL: process.env.APP_STORE_URL, ONE_STORE_URL: process.env.ONE_STORE_URL })`
   - 결과가 있으면 `redirect(target)` (307)
   - 없고 휴대폰이거나 `store`가 지정됐으면 → 로고 + "출시 준비 중"
   - PC면 → 로고 + 큰 QR(`source="download-page"`) + 안내 문구 + 스토어 버튼 + `<IpadStoreRedirect />`
   - ⚠️ `IpadStoreRedirect`는 **PC 분기 안에만** 둔다. "출시 준비 중" 화면에 두면 iPad에서 무한 새로고침된다.
   - 루트 `app/download/page.tsx`는 re-export만.
-- [ ] `.env.example`에 `NEXT_PUBLIC_SITE_URL=`, `APP_STORE_URL=`, `ONE_STORE_URL=` 추가(값은 비워둠).
+- [ ] `.env.example`에 `NEXT_PUBLIC_SITE_URL=`, `APP_STORE_URL=`, `ONE_STORE_URL=` 추가(값은 비워둠). **미완료** — 이 저장소 권한 설정(`.env*` 쓰기 차단)에 막혀 Claude가 만들지 못함. 사람이 직접 추가 필요.
 
 ## 완료 기준
 
-- [ ] `pnpm test -- detectPlatform resolveStoreUrl` 통과, `pnpm verify` · `pnpm build` 통과 (`/download`가 `ƒ (Dynamic)`)
-- [ ] **같은 빌드**로 환경변수만 바꿔 두 번 확인한다(= 링크를 나중에 넣어도 코드·QR이 안 바뀐다는 증명):
+- [x] `pnpm test -- detectPlatform resolveStoreUrl` 통과, `pnpm verify` · `pnpm build` 통과 (`/download`가 `ƒ (Dynamic)`)
+- [x] **같은 빌드**로 환경변수만 바꿔 두 번 확인한다(= 링크를 나중에 넣어도 코드·QR이 안 바뀐다는 증명):
   ```bash
   IP="Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X)"; GX="Mozilla/5.0 (Linux; Android 15; SM-S928N)"
   # ① 링크 없음
@@ -117,3 +117,4 @@ npx qrcode -e H -o heddy-download-qr.svg "https://<도메인>/download?src=poste
 ## 변경 기록
 
 - 2026-09-27: 생성. 스토어 링크를 환경변수로 분리하고 모든 진입점이 `/download`를 거치게 함. 같은 빌드에서 환경변수 유무만 바꿔 검증(없음 → 휴대폰 200 출시 준비 중 / 있음 → 아이폰 307 App Store, 갤럭시 307 원스토어, PC 200 QR).
+- 2026-09-28: 구현 완료. `detectPlatform`·`resolveStoreUrl` 테스트를 먼저 쓰고 통과시킴(총 33개 테스트 통과). `pnpm verify`·`pnpm build` 통과, `/download`는 `ƒ (Dynamic)`로 확인. 프로덕션 빌드(`pnpm start`) 하나로 환경변수만 바꿔 두 번 실측: env 없음 → 아이폰·갤럭시 UA 모두 200(출시 준비 중) / env 채움(재빌드 없이) → 아이폰 307 App Store, 갤럭시 307 원스토어, `?store=onestore`·`?store=appstore` 각각 UA 무관하게 307 → 지정한 스토어. PC(데스크톱 UA) 200 + QR·App Store·원스토어 버튼 렌더 확인. `.env.example`은 이 저장소 권한 설정(`.env*` 쓰기 차단)에 막혀 Claude가 만들지 못함 — 사람이 직접 추가 필요.
