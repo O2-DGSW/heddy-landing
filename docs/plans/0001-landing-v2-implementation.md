@@ -17,7 +17,7 @@ Claude Design "Heddy Landing v2"를 실제 Next.js 사이트로 옮긴다. 폰 �
 
 ## 할 일
 
-- [ ] 로고 PNG 넣기 (`public/brand/`) · 디자인 원본 HTML 넣기 (`docs/design/reference/`)
+- [ ] 로고 PNG 넣기 (`public/brand/`) · 디자인 원본 HTML 넣기 (`docs/design/reference/`) — `logo-symbol.png`(심볼)만 받음(2026-09-28), 헤더에 쓰는 `logo-wordmark.png`(워드마크)는 아직 없음
 - [ ] 디자인 토큰 값 채우기: Main 램프(97~10), Neutral(99~5), label/line/fill/background/status 시맨틱 토큰(라이트·다크). `docs/design/reference/`가 들어와야 값을 알 수 있어 `src/app/styles/tokens.css`에 TODO로만 남겨둠
 - [ ] record: 좌측 레일 + "핀 진행 %" + 큰 날짜 색 보간 + 포커스 밴드(12행, 가운데만 선명) — `TIMELINE.record`
 - [ ] report: 지표 막대 3개 scaleX 스태거 (섹션 카피 + 폰 화면 둘 다) — `TIMELINE.report`

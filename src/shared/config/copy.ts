@@ -11,25 +11,16 @@ export const COPY = {
   sections: {
     hero: {
       title: ["내 머리의 기록이,", "다음 스타일의 기준이 되다"],
-      body: [
-        "펌·컬러·시술 사진을 한 곳에 기록하고,",
-        "AI 분석과 AR 프리뷰로 다음 스타일을 미리 확인하세요.",
-      ],
+      body: ["펌·컬러·시술 사진을 한 곳에 기록하고,", "AI 분석과 AR 프리뷰로 다음 스타일을 미리 확인하세요."],
     },
     archive: {
       title: ["흩어진 기록이,", "한 화면으로"],
-      body: [
-        "갤러리, 메모, 카톡에 흩어져 있던 시술 기록을",
-        "헤디 하나에 모았어요.",
-      ],
+      body: ["갤러리, 메모, 카톡에 흩어져 있던 시술 기록을", "헤디 하나에 모았어요."],
     },
     record: {
       eyebrow: "01 — 시술기록 저장",
       title: ["한 번의 시술이,", "한 장의 기록으로"],
-      body: [
-        "사진 몇 장이면 기록이 끝납니다.",
-        "스크롤을 내릴수록 기록이 시간순으로 쌓여요.",
-      ],
+      body: ["사진 몇 장이면 기록이 끝납니다.", "스크롤을 내릴수록 기록이 시간순으로 쌓여요."],
     },
     report: {
       title: ["12번의 기록이,", "나를 설명합니다"],
@@ -53,8 +44,8 @@ export const COPY = {
     },
   },
   storeButtons: {
-    googlePlay: "Google Play",
     appStore: "App Store",
+    oneStore: "원스토어",
   },
   phoneScreens: {
     home: {
@@ -83,11 +74,7 @@ export const COPY = {
       style: "애쉬브라운 레이어드 C컬",
       description: "톤은 유지하고, 컬만 다시",
       tags: ["손상도 낮음", "톤 유지", "펌 주기 도래"],
-      basedOnRecords: [
-        "2026.07 헤어 클리닉",
-        "2026.03 애쉬브라운 리터치",
-        "2025.09 레이어드 C컬펌",
-      ],
+      basedOnRecords: ["2026.07 헤어 클리닉", "2026.03 애쉬브라운 리터치", "2025.09 레이어드 C컬펌"],
       footnote: "세 개의 기록에서 나온 추천이에요",
     },
     ar: {
@@ -117,4 +104,12 @@ export const COPY = {
       hairCondition: "모발 상태 손상도 낮음",
     },
   },
+} as const;
+
+/**
+ * `/download` 페이지 카피. `comingSoon`은 임시 문구 — 확정 전 사람 확인 필요
+ * (`docs/plans/0002-os-download-qr.md`).
+ */
+export const DOWNLOAD_COPY = {
+  comingSoon: "헤디는 출시 준비 중이에요",
 } as const;
