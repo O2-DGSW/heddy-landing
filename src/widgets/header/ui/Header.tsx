@@ -15,6 +15,7 @@ export const Header = () => {
           src="/brand/logo-wordmark.png"
           alt="Heddy"
           fill
+          sizes="96px"
           className="object-contain"
           priority
         />
