@@ -66,7 +66,7 @@ prefix는 커밋 type과 맞춘다: `feature/#이슈번호-설명`, `fix/#이슈
 ## 4. PR 만들기
 
 1. **제목**: `feat: feat-name/#00` 형식 (커밋의 `merge:` 규칙과 동일한 스타일). 브랜치 이름의 설명 부분과 이슈 번호를 그대로 가져오면 된다.
-2. **본문**: `assets/pr_body_template.md`(= `.github/pull_request_template.md`)의 구조를 그대로 채운다. 팀 코드 리뷰 규칙의 필수 항목은 이렇게 넣는다:
+2. **본문**: `.github/pull_request_template.md`의 구조를 그대로 채운다(이 파일이 유일한 출처 — 사본을 따로 두지 않는다). 팀 코드 리뷰 규칙의 필수 항목은 이렇게 넣는다:
    - **관련 이슈**: `Resolves #번호`
    - **변경 내용**: 구현한 컴포넌트 / 구현한 함수 / 더미데이터 사용 여부(`MOCK_RECORDS` 등)를 각각 소제목 없이 목록으로
    - **작업 목적**: 관련 계획서가 있으면 `docs/plans/NNNN` 링크
