@@ -44,10 +44,9 @@ next-env.d.ts
 # screenshots
 .snapshots/
 
-# claude
-.claude/settings.local.json
+# claude (로컬 하네스 — 팀 저장소에는 커밋하지 않는다)
+/.claude
 
 # AI 어시스턴트용 프로젝트 지침 (팀 저장소에는 커밋하지 않고 로컬에만 둔다)
 /CLAUDE.md
 /AGENTS.md
-/.claude/CLAUDE.md
