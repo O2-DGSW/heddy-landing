@@ -1,32 +1,12 @@
+import Image from "next/image";
+
 import { COPY } from "@/shared/config";
 import { MOCK_RECORDS, RecordRow } from "@/entities/record";
 
-/** 홈 화면 (`docs/design/spec.md` §4) */
-export const HomeScreen = () => {
-  const { home } = COPY.phoneScreens;
-  return (
-    <div className="flex h-full flex-col gap-4 p-4">
-      <p className="text-14">{home.nextTreatmentDday}</p>
-      <p className="text-20 font-semibold">{home.style}</p>
-      <p className="text-14">{home.recommendedTiming}</p>
-      <div>
-        <p className="text-14 font-medium">{home.lastColorTitle}</p>
-        <p className="text-12">
-          {home.lastColor.tone} · {home.lastColor.level} · {home.lastColor.date}
-        </p>
-      </div>
-      <div className="mt-auto flex items-center justify-between">
-        <p className="text-14 font-medium">{home.recentRecordsTitle}</p>
-        <p className="text-12">{home.totalRecordsLabel}</p>
-      </div>
-      <div className="flex flex-col gap-2">
-        {MOCK_RECORDS.slice(-home.recentRecordsCount).map((record) => (
-          <RecordRow key={record.id} record={record} />
-        ))}
-      </div>
-    </div>
-  );
-};
+/** 홈 화면 — 실제 앱 홈 화면 캡처 (`docs/design/spec.md` §4) */
+export const HomeScreen = () => (
+  <Image src="/screens/home.png" alt="헤디 홈 화면" fill priority sizes="280px" className="object-cover" />
+);
 
 /** 기록 화면: 12행 리스트. 포커스 밴드 모션은 TODO(docs/plans/0001) */
 export const RecordScreen = () => {
@@ -87,22 +67,10 @@ export const RecommendScreen = () => {
   );
 };
 
-/** AR 화면: pill 분할/다크 패널/스타일 전환 모션은 TODO(docs/plans/0001) */
-export const ArScreen = () => {
-  const { ar } = COPY.phoneScreens;
-  return (
-    <div className="bg-phone-frame flex h-full flex-col items-center justify-center gap-4 p-4 text-white">
-      <p className="text-14">{ar.scanning}</p>
-      <div className="flex gap-2">
-        {ar.styles.map((style) => (
-          <span key={style} className="text-12 rounded-DEFAULT border border-white/40 px-2 py-1">
-            {style}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-};
+/** AR 화면 — 실제 앱 AR 체험 화면 캡처. pill 분할/다크 패널 전환 모션은 TODO(docs/plans/0001) */
+export const ArScreen = () => (
+  <Image src="/screens/ar.webp" alt="헤디 AR 스타일 체험 화면" fill sizes="280px" className="object-cover" />
+);
 
 /** QR 공유 화면: clip-path 모션은 TODO(docs/plans/0001) */
 export const QrShareScreen = () => {
