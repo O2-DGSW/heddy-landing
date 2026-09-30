@@ -12,7 +12,7 @@ export type SplineHandoff = {
 };
 
 /** 캔버스 가로:세로. 히어로의 두 폰과 그림자가 잘리지 않을 만큼 넓게 */
-const CANVAS_ASPECT = 2;
+const CANVAS_ASPECT = 1.6;
 
 /**
  * Spline 캔버스 위치·크기. 씬 카메라가 월드 원점(합쳐진 PhoneA)을 캔버스 중심에 비추므로,

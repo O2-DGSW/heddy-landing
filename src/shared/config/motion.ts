@@ -52,8 +52,8 @@ export const STAGE_LAYOUT = {
  * 캔버스 중심을 CSS 폰 A 중심에 두고 높이를 맞추면 넘겨받을 때 이음새가 없다.
  */
 export const PHONE_3D = {
-  /** Spline 씬 카메라: 정면(0,0,distance), 세로 시야각(도). 씬과 같은 값이어야 한다 */
-  camera: { fovDeg: 25, distance: 2850 },
+  /** Spline 씬 카메라: 정면(0,0,distance), 세로 시야각(도, Spline 기본값 45). 씬과 같은 값이어야 한다 */
+  camera: { fovDeg: 45, distance: 1700 },
 } as const;
 
 /**
