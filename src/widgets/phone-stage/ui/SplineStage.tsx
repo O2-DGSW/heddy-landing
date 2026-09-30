@@ -38,7 +38,9 @@ const findRecordObjects = (app: Application): RecordObjects | null => {
   const layer = app.findObjectByName("RecordLayer");
   const homeScreen = app.findObjectByName("ScreenA");
   const veil = app.findObjectByName("Veil");
-  const cards = MOCK_RECORDS.map((_, index) => app.findObjectByName(`Card${String(index + 1).padStart(2, "0")}`));
+  const cards = MOCK_RECORDS.map((_, index) =>
+    app.findObjectByName(`Card${String(index + 1).padStart(2, "0")}`),
+  );
   if (!rig || !layer || !homeScreen || !veil || cards.some((card) => !card)) return null;
   return { rig, layer, homeScreen, veil, cards: cards as SPEObject[] };
 };
@@ -134,6 +136,9 @@ export const SplineStage = ({ sceneUrl, onFail }: SplineStageProps) => {
     appRef.current = app;
     // 기록 스택 오브젝트가 없는 옛 export면 record 구간은 합쳐진 정면 폰 그대로 둔다
     recordObjectsRef.current = findRecordObjects(app);
+    // RecordLayer는 export에 들어가도록 씬에선 보이게 두므로(숨긴 오브젝트는 export에서 빠짐),
+    // 스크롤이 없어도 첫 프레임을 받아 지금 위치에 맞게 숨긴다
+    window.dispatchEvent(new Event("scroll"));
     fadeRef.current?.classList.remove("opacity-0");
   };
 
