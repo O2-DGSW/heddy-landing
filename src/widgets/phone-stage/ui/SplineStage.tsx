@@ -50,7 +50,6 @@ export const SplineStage = ({ sceneUrl, onFail }: SplineStageProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const fadeRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
-  const isPausedRef = useRef(false);
   const isFailedRef = useRef(false);
 
   // 서버 렌더 HTML에 <link>로 들어가서, JS가 끝나기 전부터 씬 파일(~1.3MB)을 받기 시작한다
@@ -89,21 +88,10 @@ export const SplineStage = ({ sceneUrl, onFail }: SplineStageProps) => {
     container.style.height = `${rect.height}px`;
     container.style.opacity = String(canvasOpacity);
 
-    const app = appRef.current;
-    if (!app) return;
-
-    // CSS 폰으로 넘어간 뒤에는 3D 렌더를 멈춰 나머지 섹션 스크롤에 GPU를 비워 둔다
-    const shouldPause = canvasOpacity === 0;
-    if (shouldPause === isPausedRef.current) return;
-    isPausedRef.current = shouldPause;
-    container.style.visibility = shouldPause ? "hidden" : "visible";
-    if (shouldPause) {
-      app.stop();
-      return;
-    }
-    app.play();
-    // 멈춰 있는 동안 지나간 스크롤을 Spline Scroll 이벤트가 놓쳤으므로 현재 위치로 다시 계산시킨다
-    window.dispatchEvent(new Event("scroll"));
+    // CSS 폰으로 넘어간 뒤에는 캔버스를 숨겨 합성 비용을 없앤다. app.stop()은 쓰지 않는다 —
+    // 멈췄다 켜면 Spline Scroll 상태가 합쳐진 채로 굳어 역스크롤 때 다시 갈라지지 않는다.
+    // (renderOnDemand라 화면 변화가 없으면 어차피 그리지 않는다)
+    container.style.visibility = canvasOpacity === 0 ? "hidden" : "visible";
   });
 
   return (
