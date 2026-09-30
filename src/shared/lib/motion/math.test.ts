@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clamp, easeInOutCubic, lerp, mixRgb, progressIn } from "./math";
+import { clamp, damp, easeInOutCubic, lerp, mixRgb, progressIn } from "./math";
 
 describe("clamp", () => {
   it("범위 안 값은 그대로 반환한다", () => {
@@ -57,5 +57,19 @@ describe("mixRgb", () => {
   });
   it("중간값은 반올림된 평균이다", () => {
     expect(mixRgb([0, 0, 0], [10, 10, 11], 0.5)).toEqual([5, 5, 6]);
+  });
+});
+
+describe("damp", () => {
+  it("반감기만큼 지나면 남은 거리가 절반이 된다", () => {
+    expect(damp(0, 100, 90, 90)).toBeCloseTo(50);
+  });
+  it("프레임을 나눠도 같은 시간이면 같은 결과다", () => {
+    const once = damp(0, 100, 32, 90);
+    const twice = damp(damp(0, 100, 16, 90), 100, 16, 90);
+    expect(twice).toBeCloseTo(once);
+  });
+  it("반감기가 0이면 바로 목표값이다", () => {
+    expect(damp(0, 100, 16, 0)).toBe(100);
   });
 });

@@ -26,3 +26,12 @@ export const mixRgb = (a: RgbColor, b: RgbColor, t: number): RgbColor => [
   Math.round(lerp(a[1], b[1], t)),
   Math.round(lerp(a[2], b[2], t)),
 ];
+
+/**
+ * current를 target 쪽으로 반감기(halfLifeMs)만큼 지수적으로 따라가게 한다. 프레임 간격(dtMs)이
+ * 달라도 같은 시간이면 같은 만큼 움직이므로, 빠른 스크롤을 부드러운 움직임으로 바꿀 때 쓴다.
+ */
+export const damp = (current: number, target: number, dtMs: number, halfLifeMs: number): number => {
+  if (halfLifeMs <= 0) return target;
+  return target + (current - target) * Math.pow(0.5, dtMs / halfLifeMs);
+};
