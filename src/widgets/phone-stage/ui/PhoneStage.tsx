@@ -8,6 +8,8 @@ import { PhoneFrame } from "@/shared/ui";
 
 import { computePhones, computeScreens } from "../model/scene";
 import type { PhoneAScreenKey, PhoneBScreenKey, PhonePose } from "../model/scene";
+import { computePhones3D } from "../model/scene3d";
+import { SplineStage } from "./SplineStage";
 import {
   ArScreen,
   BScanScreen,
@@ -18,6 +20,9 @@ import {
   RecordScreen,
   ReportScreen,
 } from "./screens";
+
+/** Spline 씬 URL. 없으면 CSS 폰만 쓴다(`docs/plans/0003`) */
+const SPLINE_HERO_SCENE = process.env.NEXT_PUBLIC_SPLINE_HERO_SCENE;
 
 const A_SCREENS: readonly { key: PhoneAScreenKey; node: ReactNode }[] = [
   { key: "home", node: <HomeScreen /> },
@@ -49,13 +54,16 @@ export const PhoneStage = () => {
   const qrFlightRef = useRef<HTMLDivElement>(null);
   const aScreenRefs = useRef<Partial<Record<PhoneAScreenKey, HTMLDivElement | null>>>({});
   const bScreenRefs = useRef<Partial<Record<PhoneBScreenKey, HTMLDivElement | null>>>({});
+  const isSplineReadyRef = useRef(false);
 
   useSceneFrame((frame) => {
     const { a, b, qrFlight } = computePhones(frame);
     const screens = computeScreens(frame);
+    // 3D 폰이 떠 있는 동안(hero~archive 합체)은 CSS 폰을 숨겼다가 같은 자세에서 넘겨받는다
+    const cssOpacity = isSplineReadyRef.current ? computePhones3D(frame).cssOpacity : 1;
 
-    applyPose(phoneARef.current, a);
-    applyPose(phoneBRef.current, b);
+    applyPose(phoneARef.current, { ...a, opacity: a.opacity * cssOpacity });
+    applyPose(phoneBRef.current, { ...b, opacity: b.opacity * cssOpacity });
 
     if (qrFlightRef.current) {
       qrFlightRef.current.style.transform = `translate(${qrFlight.x}px, ${qrFlight.y}px) rotate(${qrFlight.rotate}deg) scale(${qrFlight.scale})`;
@@ -74,6 +82,14 @@ export const PhoneStage = () => {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-40">
+      {SPLINE_HERO_SCENE && (
+        <SplineStage
+          sceneUrl={SPLINE_HERO_SCENE}
+          onReady={() => {
+            isSplineReadyRef.current = true;
+          }}
+        />
+      )}
       <PhoneFrame ref={phoneBRef}>
         {B_SCREENS.map(({ key, node }) => (
           <div
