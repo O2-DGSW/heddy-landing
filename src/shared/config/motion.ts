@@ -64,6 +64,29 @@ export const PHONE_3D = {
 } as const;
 
 /**
+ * record 섹션 3D 기록 스택 (`docs/plans/0004`). 좌표는 폰 화면 기준 px(좌상단 원점, y 아래로),
+ * 각도는 도. Spline 씬의 RecordRig·RecordLayer·Card01~12와 같은 값이어야 한다.
+ */
+export const RECORD_STACK = {
+  /** 기울어진 자세: 폰 A(정면)에 더해지는 RecordRig 회전 — 이미지 2 각도 */
+  tiltPose: { rotX: 0, rotY: -25, rotZ: -15 },
+  /** 화면(= Spline PhoneA ScreenA) 크기. 씬 단위 = px */
+  screen: { width: 268, height: 582 },
+  /** 첫 카드(slot 0) 윗변 y, 카드 크기, 슬롯 간격 */
+  listTop: 118,
+  card: { width: 236, height: 76 },
+  slotGap: 86,
+  /** 하단 네비 윗변 y. 카드는 여기 닿으면 접히며 사라진다 */
+  navTop: 518,
+  /** 새 카드가 튀어나온 자세: 앞으로 z, 왼쪽 x, 확대, 리그 Y회전을 되돌리는 비율(카메라 쪽으로 돌아봄) */
+  pop: { z: 70, x: -45, scale: 1.06, faceCamera: 0.6 },
+  /** 새 카드가 돌면서 들어올 때 시작 Y회전(90 = 옆면이라 안 보임) */
+  spinInDeg: 90,
+  /** 흐림 막 최대 불투명도 */
+  veilAlpha: 0.55,
+} as const;
+
+/**
  * 모든 스크롤 구간의 단일 출처 (`docs/design/spec.md` §2~5).
  * 값 대부분은 섹션 진행도(0~1) 기준 `Range`이며, 주석에 어떤 진행도인지 적는다.
  */
@@ -93,8 +116,14 @@ export const TIMELINE = {
 
   // --- 섹션별 모션 (§5, 상세 구현은 각 섹션 위젯에서 TODO로 남김) ---
   record: {
-    /** record 진행도 p × 11 = raw. band는 p 기준 구간 */
+    /** record 진행도: 기록 12건이 한 건씩 추가되는 구간 (`docs/plans/0004`) */
     band: [0.06, 0.94] as Range,
+    /** record.top 기준 뷰포트 높이 배수: 폰이 한 바퀴 돌며 기울어지는 구간 */
+    spinVh: [-0.6, 0.15] as Range,
+    /** 한 건 추가 스텝(0~1) 중 밀림·등장·튀어나옴이 끝나는 지점. 나머지는 멈춰서 읽는 시간 */
+    stepEnter: 0.45,
+    /** record 진행도: 마지막 카드가 내려앉고 폰이 정면으로 돌아오는 구간 */
+    settle: [0.94, 1] as Range,
   },
   report: {
     /** 막대 i: top - 0.3H + i·0.06H ~ top + 0.4L + i·0.06H (H=뷰포트, L=섹션 스크롤 길이) */
