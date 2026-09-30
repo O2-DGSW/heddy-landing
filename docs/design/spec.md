@@ -60,7 +60,8 @@ Claude Design `Heddy Landing v2.dc.html`의 마크업과 `update()` 로직에서
 
 ## 5. 섹션별 모션
 
-- **record (포커스 밴드)**: raw = R(p, 0.06~0.94)×11, k = min(10, ⌊raw⌋), fc = raw≥11 ? 11 : k + lerp(frac, E(frac), 0.5).
+- **record (포커스 밴드)** — 구현은 3D 기록 스택으로 대체됨(`docs/plans/0004`). 레일·큰 날짜 색·캡션은 아래 수치 그대로:
+  raw = R(p, 0.06~0.94)×11, k = min(10, ⌊raw⌋), fc = raw≥11 ? 11 : k + lerp(frac, E(frac), 0.5).
   행 j: y = 312 − 21 + (j − fc)×48, 거리 d = |j − fc|, f = clamp(1 − d), appear = clamp(fc − j + 1).
   흐린 행 opacity = f>0 ? 0 : 0.28×appear / 포커스 행 opacity (0.28 + 0.72f)×appear, transform translate(−52f, y) scale(1 + 0.04f), 배경 rgb(245,243,239)→흰색, 그림자 0.10f, 이름색 rgb(92,88,80)→rgb(13,13,13), 날짜색 rgb(163,158,148)→rgb(107,112,117).
   포커스 레이어는 폰 A와 같은 transform. 좌측 레일 scaleY(0.08 + 0.92p), "핀 진행 {8 + 92p}%".
