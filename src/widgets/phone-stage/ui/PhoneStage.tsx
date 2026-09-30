@@ -59,7 +59,7 @@ export const PhoneStage = () => {
   useSceneFrame((frame) => {
     const { a, b, qrFlight } = computePhones(frame);
     const screens = computeScreens(frame);
-    // 3D 폰 구간(hero~archive 합체)은 로드 전부터 CSS 폰을 숨기고, 같은 자세에서 넘겨받는다.
+    // 3D 폰 구간(hero 합체~record 기록 스택)은 로드 전부터 CSS 폰을 숨기고, 같은 자세에서 넘겨받는다.
     // Spline이 실패/타임아웃이면 CSS 폰으로 되돌린다
     const isSplineActive = Boolean(SPLINE_HERO_SCENE) && !isSplineFailedRef.current;
     const cssOpacity = isSplineActive ? computeSplineHandoff(frame).cssOpacity : 1;

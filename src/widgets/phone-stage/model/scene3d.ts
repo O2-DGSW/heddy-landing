@@ -32,16 +32,16 @@ export const computeSplineViewport = (layout: StageLayout): SplineViewport => {
 };
 
 /**
- * archive 섹션("흩어진 기록이, 한 화면으로")은 끝까지 3D 폰으로 보여 주고, 섹션이 끝난 뒤
- * (record 화면 전환 전) CSS 폰 A로 크로스페이드한다. Spline 합체(페이지 px 고정)가 그보다
- * 늦게 끝나는 작은 화면에서는 합체가 끝난 뒤로 미룬다 — 둘 다 정면에 멈춘 뒤라 이음새가 없다.
+ * hero부터 record 섹션(기록 스택, `docs/plans/0004`) 끝까지는 3D 폰으로 보여 주고, record가
+ * 끝난 뒤(report 화면 전환 전) CSS 폰 A로 크로스페이드한다. 그 시점엔 RecordRig가 정면으로
+ * 돌아와 있어 이음새가 없다. Spline 합체(페이지 px 고정)가 더 늦게 끝나면 그 뒤로 미룬다.
  */
 export const computeSplineHandoff = (frame: SceneFrame): SplineHandoff => {
   if (frame.isReducedMotion) return { canvasOpacity: 0, cssOpacity: 1 };
 
-  const archive = frame.sections.find((section) => section.key === "archive");
-  const archiveEndAt = archive ? archive.top + Math.max(archive.height - frame.layout.viewportHeight, 1) : 0;
-  const start = Math.max(PHONE_3D.mergeEndScrollPx, archiveEndAt);
+  const record = frame.sections.find((section) => section.key === "record");
+  const recordEndAt = record ? record.top + Math.max(record.height - frame.layout.viewportHeight, 1) : 0;
+  const start = Math.max(PHONE_3D.mergeEndScrollPx, recordEndAt);
   const handoff = progressIn(frame.scrollY, [start, start + PHONE_3D.handoffScrollPx]);
   const canvasOpacity = 1 - handoff;
   return { canvasOpacity, cssOpacity: handoff };

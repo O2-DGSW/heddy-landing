@@ -52,40 +52,37 @@ describe("computeSplineHandoff", () => {
     expect(cssOpacity).toBe(0);
   });
 
-  it("archive(흩어진 기록이, 한 화면으로) 섹션 끝까지 3D 폰만 보인다", () => {
+  it("record(시술기록) 섹션 끝까지 3D 폰만 보인다", () => {
     for (const [width, height] of [
       [1440, 900],
       [1920, 1080],
+      [1024, 700],
     ] as const) {
       const vp = frameForViewport(width, height);
-      const { canvasOpacity, cssOpacity } = computeSplineHandoff(vp.at(vp.scrollAt("archive", 0.99)));
-      expect(canvasOpacity).toBe(1);
-      expect(cssOpacity).toBe(0);
+      for (const p of [0, 0.5, 0.99]) {
+        const { canvasOpacity, cssOpacity } = computeSplineHandoff(vp.at(vp.scrollAt("record", p)));
+        expect(canvasOpacity).toBe(1);
+        expect(cssOpacity).toBe(0);
+      }
     }
   });
 
-  it("archive가 끝나면 CSS 폰으로 넘어가고, record 화면 전환(섹션 끝 + 0.35H)보다 먼저 끝난다", () => {
+  it("record가 끝나면 CSS 폰으로 넘어가고, report 화면 전환(섹션 끝 + 0.35H)보다 먼저 끝난다", () => {
     const vp = frameForViewport(1440, 900);
-    const archiveEndAt = vp.scrollAt("archive", 1);
-    const done = computeSplineHandoff(vp.at(archiveEndAt + PHONE_3D.handoffScrollPx));
+    const recordEndAt = vp.scrollAt("record", 1);
+    const done = computeSplineHandoff(vp.at(recordEndAt + PHONE_3D.handoffScrollPx));
     expect(done.canvasOpacity).toBe(0);
     expect(done.cssOpacity).toBe(1);
 
-    const archive = sections.find((section) => section.key === "archive");
-    if (!archive) throw new Error("archive not found");
-    const screenSwitchAt = archive.end + TIMELINE.screenCrossfadeBand[0] * H;
-    expect(archiveEndAt + PHONE_3D.handoffScrollPx).toBeLessThan(screenSwitchAt);
-  });
-
-  it("아주 작은 화면: Spline 합체(px 고정)가 끝날 때까지는 넘기지 않는다", () => {
-    const tiny = frameForViewport(1024, 700);
-    expect(tiny.scrollAt("archive", 1)).toBeLessThan(PHONE_3D.mergeEndScrollPx);
-    expect(computeSplineHandoff(tiny.at(PHONE_3D.mergeEndScrollPx - 1)).canvasOpacity).toBe(1);
+    const record = sections.find((section) => section.key === "record");
+    if (!record) throw new Error("record not found");
+    const screenSwitchAt = record.end + TIMELINE.screenCrossfadeBand[0] * H;
+    expect(recordEndAt + PHONE_3D.handoffScrollPx).toBeLessThan(screenSwitchAt);
   });
 
   it("넘기는 도중 두 opacity의 합은 항상 1이다", () => {
     const vp = frameForViewport(1440, 900);
-    const start = Math.max(PHONE_3D.mergeEndScrollPx, vp.scrollAt("archive", 1));
+    const start = vp.scrollAt("record", 1);
     const { canvasOpacity, cssOpacity } = computeSplineHandoff(vp.at(start + PHONE_3D.handoffScrollPx / 2));
     expect(canvasOpacity).toBeCloseTo(0.5);
     expect(canvasOpacity + cssOpacity).toBeCloseTo(1);

@@ -4,16 +4,73 @@ import { Component, useEffect, useRef, type ReactNode } from "react";
 import { preconnect, preload } from "react-dom";
 
 import dynamic from "next/dynamic";
-import type { Application } from "@splinetool/runtime";
+import type { Application, SPEObject } from "@splinetool/runtime";
 
+import { MOCK_RECORDS } from "@/entities/record";
+import { RECORD_STACK } from "@/shared/config";
 import { useSceneFrame } from "@/shared/lib/scroll";
 
+import { computeRecordStack, type RecordStackScene } from "../model/recordStack";
 import { computeSplineHandoff, computeSplineViewport } from "../model/scene3d";
 
 const Spline = dynamic(() => import("@splinetool/react-spline"), { ssr: false });
 
 /** 이 시간 안에 씬이 안 뜨면 CSS 폰으로 되돌린다(ms) */
 const LOAD_TIMEOUT_MS = 10_000;
+
+const DEG = Math.PI / 180;
+
+/** 카드끼리, 카드와 RecordBase가 같은 평면에서 깜빡이지 않도록 띄우는 z(px) */
+const CARD_BASE_Z = 1;
+const CARD_Z_STEP = 0.01;
+
+/** record 섹션에서 코드가 움직이는 씬 오브젝트(`docs/plans/0004`) */
+type RecordObjects = {
+  rig: SPEObject;
+  layer: SPEObject;
+  homeScreen: SPEObject;
+  veil: SPEObject;
+  cards: SPEObject[];
+};
+
+const findRecordObjects = (app: Application): RecordObjects | null => {
+  const rig = app.findObjectByName("RecordRig");
+  const layer = app.findObjectByName("RecordLayer");
+  const homeScreen = app.findObjectByName("ScreenA");
+  const veil = app.findObjectByName("Veil");
+  const cards = MOCK_RECORDS.map((_, index) => app.findObjectByName(`Card${String(index + 1).padStart(2, "0")}`));
+  if (!rig || !layer || !homeScreen || !veil || cards.some((card) => !card)) return null;
+  return { rig, layer, homeScreen, veil, cards: cards as SPEObject[] };
+};
+
+/** 값이 바뀔 때만 쓴다 — 같은 값을 써도 Spline이 다시 그리므로 */
+const setIfChanged = <T extends object, K extends keyof T>(target: T, key: K, value: T[K]): void => {
+  if (target[key] !== value) target[key] = value;
+};
+
+const applyRecordStack = (objects: RecordObjects, scene: RecordStackScene): void => {
+  const { rig, cards, veil } = scene;
+  setIfChanged(objects.rig.rotation, "x", rig.rotX * DEG);
+  setIfChanged(objects.rig.rotation, "y", rig.rotY * DEG);
+  setIfChanged(objects.rig.rotation, "z", rig.rotZ * DEG);
+  setIfChanged(objects.homeScreen, "visible", !rig.isRecordScreen);
+  setIfChanged(objects.layer, "visible", rig.isRecordScreen);
+  setIfChanged(objects.veil, "visible", veil > 0);
+
+  const { width, height } = RECORD_STACK.screen;
+  cards.forEach((pose, index) => {
+    const card = objects.cards[index];
+    setIfChanged(card, "visible", pose.isVisible);
+    if (!pose.isVisible) return;
+    // 모델은 화면 좌표(좌상단 원점, y 아래로), 씬은 화면 중심 원점(y 위로)
+    setIfChanged(card.position, "x", pose.x - width / 2);
+    setIfChanged(card.position, "y", height / 2 - pose.y);
+    setIfChanged(card.position, "z", CARD_BASE_Z + index * CARD_Z_STEP + pose.z);
+    setIfChanged(card.rotation, "y", pose.rotY * DEG);
+    setIfChanged(card.scale, "x", pose.scaleX);
+    setIfChanged(card.scale, "y", pose.scaleY);
+  });
+};
 
 interface SplineStageProps {
   sceneUrl: string;
@@ -43,13 +100,15 @@ class SplineErrorBoundary extends Component<SplineErrorBoundaryProps, { hasError
 }
 
 /**
- * 히어로 3D 폰(Spline 씬). 합체 모션은 씬 안의 State + Scroll 이벤트가 맡고,
- * 여기서는 캔버스를 CSS 폰 A 자리에 맞추고 넘겨주는 페이드만 한다.
+ * 3D 폰(Spline 씬, hero~record). 히어로 합체는 씬 안의 State + Scroll 이벤트가 맡고,
+ * record의 회전·기록 스택은 여기서 런타임 API로 쓴다(Scroll 이벤트는 px 고정이라 뷰포트마다 어긋남).
+ * 캔버스를 CSS 폰 A 자리에 맞추고, record가 끝나면 CSS 폰으로 페이드해 넘긴다.
  */
 export const SplineStage = ({ sceneUrl, onFail }: SplineStageProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const fadeRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
+  const recordObjectsRef = useRef<RecordObjects | null>(null);
   const isFailedRef = useRef(false);
 
   // 서버 렌더 HTML에 <link>로 들어가서, JS가 끝나기 전부터 씬 파일(~1.3MB)을 받기 시작한다
@@ -73,6 +132,8 @@ export const SplineStage = ({ sceneUrl, onFail }: SplineStageProps) => {
   const handleLoad = (app: Application) => {
     if (isFailedRef.current) return;
     appRef.current = app;
+    // 기록 스택 오브젝트가 없는 옛 export면 record 구간은 합쳐진 정면 폰 그대로 둔다
+    recordObjectsRef.current = findRecordObjects(app);
     fadeRef.current?.classList.remove("opacity-0");
   };
 
@@ -92,6 +153,10 @@ export const SplineStage = ({ sceneUrl, onFail }: SplineStageProps) => {
     // 멈췄다 켜면 Spline Scroll 상태가 합쳐진 채로 굳어 역스크롤 때 다시 갈라지지 않는다.
     // (renderOnDemand라 화면 변화가 없으면 어차피 그리지 않는다)
     container.style.visibility = canvasOpacity === 0 ? "hidden" : "visible";
+
+    if (recordObjectsRef.current && canvasOpacity > 0) {
+      applyRecordStack(recordObjectsRef.current, computeRecordStack(frame, MOCK_RECORDS.length));
+    }
   });
 
   return (
