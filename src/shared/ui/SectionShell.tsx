@@ -8,6 +8,8 @@ export interface SectionShellProps {
   eyebrow?: string;
   title: readonly string[];
   body?: readonly string[];
+  /** 카피 바로 아래(같은 열)에 붙는 내용 */
+  footer?: ReactNode;
   children?: ReactNode;
 }
 
@@ -21,6 +23,7 @@ export const SectionShell = ({
   eyebrow,
   title,
   body,
+  footer,
   children,
 }: SectionShellProps) => {
   return (
@@ -44,6 +47,7 @@ export const SectionShell = ({
               {line}
             </p>
           ))}
+          {footer}
         </div>
         {children}
       </div>
