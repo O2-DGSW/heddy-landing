@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 
-import { MOCK_RECORDS, recordSpanCaption } from "@/entities/record";
+import { RECORD_CARDS } from "@/entities/record";
 import { COPY, SECTION_HEIGHT_VH } from "@/shared/config";
 import { useSceneFrame } from "@/shared/lib/scroll";
 import { SectionShell } from "@/shared/ui";
@@ -10,7 +10,7 @@ import { SectionShell } from "@/shared/ui";
 import { computeRecordAside } from "../model/recordAside";
 
 /**
- * 좌측 레일 + 큰 날짜 + 캡션(`docs/plans/0004`). 폰의 기록 스택(phone-stage)과 같은 스텝으로
+ * 좌측 레일 + 큰 연·월(`docs/plans/0004`). 폰의 기록 카드 스택(phone-stage)과 같은 스텝으로
  * 움직인다. 프레임마다 ref로만 쓴다.
  */
 export const RecordSection = () => {
@@ -18,16 +18,12 @@ export const RecordSection = () => {
   const dateRef = useRef<HTMLSpanElement>(null);
   const prevDateRef = useRef<HTMLSpanElement>(null);
   const dateBoxRef = useRef<HTMLParagraphElement>(null);
-  const captionRef = useRef<HTMLParagraphElement>(null);
 
   useSceneFrame((frame) => {
-    const aside = computeRecordAside(frame, MOCK_RECORDS);
+    const aside = computeRecordAside(frame, RECORD_CARDS);
 
     if (railRef.current) railRef.current.style.transform = `scaleY(${aside.railScale})`;
     if (dateBoxRef.current) dateBoxRef.current.style.color = `rgb(${aside.dateColor.join(",")})`;
-    if (captionRef.current && captionRef.current.textContent !== aside.caption) {
-      captionRef.current.textContent = aside.caption;
-    }
 
     // 직전 날짜는 위로 빠지고 새 날짜가 아래에서 올라온다(폰 카드가 돌며 들어오는 것과 같은 진행도)
     if (dateRef.current) {
@@ -51,22 +47,17 @@ export const RecordSection = () => {
       title={COPY.sections.record.title}
       body={COPY.sections.record.body}
       footer={
-        <div className="mt-10">
-          <p
-            ref={dateBoxRef}
-            className="relative overflow-hidden text-[clamp(56px,7vw,104px)] font-bold leading-[1.15] tracking-[-0.04em] tabular-nums"
-          >
-            {/* 자리 잡기용(보이지 않음) — 날짜 폭이 바뀌어도 레이아웃이 흔들리지 않게 */}
-            <span className="invisible">0000.00</span>
-            <span ref={prevDateRef} aria-hidden="true" className="absolute left-0 top-0" />
-            <span ref={dateRef} className="absolute left-0 top-0">
-              {MOCK_RECORDS[0].date}
-            </span>
-          </p>
-          <p ref={captionRef} className="mt-3 text-16 font-medium text-neutral-500">
-            {recordSpanCaption(MOCK_RECORDS, 0)}
-          </p>
-        </div>
+        <p
+          ref={dateBoxRef}
+          className="relative mt-10 overflow-hidden text-[clamp(56px,7vw,104px)] font-bold leading-[1.15] tracking-[-0.04em] tabular-nums"
+        >
+          {/* 자리 잡기용(보이지 않음) — 날짜 폭이 바뀌어도 레이아웃이 흔들리지 않게 */}
+          <span className="invisible">0000.00</span>
+          <span ref={prevDateRef} aria-hidden="true" className="absolute left-0 top-0" />
+          <span ref={dateRef} className="absolute left-0 top-0">
+            {RECORD_CARDS[0].date}
+          </span>
+        </p>
       }
     >
       <div
