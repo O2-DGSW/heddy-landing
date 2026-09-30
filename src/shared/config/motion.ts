@@ -71,13 +71,16 @@ export const RECORD_STACK = {
   /** 기울어진 자세: 폰 A(정면)에 더해지는 RecordRig 회전 — 이미지 2 각도 */
   tiltPose: { rotX: 0, rotY: -25, rotZ: -15 },
   /** 화면(= Spline PhoneA ScreenA) 크기. 씬 단위 = px */
-  screen: { width: 268, height: 582 },
-  /** 첫 카드(slot 0) 윗변 y, 카드 크기, 슬롯 간격 */
-  listTop: 118,
-  card: { width: 236, height: 76 },
-  slotGap: 86,
-  /** 하단 네비 윗변 y. 카드는 여기 닿으면 접히며 사라진다 */
-  navTop: 518,
+  screen: { width: 804 / 3, height: 1748 / 3 },
+  /**
+   * 첫 카드(slot 0) 윗변 y, 카드 크기, 슬롯 간격, 하단 네비 윗변 y — 실제 기록 화면(804×1748)을
+   * 1/3로 줄인 값. 카드 크기는 그림자 여백까지 포함한 카드 이미지(744×256) 기준이다.
+   * 카드는 네비 윗변에 닿으면 접히며 사라진다.
+   */
+  listTop: 320 / 3,
+  card: { width: 744 / 3, height: 256 / 3 },
+  slotGap: 268 / 3,
+  navTop: 1536 / 3,
   /** 새 카드가 튀어나온 자세: 앞으로 z, 왼쪽 x, 확대, 리그 Y회전을 되돌리는 비율(카메라 쪽으로 돌아봄) */
   pop: { z: 70, x: -45, scale: 1.06, faceCamera: 0.6 },
   /** 새 카드가 돌면서 들어올 때 시작 Y회전(90 = 옆면이라 안 보임) */

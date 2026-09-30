@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { RECORD_STACK, TIMELINE } from "@/shared/config";
 import { computeStageLayout, createFrame, stackSections, type SceneFrame } from "@/shared/lib/scroll";
 
-import { computeRecordStack } from "./recordStack";
+import { computeRecordStack, computeSettledRecordCards } from "./recordStack";
 
 const COUNT = 12;
 
@@ -156,5 +156,19 @@ describe("computeRecordStack — 카드", () => {
     expect(cards[COUNT - 1].isVisible).toBe(true);
     expect(cards.every((card) => card.z === 0)).toBe(true);
     expect(veil).toBe(0);
+  });
+});
+
+describe("computeSettledRecordCards", () => {
+  it("record 끝(3D에서 CSS 폰으로 넘기는 순간)의 카드 배치와 같다", () => {
+    const { cards } = computeRecordStack(viewport().atP(1), COUNT);
+    const settled = computeSettledRecordCards(COUNT);
+    settled.forEach((card, index) => {
+      expect(card.isVisible).toBe(cards[index].isVisible);
+      if (!card.isVisible) return;
+      expect(card.x).toBeCloseTo(cards[index].x);
+      expect(card.y).toBeCloseTo(cards[index].y);
+      expect(card.scaleY).toBeCloseTo(cards[index].scaleY);
+    });
   });
 });

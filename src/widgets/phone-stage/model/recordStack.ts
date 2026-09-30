@@ -63,20 +63,17 @@ export const computeRecordRig = (frame: SceneFrame, settle: number): RecordRig =
   };
 };
 
-/**
- * 기록 카드 스택(`docs/plans/0004`). 새 기록은 리스트 맨 위(slot 0)에 돌면서 들어와
- * 화면 밖으로 튀어나오고(pop), 다음 기록이 오면 제자리로 내려앉으며 한 칸 밀린다.
- * 네비에 닿는 카드는 윗변을 고정한 채 접혀 사라진다.
- */
-export const computeRecordStack = (frame: SceneFrame, count: number): RecordStackScene => {
-  const steps = computeRecordSteps(frame, count);
-  const rig = computeRecordRig(frame, steps.settle);
-  const { listTop, card, slotGap, navTop, pop, spinInDeg, veilAlpha, screen } = RECORD_STACK;
-  const rigYawFromFront = normalizeDeg(rig.rotY);
+/** 등장 진행도(entered)·settle·리그 요(yaw)로 카드 자세를 낸다 */
+const layoutRecordCards = (
+  entered: readonly number[],
+  settle: number,
+  rigYawFromFront: number,
+): RecordCardPose[] => {
+  const { listTop, card, slotGap, navTop, pop, spinInDeg, screen } = RECORD_STACK;
 
-  const cards = steps.entered.map((enter, index): RecordCardPose => {
-    const slot = steps.entered.slice(index + 1).reduce((sum, value) => sum + value, 0);
-    const next = index + 1 < count ? steps.entered[index + 1] : steps.settle;
+  return entered.map((enter, index): RecordCardPose => {
+    const slot = entered.slice(index + 1).reduce((sum, value) => sum + value, 0);
+    const next = index + 1 < entered.length ? entered[index + 1] : settle;
     const popped = enter * (1 - next);
 
     const top = listTop + slot * slotGap;
@@ -93,8 +90,28 @@ export const computeRecordStack = (frame: SceneFrame, count: number): RecordStac
       isVisible: enter > 0 && scaleY > 0,
     };
   });
+};
 
-  const veil = frame.isReducedMotion ? 0 : veilAlpha * (steps.entered[0] ?? 0) * (1 - steps.settle);
+/**
+ * 기록 카드 스택(`docs/plans/0004`). 새 기록은 리스트 맨 위(slot 0)에 돌면서 들어와
+ * 화면 밖으로 튀어나오고(pop), 다음 기록이 오면 제자리로 내려앉으며 한 칸 밀린다.
+ * 네비에 닿는 카드는 윗변을 고정한 채 접혀 사라진다.
+ */
+export const computeRecordStack = (frame: SceneFrame, count: number): RecordStackScene => {
+  const steps = computeRecordSteps(frame, count);
+  const rig = computeRecordRig(frame, steps.settle);
+  const cards = layoutRecordCards(steps.entered, steps.settle, normalizeDeg(rig.rotY));
+  const veil = frame.isReducedMotion
+    ? 0
+    : RECORD_STACK.veilAlpha * (steps.entered[0] ?? 0) * (1 - steps.settle);
 
   return { rig, cards, veil };
 };
+
+/** 12건이 다 쌓이고 내려앉은 마지막 상태 — 3D에서 넘겨받는 CSS 폰 기록 화면이 그대로 그린다 */
+export const computeSettledRecordCards = (count: number): RecordCardPose[] =>
+  layoutRecordCards(
+    Array.from({ length: count }, () => 1),
+    1,
+    0,
+  );

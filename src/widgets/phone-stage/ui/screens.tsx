@@ -1,23 +1,60 @@
 import Image from "next/image";
 
-import { COPY } from "@/shared/config";
-import { MOCK_RECORDS, RecordRow } from "@/entities/record";
+import { RECORD_CARDS } from "@/entities/record";
+import { COPY, RECORD_STACK } from "@/shared/config";
+
+import { computeSettledRecordCards } from "../model/recordStack";
 
 /** 홈 화면 — 실제 앱 홈 화면 캡처 (`docs/design/spec.md` §4) */
 export const HomeScreen = () => (
   <Image src="/screens/home.png" alt="헤디 홈 화면" fill priority sizes="280px" className="object-cover" />
 );
 
-/** 기록 화면: 12행 리스트. 포커스 밴드 모션은 TODO(docs/plans/0001) */
+/** record 끝에서 3D 폰이 넘겨주는 카드 배치(12건이 다 쌓이고 내려앉은 상태) */
+const SETTLED_RECORD_CARDS = computeSettledRecordCards(RECORD_CARDS.length);
+
+const toPercent = (value: number, total: number): string => `${(value / total) * 100}%`;
+
+/**
+ * 기록 화면 — 실제 앱 기록 화면에서 카드를 비운 바탕 + 카드 이미지(최신이 맨 위).
+ * 3D 기록 스택의 마지막 상태와 같은 배치라 넘겨받을 때 이음새가 없다(`docs/plans/0004`).
+ */
 export const RecordScreen = () => {
+  const { screen, card } = RECORD_STACK;
   return (
-    <div className="flex h-full flex-col gap-3 p-4">
-      <p className="text-14 font-medium">{COPY.phoneScreens.record.titleFor(MOCK_RECORDS.length)}</p>
-      <div className="flex flex-col gap-3">
-        {MOCK_RECORDS.map((record) => (
-          <RecordRow key={record.id} record={record} />
-        ))}
-      </div>
+    <div className="relative h-full w-full">
+      <Image src="/screens/record/base.png" alt="헤디 시술기록 화면" fill sizes="280px" className="object-fill" />
+      {SETTLED_RECORD_CARDS.map((pose, index) => {
+        if (!pose.isVisible) return null;
+        const height = card.height * pose.scaleY;
+        return (
+          <div
+            key={RECORD_CARDS[index].id}
+            className="absolute"
+            style={{
+              left: toPercent(pose.x - card.width / 2, screen.width),
+              top: toPercent(pose.y - height / 2, screen.height),
+              width: toPercent(card.width, screen.width),
+              height: toPercent(height, screen.height),
+            }}
+          >
+            <Image
+              src={`/screens/record/card-${String(index + 1).padStart(2, "0")}.png`}
+              alt={`${RECORD_CARDS[index].date} ${RECORD_CARDS[index].title}`}
+              fill
+              sizes="250px"
+              className="object-fill"
+            />
+          </div>
+        );
+      })}
+      <Image
+        src="/screens/record/fab.png"
+        alt=""
+        width={40}
+        height={40}
+        className="absolute left-[80.5%] top-[80.3%] h-[6.9%] w-auto"
+      />
     </div>
   );
 };
