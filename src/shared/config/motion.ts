@@ -54,6 +54,13 @@ export const STAGE_LAYOUT = {
 export const PHONE_3D = {
   /** Spline 씬 카메라: 정면(0,0,distance), 세로 시야각(도, Spline 기본값 45). 씬과 같은 값이어야 한다 */
   camera: { fovDeg: 45, distance: 1700 },
+  /**
+   * Spline Scroll 이벤트가 합체를 끝내는 페이지 스크롤 위치(px). 씬 값과 같아야 한다:
+   * PhoneA 900+778, PhoneB 993+685 → 둘 다 1678. Spline은 px 고정이라 뷰포트와 무관하다.
+   */
+  mergeEndScrollPx: 1678,
+  /** CSS 폰 A로 크로스페이드하는 스크롤 길이(px) */
+  handoffScrollPx: 140,
 } as const;
 
 /**
@@ -65,10 +72,7 @@ export const TIMELINE = {
   /** archive 진행도: hero→archive 폰 A/B 수렴 */
   heroArchiveConverge: [0, 0.72] as Range,
   /** archive 진행도: 폰 B 페이드아웃(끝나면 B=0) */
-  archiveBFade: [0.72, 0.86] as Range,
-  /** archive 진행도: 3D 폰 → CSS 폰 A 크로스페이드(둘 다 같은 자리·자세) */
-  splineHandoff: [0.72, 0.86] as Range,
-  /** ar 진행도: 폰 A 재등장 y (yOffset) */
+  archiveBFade: [0.72, 0.86] as Range /** ar 진행도: 폰 A 재등장 y (yOffset) */,
   arReappearY: [0.46, 0.56] as Range,
   /** ar 진행도: 폰 A 재등장 opacity */
   arReappearOpacity: [0.46, 0.53] as Range,

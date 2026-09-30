@@ -24,6 +24,19 @@ const frameAtSectionProgress = (key: SectionKey, p: number): SceneFrame => {
   return frameAtScrollY(section.top + p * denom);
 };
 
+/** 다른 뷰포트 크기로 섹션을 다시 쌓아 프레임을 만든다 */
+const frameForViewport = (width: number, height: number) => {
+  const vpSections = stackSections({}, height);
+  const vpLayout = computeStageLayout(width, height);
+  const scrollAt = (key: SectionKey, p: number): number => {
+    const section = vpSections.find((candidate) => candidate.key === key);
+    if (!section) throw new Error(`section not found: ${key}`);
+    return section.top + p * Math.max(section.height - height, 1);
+  };
+  const at = (scrollY: number): SceneFrame => createFrame(scrollY, vpLayout, vpSections, false);
+  return { scrollAt, at };
+};
+
 describe("computeSplineViewport", () => {
   it("캔버스 중심이 CSS 폰 A 중심과 같다", () => {
     const rect = computeSplineViewport(layout);
@@ -46,17 +59,34 @@ describe("computeSplineHandoff", () => {
     expect(cssOpacity).toBe(0);
   });
 
-  it("archive 0.86 이후 CSS 폰으로 완전히 넘어간다", () => {
-    const { canvasOpacity, cssOpacity } = computeSplineHandoff(frameAtSectionProgress("archive", 0.86));
-    expect(canvasOpacity).toBe(0);
-    expect(cssOpacity).toBe(1);
+  it("작은 화면: CSS 폰은 먼저 합쳐져도 Spline 합체(px 고정)가 끝날 때까지 넘기지 않는다", () => {
+    const small = frameForViewport(1024, 768);
+    const cssMergedAt = small.scrollAt("archive", 0.72);
+    expect(cssMergedAt).toBeLessThan(PHONE_3D.mergeEndScrollPx);
+    expect(computeSplineHandoff(small.at(PHONE_3D.mergeEndScrollPx - 1)).canvasOpacity).toBe(1);
+  });
+
+  it("큰 화면: Spline이 먼저 합쳐져도 CSS 폰 합체(archive 0.72)가 끝날 때까지 넘기지 않는다", () => {
+    const big = frameForViewport(1920, 1080);
+    const cssMergedAt = big.scrollAt("archive", 0.72);
+    expect(cssMergedAt).toBeGreaterThan(PHONE_3D.mergeEndScrollPx);
+    expect(computeSplineHandoff(big.at(cssMergedAt - 1)).canvasOpacity).toBe(1);
+    expect(computeSplineHandoff(big.at(cssMergedAt + PHONE_3D.handoffScrollPx)).canvasOpacity).toBe(0);
   });
 
   it("넘기는 도중 두 opacity의 합은 항상 1이다", () => {
-    const { canvasOpacity, cssOpacity } = computeSplineHandoff(frameAtSectionProgress("archive", 0.79));
-    expect(canvasOpacity).toBeGreaterThan(0);
-    expect(canvasOpacity).toBeLessThan(1);
+    const start = Math.max(PHONE_3D.mergeEndScrollPx, frameAtSectionProgress("archive", 0.72).scrollY);
+    const { canvasOpacity, cssOpacity } = computeSplineHandoff(
+      frameAtScrollY(start + PHONE_3D.handoffScrollPx / 2),
+    );
+    expect(canvasOpacity).toBeCloseTo(0.5);
     expect(canvasOpacity + cssOpacity).toBeCloseTo(1);
+  });
+
+  it("archive를 지나면 CSS 폰으로 완전히 넘어가 있다", () => {
+    const { canvasOpacity, cssOpacity } = computeSplineHandoff(frameAtSectionProgress("record", 0));
+    expect(canvasOpacity).toBe(0);
+    expect(cssOpacity).toBe(1);
   });
 
   it("reduced motion이면 3D를 쓰지 않고 CSS 폰만 보인다", () => {

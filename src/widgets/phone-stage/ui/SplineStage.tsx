@@ -56,8 +56,13 @@ export const SplineStage = ({ sceneUrl, onReady }: SplineStageProps) => {
     if (shouldPause === isPausedRef.current) return;
     isPausedRef.current = shouldPause;
     container.style.visibility = shouldPause ? "hidden" : "visible";
-    if (shouldPause) app.stop();
-    else app.play();
+    if (shouldPause) {
+      app.stop();
+      return;
+    }
+    app.play();
+    // 멈춰 있는 동안 지나간 스크롤을 Spline Scroll 이벤트가 놓쳤으므로 현재 위치로 다시 계산시킨다
+    window.dispatchEvent(new Event("scroll"));
   });
 
   return (

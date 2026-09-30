@@ -31,9 +31,20 @@ export const computeSplineViewport = (layout: StageLayout): SplineViewport => {
   };
 };
 
-/** 합체가 끝난 뒤(`splineHandoff`) 같은 자리·자세의 CSS 폰 A로 크로스페이드한다 */
+/**
+ * Spline 합체(페이지 px 고정)와 CSS 폰 합체(archive 진행도, 뷰포트 비례) 중 늦게 끝나는 쪽 이후에
+ * 크로스페이드한다 — 둘 다 정면에 멈춘 뒤라 화면 크기와 상관없이 이음새가 없다.
+ */
 export const computeSplineHandoff = (frame: SceneFrame): SplineHandoff => {
-  const handoff = progressIn(frame.progress("archive"), TIMELINE.splineHandoff);
-  const canvasOpacity = frame.isReducedMotion ? 0 : 1 - handoff;
-  return { canvasOpacity, cssOpacity: 1 - canvasOpacity };
+  if (frame.isReducedMotion) return { canvasOpacity: 0, cssOpacity: 1 };
+
+  const archive = frame.sections.find((section) => section.key === "archive");
+  const [, cssMergeEnd] = TIMELINE.heroArchiveConverge;
+  const cssMergedAt = archive
+    ? archive.top + cssMergeEnd * Math.max(archive.height - frame.layout.viewportHeight, 1)
+    : 0;
+  const start = Math.max(PHONE_3D.mergeEndScrollPx, cssMergedAt);
+  const handoff = progressIn(frame.scrollY, [start, start + PHONE_3D.handoffScrollPx]);
+  const canvasOpacity = 1 - handoff;
+  return { canvasOpacity, cssOpacity: handoff };
 };
