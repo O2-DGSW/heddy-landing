@@ -46,29 +46,14 @@ export const STAGE_LAYOUT = {
 } as const;
 
 /**
- * 히어로 3D 폰(Spline 씬, `docs/plans/0003`). 좌표는 Spline 월드 단위(1 = 스케일 1의 CSS px)이고,
- * 원점이 CSS 폰 A의 중심(`STAGE_LAYOUT` center)에 오도록 코드가 환산한다.
+ * 히어로 3D 폰(Spline 씬, `docs/plans/0003`). 합체 모션은 Spline 안의 State + Scroll 이벤트가 맡고,
+ * 코드는 캔버스 위치·크기와 CSS 폰으로 넘기는 페이드만 담당한다.
+ * 씬의 PhoneA "Merged" 상태가 월드 원점(높이 615, rotX -8 = `PhoneFrame`의 rotateX(8deg))이라,
+ * 캔버스 중심을 CSS 폰 A 중심에 두고 높이를 맞추면 넘겨받을 때 이음새가 없다.
  */
 export const PHONE_3D = {
-  /** Spline 씬 카메라: 정면(0,0,distance), 세로 시야각(도) */
-  camera: { fovDeg: 25, distance: 2036 },
-  /** 폰 그룹 기본 스케일 — 이 값에서 높이가 615 */
-  baseScale: 222.84,
-  /** hero 시작 자세 (Spline 배치를 그대로 옮긴 값, 회전은 도) */
-  heroStart: {
-    a: { x: -147.6, y: -54.8, z: 82.8, rotX: -28.37, rotY: 29.9, rotZ: 20.04 },
-    b: { x: 161.9, y: -90.6, z: 13.6, rotX: -27.17, rotY: -20.53, rotZ: -17.88 },
-  },
-  /**
-   * 합쳐진 끝 자세. A는 CSS 폰 A와 같은 자리·기울기(`PhoneFrame`의 rotateX(8deg) = Spline rotX -8)라
-   * 넘겨받을 때 이음새가 없다. B는 A 바로 뒤로 숨는다.
-   */
-  mergedA: { x: 0, y: 0, z: 0, rotX: -8, rotY: 0, rotZ: 0 },
-  mergedBBehindZ: -40,
-  /** B가 A보다 늦게 모이는 정도(수렴 진행도 기준 지연) */
-  bLag: 0.12,
-  /** 그림자 바닥(ShadowCatcher) y */
-  shadowFloorY: -420,
+  /** Spline 씬 카메라: 정면(0,0,distance), 세로 시야각(도). 씬과 같은 값이어야 한다 */
+  camera: { fovDeg: 25, distance: 2850 },
 } as const;
 
 /**

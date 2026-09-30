@@ -8,7 +8,7 @@ import { PhoneFrame } from "@/shared/ui";
 
 import { computePhones, computeScreens } from "../model/scene";
 import type { PhoneAScreenKey, PhoneBScreenKey, PhonePose } from "../model/scene";
-import { computePhones3D } from "../model/scene3d";
+import { computeSplineHandoff } from "../model/scene3d";
 import { SplineStage } from "./SplineStage";
 import {
   ArScreen,
@@ -60,7 +60,7 @@ export const PhoneStage = () => {
     const { a, b, qrFlight } = computePhones(frame);
     const screens = computeScreens(frame);
     // 3D 폰이 떠 있는 동안(hero~archive 합체)은 CSS 폰을 숨겼다가 같은 자세에서 넘겨받는다
-    const cssOpacity = isSplineReadyRef.current ? computePhones3D(frame).cssOpacity : 1;
+    const cssOpacity = isSplineReadyRef.current ? computeSplineHandoff(frame).cssOpacity : 1;
 
     applyPose(phoneARef.current, { ...a, opacity: a.opacity * cssOpacity });
     applyPose(phoneBRef.current, { ...b, opacity: b.opacity * cssOpacity });

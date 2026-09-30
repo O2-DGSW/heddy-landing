@@ -3,12 +3,10 @@
 import { useRef } from "react";
 
 import dynamic from "next/dynamic";
-import type { Application, SPEObject } from "@splinetool/runtime";
 
-import { PHONE_3D } from "@/shared/config";
 import { useSceneFrame } from "@/shared/lib/scroll";
 
-import { computePhones3D, type Pose3D, type Stage3D } from "../model/scene3d";
+import { computeSplineHandoff, computeSplineViewport } from "../model/scene3d";
 
 const Spline = dynamic(() => import("@splinetool/react-spline"), { ssr: false });
 
@@ -17,59 +15,33 @@ interface SplineStageProps {
   onReady: () => void;
 }
 
-type Stage3DObjects = { a: SPEObject; b: SPEObject; shadow?: SPEObject };
-
-const DEG = Math.PI / 180;
-
-const applyPose3D = (object: SPEObject, pose: Pose3D, stage: Stage3D): void => {
-  object.position.x = stage.x + stage.k * pose.x;
-  object.position.y = stage.y + stage.k * pose.y;
-  object.position.z = stage.k * pose.z;
-  object.rotation.x = pose.rotX * DEG;
-  object.rotation.y = pose.rotY * DEG;
-  object.rotation.z = pose.rotZ * DEG;
-  const scale = PHONE_3D.baseScale * stage.k;
-  object.scale.x = scale;
-  object.scale.y = scale;
-  object.scale.z = scale;
-  object.visible = pose.isVisible;
-};
-
-/** 히어로 3D 폰(Spline 씬). 스크롤 프레임마다 `computePhones3D` 결과를 오브젝트에 직접 대입한다 */
+/**
+ * 히어로 3D 폰(Spline 씬). 합체 모션은 씬 안의 State + Scroll 이벤트가 맡고,
+ * 여기서는 캔버스를 CSS 폰 A 자리에 맞추고 넘겨주는 페이드만 한다.
+ */
 export const SplineStage = ({ sceneUrl, onReady }: SplineStageProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const objectsRef = useRef<Stage3DObjects | null>(null);
+  const isLoadedRef = useRef(false);
 
-  const handleLoad = (app: Application) => {
-    const a = app.findObjectByName("PhoneA");
-    const b = app.findObjectByName("PhoneB");
-    if (!a || !b) return;
-    objectsRef.current = { a, b, shadow: app.findObjectByName("ShadowCatcher") };
+  const handleLoad = () => {
+    isLoadedRef.current = true;
     onReady();
   };
 
   useSceneFrame((frame) => {
-    const objects = objectsRef.current;
     const container = containerRef.current;
-    if (!objects || !container) return;
+    if (!container || !isLoadedRef.current) return;
 
-    const scene = computePhones3D(frame);
-    container.style.opacity = String(scene.canvasOpacity);
-    applyPose3D(objects.a, scene.a, scene.stage);
-    applyPose3D(objects.b, scene.b, scene.stage);
-
-    if (objects.shadow) {
-      objects.shadow.position.x = scene.stage.x;
-      objects.shadow.position.y = scene.stage.y + scene.stage.k * PHONE_3D.shadowFloorY;
-      objects.shadow.scale.x = scene.stage.k;
-      objects.shadow.scale.y = scene.stage.k;
-      objects.shadow.scale.z = scene.stage.k;
-      objects.shadow.visible = scene.canvasOpacity > 0;
-    }
+    const rect = computeSplineViewport(frame.layout);
+    const { canvasOpacity } = computeSplineHandoff(frame);
+    container.style.transform = `translate(${rect.left}px, ${rect.top}px)`;
+    container.style.width = `${rect.width}px`;
+    container.style.height = `${rect.height}px`;
+    container.style.opacity = String(canvasOpacity);
   });
 
   return (
-    <div ref={containerRef} className="pointer-events-none fixed inset-0 opacity-0">
+    <div ref={containerRef} className="pointer-events-none absolute left-0 top-0 opacity-0">
       <Spline scene={sceneUrl} onLoad={handleLoad} />
     </div>
   );
