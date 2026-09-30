@@ -1,4 +1,4 @@
-import { PHONE_3D, TIMELINE } from "@/shared/config";
+import { PHONE_3D } from "@/shared/config";
 import { progressIn } from "@/shared/lib/motion";
 import type { SceneFrame, StageLayout } from "@/shared/lib/scroll";
 
@@ -32,18 +32,16 @@ export const computeSplineViewport = (layout: StageLayout): SplineViewport => {
 };
 
 /**
- * Spline 합체(페이지 px 고정)와 CSS 폰 합체(archive 진행도, 뷰포트 비례) 중 늦게 끝나는 쪽 이후에
- * 크로스페이드한다 — 둘 다 정면에 멈춘 뒤라 화면 크기와 상관없이 이음새가 없다.
+ * archive 섹션("흩어진 기록이, 한 화면으로")은 끝까지 3D 폰으로 보여 주고, 섹션이 끝난 뒤
+ * (record 화면 전환 전) CSS 폰 A로 크로스페이드한다. Spline 합체(페이지 px 고정)가 그보다
+ * 늦게 끝나는 작은 화면에서는 합체가 끝난 뒤로 미룬다 — 둘 다 정면에 멈춘 뒤라 이음새가 없다.
  */
 export const computeSplineHandoff = (frame: SceneFrame): SplineHandoff => {
   if (frame.isReducedMotion) return { canvasOpacity: 0, cssOpacity: 1 };
 
   const archive = frame.sections.find((section) => section.key === "archive");
-  const [, cssMergeEnd] = TIMELINE.heroArchiveConverge;
-  const cssMergedAt = archive
-    ? archive.top + cssMergeEnd * Math.max(archive.height - frame.layout.viewportHeight, 1)
-    : 0;
-  const start = Math.max(PHONE_3D.mergeEndScrollPx, cssMergedAt);
+  const archiveEndAt = archive ? archive.top + Math.max(archive.height - frame.layout.viewportHeight, 1) : 0;
+  const start = Math.max(PHONE_3D.mergeEndScrollPx, archiveEndAt);
   const handoff = progressIn(frame.scrollY, [start, start + PHONE_3D.handoffScrollPx]);
   const canvasOpacity = 1 - handoff;
   return { canvasOpacity, cssOpacity: handoff };
