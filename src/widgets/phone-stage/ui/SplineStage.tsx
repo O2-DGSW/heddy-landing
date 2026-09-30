@@ -6,7 +6,7 @@ import { preconnect, preload } from "react-dom";
 import dynamic from "next/dynamic";
 import type { Application, SPEObject } from "@splinetool/runtime";
 
-import { MOCK_RECORDS } from "@/entities/record";
+import { RECORD_CARDS } from "@/entities/record";
 import { RECORD_STACK } from "@/shared/config";
 import { useSceneFrame } from "@/shared/lib/scroll";
 
@@ -38,7 +38,7 @@ const findRecordObjects = (app: Application): RecordObjects | null => {
   const layer = app.findObjectByName("RecordLayer");
   const homeScreen = app.findObjectByName("ScreenA");
   const veil = app.findObjectByName("Veil");
-  const cards = MOCK_RECORDS.map((_, index) =>
+  const cards = RECORD_CARDS.map((_, index) =>
     app.findObjectByName(`Card${String(index + 1).padStart(2, "0")}`),
   );
   if (!rig || !layer || !homeScreen || !veil || cards.some((card) => !card)) return null;
@@ -160,7 +160,7 @@ export const SplineStage = ({ sceneUrl, onFail }: SplineStageProps) => {
     container.style.visibility = canvasOpacity === 0 ? "hidden" : "visible";
 
     if (recordObjectsRef.current && canvasOpacity > 0) {
-      applyRecordStack(recordObjectsRef.current, computeRecordStack(frame, MOCK_RECORDS.length));
+      applyRecordStack(recordObjectsRef.current, computeRecordStack(frame, RECORD_CARDS.length));
     }
   });
 
