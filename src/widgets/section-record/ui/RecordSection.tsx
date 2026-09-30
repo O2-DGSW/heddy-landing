@@ -3,8 +3,8 @@
 import { useRef } from "react";
 
 import { RECORD_CARDS } from "@/entities/record";
-import { COPY, SECTION_HEIGHT_VH } from "@/shared/config";
-import { useSceneFrame } from "@/shared/lib/scroll";
+import { COPY, RECORD_STACK, SECTION_HEIGHT_VH } from "@/shared/config";
+import { useSmoothSceneFrame } from "@/shared/lib/scroll";
 import { SectionShell } from "@/shared/ui";
 
 import { computeRecordAside } from "../model/recordAside";
@@ -19,7 +19,7 @@ export const RecordSection = () => {
   const prevDateRef = useRef<HTMLSpanElement>(null);
   const dateBoxRef = useRef<HTMLParagraphElement>(null);
 
-  useSceneFrame((frame) => {
+  useSmoothSceneFrame((frame) => {
     const aside = computeRecordAside(frame, RECORD_CARDS);
 
     if (railRef.current) railRef.current.style.transform = `scaleY(${aside.railScale})`;
@@ -37,7 +37,7 @@ export const RecordSection = () => {
       prevDateRef.current.style.transform = `translateY(${-aside.roll * 100}%)`;
       prevDateRef.current.style.opacity = String(1 - aside.roll);
     }
-  });
+  }, RECORD_STACK.smoothHalfLifeMs);
 
   return (
     <SectionShell

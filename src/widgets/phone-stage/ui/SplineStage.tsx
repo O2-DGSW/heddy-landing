@@ -8,7 +8,7 @@ import type { Application, SPEObject } from "@splinetool/runtime";
 
 import { RECORD_CARDS } from "@/entities/record";
 import { RECORD_STACK } from "@/shared/config";
-import { useSceneFrame } from "@/shared/lib/scroll";
+import { useSceneFrame, useSmoothSceneFrame } from "@/shared/lib/scroll";
 
 import { computeRecordStack, type RecordStackScene } from "../model/recordStack";
 import { computeSplineHandoff, computeSplineViewport } from "../model/scene3d";
@@ -158,11 +158,14 @@ export const SplineStage = ({ sceneUrl, onFail }: SplineStageProps) => {
     // 멈췄다 켜면 Spline Scroll 상태가 합쳐진 채로 굳어 역스크롤 때 다시 갈라지지 않는다.
     // (renderOnDemand라 화면 변화가 없으면 어차피 그리지 않는다)
     container.style.visibility = canvasOpacity === 0 ? "hidden" : "visible";
-
-    if (recordObjectsRef.current && canvasOpacity > 0) {
-      applyRecordStack(recordObjectsRef.current, computeRecordStack(frame, RECORD_CARDS.length));
-    }
   });
+
+  // 기록 스택은 부드럽게 따라가는 스크롤로 움직인다 — 빠르게 내려도 카드가 건너뛰지 않는다.
+  // 좌측 큰 날짜(RecordSection)도 같은 반감기를 써서 서로 맞는다
+  useSmoothSceneFrame((frame) => {
+    if (!recordObjectsRef.current || isFailedRef.current) return;
+    applyRecordStack(recordObjectsRef.current, computeRecordStack(frame, RECORD_CARDS.length));
+  }, RECORD_STACK.smoothHalfLifeMs);
 
   return (
     <div ref={containerRef} className="pointer-events-none absolute left-0 top-0 opacity-0">

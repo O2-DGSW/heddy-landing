@@ -94,11 +94,14 @@ describe("computeRecordStack — 카드", () => {
     }
   });
 
-  it("새 카드는 옆면(spinInDeg)에서 돌며 들어온다", () => {
+  it("새 카드는 뒤집히지 않고(책장처럼 돌지 않고) 작게 시작해 커지며 튀어나온다", () => {
     const { atP } = viewport();
-    const entering = computeRecordStack(atP(pAtStep(3, 0.02)), COUNT).cards[3];
+    const entering = computeRecordStack(atP(pAtStep(3, 0.05)), COUNT).cards[3];
+    const popped = computeRecordStack(atP(pAtStep(3, 0.8)), COUNT).cards[3];
     expect(entering.isVisible).toBe(true);
-    expect(entering.rotY).toBeGreaterThan(RECORD_STACK.spinInDeg * 0.9);
+    expect(Math.abs(entering.rotY)).toBeLessThan(10);
+    expect(entering.scaleX).toBeLessThan(popped.scaleX);
+    expect(entering.scaleX).toBeGreaterThanOrEqual(RECORD_STACK.enterScaleFrom);
   });
 
   it("튀어나온 카드는 기울어진 폰과 반대로 돌아 카메라 쪽을 본다", () => {

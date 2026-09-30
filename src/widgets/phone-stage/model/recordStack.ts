@@ -69,7 +69,7 @@ const layoutRecordCards = (
   settle: number,
   rigYawFromFront: number,
 ): RecordCardPose[] => {
-  const { listTop, card, slotGap, navTop, pop, spinInDeg, screen } = RECORD_STACK;
+  const { listTop, card, slotGap, navTop, pop, enterScaleFrom, screen } = RECORD_STACK;
 
   return entered.map((enter, index): RecordCardPose => {
     const slot = entered.slice(index + 1).reduce((sum, value) => sum + value, 0);
@@ -79,21 +79,22 @@ const layoutRecordCards = (
     const top = listTop + slot * slotGap;
     const collapse = clamp((top + card.height - navTop) / card.height);
     const scaleY = 1 - collapse;
+    const grow = lerp(enterScaleFrom, 1, enter) * lerp(1, pop.scale, popped);
 
     return {
       x: screen.width / 2 + pop.x * popped,
       y: top + (card.height * scaleY) / 2,
       z: pop.z * popped,
-      rotY: spinInDeg * (1 - enter) - pop.faceCamera * rigYawFromFront * popped,
-      scaleX: lerp(1, pop.scale, popped),
-      scaleY: scaleY * lerp(1, pop.scale, popped),
+      rotY: -pop.faceCamera * rigYawFromFront * popped,
+      scaleX: grow,
+      scaleY: scaleY * grow,
       isVisible: enter > 0 && scaleY > 0,
     };
   });
 };
 
 /**
- * 기록 카드 스택(`docs/plans/0004`). 새 기록은 리스트 맨 위(slot 0)에 돌면서 들어와
+ * 기록 카드 스택(`docs/plans/0004`). 새 기록은 리스트 맨 위(slot 0)에 작게 나타나 커지며
  * 화면 밖으로 튀어나오고(pop), 다음 기록이 오면 제자리로 내려앉으며 한 칸 밀린다.
  * 네비에 닿는 카드는 윗변을 고정한 채 접혀 사라진다.
  */

@@ -82,9 +82,11 @@ export const RECORD_STACK = {
   slotGap: 268 / 3,
   navTop: 1536 / 3,
   /** 새 카드가 튀어나온 자세: 앞으로 z, 왼쪽 x, 확대, 리그 Y회전을 되돌리는 비율(카메라 쪽으로 돌아봄) */
-  pop: { z: 70, x: -45, scale: 1.06, faceCamera: 0.6 },
-  /** 새 카드가 돌면서 들어올 때 시작 Y회전(90 = 옆면이라 안 보임) */
-  spinInDeg: 90,
+  pop: { z: 70, x: -45, scale: 1.06, faceCamera: 0.25 },
+  /** 새 카드가 들어올 때 시작 크기 비율(토스처럼 작게 시작해 커지며 튀어나온다, 회전 없음) */
+  enterScaleFrom: 0.6,
+  /** 스크롤을 빨리 내려도 끊기지 않게, 표시 위치가 실제 스크롤을 따라잡는 반감기(ms) */
+  smoothHalfLifeMs: 90,
   /** 흐림 막 최대 불투명도 */
   veilAlpha: 0.55,
 } as const;
