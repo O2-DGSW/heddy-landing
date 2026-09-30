@@ -22,20 +22,21 @@ const toPercent = (value: number, total: number): string => `${(value / total) *
 export const RecordScreen = () => {
   const { screen, card } = RECORD_STACK;
   return (
-    <div className="relative h-full w-full">
+    <div className="relative h-full w-full overflow-hidden">
       <Image src="/screens/record/base.png" alt="헤디 시술기록 화면" fill sizes="280px" className="object-fill" />
       {SETTLED_RECORD_CARDS.map((pose, index) => {
         if (!pose.isVisible) return null;
-        const height = card.height * pose.scaleY;
+        // 3D와 같은 윗변에 원래 크기로 두고, 네비 뒤로 들어간 부분은 네비와 overflow가 가린다
+        const top = pose.y - (card.height * pose.scaleY) / 2;
         return (
           <div
             key={RECORD_CARDS[index].id}
             className="absolute"
             style={{
               left: toPercent(pose.x - card.width / 2, screen.width),
-              top: toPercent(pose.y - height / 2, screen.height),
+              top: toPercent(top, screen.height),
               width: toPercent(card.width, screen.width),
-              height: toPercent(height, screen.height),
+              height: toPercent(card.height, screen.height),
             }}
           >
             <Image
@@ -48,6 +49,14 @@ export const RecordScreen = () => {
           </div>
         );
       })}
+      <Image
+        src="/screens/record/nav.png"
+        alt=""
+        width={804}
+        height={224}
+        sizes="280px"
+        className="absolute bottom-0 left-0 w-full"
+      />
       <Image
         src="/screens/record/fab.png"
         alt=""

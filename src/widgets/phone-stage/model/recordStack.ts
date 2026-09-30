@@ -69,7 +69,7 @@ const layoutRecordCards = (
   settle: number,
   rigYawFromFront: number,
 ): RecordCardPose[] => {
-  const { listTop, card, slotGap, navTop, pop, enterScaleFrom, screen } = RECORD_STACK;
+  const { listTop, card, slotGap, pop, enterScaleFrom, screen } = RECORD_STACK;
 
   return entered.map((enter, index): RecordCardPose => {
     const slot = entered.slice(index + 1).reduce((sum, value) => sum + value, 0);
@@ -77,7 +77,8 @@ const layoutRecordCards = (
     const popped = enter * (1 - next);
 
     const top = listTop + slot * slotGap;
-    const collapse = clamp((top + card.height - navTop) / card.height);
+    // 네비 뒤로 들어가는 카드는 화면 밑변을 넘는 만큼만 잘라낸다(보이는 부분은 네비가 덮으므로 찌그러짐이 안 보인다)
+    const collapse = clamp((top + card.height - screen.height) / card.height);
     const scaleY = 1 - collapse;
     const grow = lerp(enterScaleFrom, 1, enter) * lerp(1, pop.scale, popped);
 

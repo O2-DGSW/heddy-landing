@@ -118,16 +118,23 @@ describe("computeRecordStack — 카드", () => {
     expect(cards[3].rotY).toBeCloseTo(0);
   });
 
-  it("보이는 카드는 하단 네비를 넘지 않는다(닿으면 접혀 사라진다)", () => {
+  it("카드는 네비 뒤로 자연스럽게 들어간다 — 네비에 닿아도 찌그러지지 않고 화면 밑변에서만 잘린다", () => {
     const { atP } = viewport();
-    for (let step = 0; step <= 60; step += 1) {
-      const { cards } = computeRecordStack(atP(step / 60), COUNT);
-      for (const card of cards.filter((candidate) => candidate.isVisible && candidate.z === 0)) {
-        expect(card.y + (RECORD_STACK.card.height * card.scaleY) / 2).toBeLessThanOrEqual(
-          RECORD_STACK.navTop + 1e-6,
-        );
+    const { card, navTop, screen } = RECORD_STACK;
+    let sawUnderNav = false;
+    for (let step = 0; step <= 120; step += 1) {
+      const { cards } = computeRecordStack(atP(step / 120), COUNT);
+      for (const pose of cards.filter((candidate) => candidate.isVisible && candidate.z === 0)) {
+        const height = card.height * pose.scaleY;
+        const top = pose.y - height / 2;
+        // 화면 밑변을 넘지 않는다(넘는 부분은 네비 뒤에서 잘림)
+        expect(top + height).toBeLessThanOrEqual(screen.height + 1e-6);
+        // 화면 안에 다 들어오는 동안은 원래 크기 그대로다
+        if (top + card.height <= screen.height) expect(pose.scaleY).toBeCloseTo(1);
+        if (top + card.height > navTop && top < navTop) sawUnderNav = true;
       }
     }
+    expect(sawUnderNav).toBe(true);
   });
 
   it("12건이 다 쌓이면 가장 오래된 기록은 네비 아래로 사라져 있다", () => {
