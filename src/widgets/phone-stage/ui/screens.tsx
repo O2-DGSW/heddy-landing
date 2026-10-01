@@ -23,7 +23,13 @@ export const RecordScreen = () => {
   const { screen, card } = RECORD_STACK;
   return (
     <div className="relative h-full w-full overflow-hidden">
-      <Image src="/screens/record/base.png" alt="헤디 시술기록 화면" fill sizes="280px" className="object-fill" />
+      <Image
+        src="/screens/record/base.png"
+        alt="헤디 시술기록 화면"
+        fill
+        sizes="280px"
+        className="object-fill"
+      />
       {SETTLED_RECORD_CARDS.map((pose, index) => {
         if (!pose.isVisible) return null;
         // 3D와 같은 윗변에 원래 크기로 두고, 네비 뒤로 들어간 부분은 네비와 overflow가 가린다
@@ -52,8 +58,8 @@ export const RecordScreen = () => {
       <Image
         src="/screens/record/nav.png"
         alt=""
-        width={804}
-        height={224}
+        width={1608}
+        height={456}
         sizes="280px"
         className="absolute bottom-0 left-0 w-full"
       />
