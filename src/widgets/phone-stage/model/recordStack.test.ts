@@ -25,7 +25,8 @@ const viewport = (width = 1440, height = 900) => {
 /** 스텝 k 안의 로컬 진행도 u에 해당하는 record 진행도 */
 const pAtStep = (k: number, u: number): number => {
   const [start, end] = TIMELINE.record.band;
-  return start + ((k + u) / COUNT) * (end - start);
+  // 첫 기록(k=0)은 처음부터 있고, k=1..11이 band에 고르게 들어온다
+  return start + ((k - 1 + u) / (COUNT - 1)) * (end - start);
 };
 
 const normalize = (deg: number) => ((deg % 360) + 360) % 360;
@@ -38,8 +39,10 @@ describe("computeRecordStack — 폰 자세(RecordRig)", () => {
     expect(rig.rotY).toBeCloseTo(0);
     expect(rig.rotZ).toBeCloseTo(0);
     expect(rig.isRecordScreen).toBe(false);
-    expect(cards.every((card) => !card.isVisible)).toBe(true);
-    expect(veil).toBe(0);
+    // 기록 레이어는 화면 전환 전이라 숨어 있고, 전환되면 바로 보이도록 첫 기록만 준비돼 있다
+    expect(cards[0].isVisible).toBe(true);
+    expect(cards.slice(1).every((card) => !card.isVisible)).toBe(true);
+    expect(veil).toBeGreaterThanOrEqual(0);
   });
 
   it("한 바퀴 도는 중 뒷면(180°)을 지날 때 기록 화면으로 바뀐다", () => {
@@ -109,6 +112,20 @@ describe("computeRecordStack — 카드", () => {
     const latest = computeRecordStack(atP(pAtStep(2, 0.8)), COUNT).cards[2];
     const expected = -RECORD_STACK.pop.faceCamera * RECORD_STACK.tiltPose.rotY;
     expect(latest.rotY).toBeCloseTo(expected);
+  });
+
+  it("팝은 화면 안에서만 — 카드는 어느 순간에도 화면 폭을 넘지 않고 화면 위로 거의 뜨지 않는다", () => {
+    const { atP } = viewport();
+    const { card, screen } = RECORD_STACK;
+    for (let step = 0; step <= 120; step += 1) {
+      const { cards } = computeRecordStack(atP(step / 120), COUNT);
+      for (const pose of cards.filter((candidate) => candidate.isVisible)) {
+        const half = (card.width * pose.scaleX) / 2;
+        expect(pose.x - half).toBeGreaterThanOrEqual(0);
+        expect(pose.x + half).toBeLessThanOrEqual(screen.width);
+        expect(pose.z).toBeLessThanOrEqual(1);
+      }
+    }
   });
 
   it("다음 기록이 들어오면 이전 카드는 제자리로 내려앉는다", () => {

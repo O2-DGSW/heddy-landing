@@ -21,12 +21,13 @@ const LOAD_TIMEOUT_MS = 10_000;
 const DEG = Math.PI / 180;
 
 /**
- * 카드 z(px). 텍스처 평면은 반투명으로 취급돼 깊이가 아니라 "오브젝트 원점이 카메라에 가까운 순"으로 그려진다.
- * 그래서 Veil·RecordNav·RecordFab은 커스텀 메시로 원점을 앞(45/60/62)에 두고 면은 실제 위치(28/14/23)에 둔다
- * — 카드(원점 6~9.3) → 흐림 막 → 네비·＋ 순서가 폰 각도와 상관없이 고정된다.
+ * 카드 z(px). 모든 층은 화면에 붙어 있다(면 z 0.3~2.4) — 높이 차가 크면 폰이 기울 때 옆으로 밀려 떠 보인다.
+ * 텍스처 판은 반투명으로 취급돼 깊이가 아니라 "오브젝트 원점이 카메라에 가까운 순"으로 그려지므로,
+ * Veil·RecordNav·RecordFab은 커스텀 메시로 원점만 앞(45/60/62)에 두고 면은 화면에 붙여 순서를 고정한다
+ * — 카드 → 흐림 막(slot 0 띠는 비움) → 네비·＋.
  */
-const CARD_BASE_Z = 6;
-const CARD_Z_STEP = 0.3;
+const CARD_BASE_Z = 1;
+const CARD_Z_STEP = 0.01;
 
 /** record 섹션에서 코드가 움직이는 씬 오브젝트(`docs/plans/0004`) */
 type RecordObjects = {

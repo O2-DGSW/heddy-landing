@@ -17,7 +17,7 @@ const atP = (p: number, isReducedMotion = false): SceneFrame =>
 
 const pAtStep = (k: number, u: number): number => {
   const [start, end] = TIMELINE.record.band;
-  return start + ((k + u) / RECORD_CARDS.length) * (end - start);
+  return start + ((k - 1 + u) / (RECORD_CARDS.length - 1)) * (end - start);
 };
 
 describe("computeRecordAside", () => {

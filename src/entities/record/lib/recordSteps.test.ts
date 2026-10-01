@@ -18,19 +18,21 @@ const frameAtRecord = (p: number, width = 1440, height = 900, isReducedMotion = 
 /** 스텝 k 안의 로컬 진행도 u에 해당하는 record 진행도 */
 const pAtStep = (k: number, u: number): number => {
   const [start, end] = TIMELINE.record.band;
-  return start + ((k + u) / COUNT) * (end - start);
+  // 첫 기록(k=0)은 처음부터 있고, k=1..11이 band에 고르게 들어온다
+  return start + ((k - 1 + u) / (COUNT - 1)) * (end - start);
 };
 
 describe("computeRecordSteps", () => {
-  it("band 이전에는 아무 기록도 없다", () => {
+  it("기록 화면이 뜰 때부터 첫 기록이 있다(빈 목록이 보이지 않는다)", () => {
     const steps = computeRecordSteps(frameAtRecord(0), COUNT);
-    expect(steps.raw).toBe(0);
-    expect(steps.entered.every((value) => value === 0)).toBe(true);
+    expect(steps.raw).toBe(1);
+    expect(steps.entered[0]).toBe(1);
+    expect(steps.entered.slice(1).every((value) => value === 0)).toBe(true);
     expect(steps.focusIndex).toBe(0);
   });
 
   it("스텝 k의 등장이 끝나면 k+1건이 쌓여 있고 k번째가 포커스다", () => {
-    for (const k of [0, 4, 11]) {
+    for (const k of [1, 4, 11]) {
       const steps = computeRecordSteps(frameAtRecord(pAtStep(k, 0.6)), COUNT);
       expect(steps.entered.slice(0, k + 1).every((value) => value === 1)).toBe(true);
       expect(steps.entered.slice(k + 1).every((value) => value === 0)).toBe(true);

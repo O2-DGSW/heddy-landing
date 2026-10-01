@@ -3,7 +3,7 @@ import { easeInOutCubic, progressIn } from "@/shared/lib/motion";
 import type { SceneFrame } from "@/shared/lib/scroll";
 
 export type RecordSteps = {
-  /** 0~count: 지금까지 추가된 기록 수(연속값). 스텝 k = raw ∈ [k, k+1] */
+  /** 1~count: 지금까지 추가된 기록 수(연속값). 첫 기록은 처음부터 있고, 스텝 k(1~) = raw ∈ [k, k+1] */
   raw: number;
   /** 기록 i(오래된 순)의 등장 진행도(0~1, 이징 적용) */
   entered: number[];
@@ -23,7 +23,8 @@ export const computeRecordSteps = (frame: SceneFrame, count: number): RecordStep
   }
 
   const p = frame.progress("record");
-  const raw = progressIn(p, TIMELINE.record.band) * count;
+  // 첫 기록은 기록 화면이 뜰 때부터 있고(빈 목록 없음), 나머지가 band에 고르게 한 건씩 들어온다
+  const raw = 1 + progressIn(p, TIMELINE.record.band) * (count - 1);
   const entered = Array.from({ length: count }, (_, index) =>
     easeInOutCubic(progressIn(raw - index, [0, TIMELINE.record.stepEnter])),
   );
