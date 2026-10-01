@@ -21,8 +21,9 @@ const LOAD_TIMEOUT_MS = 10_000;
 const DEG = Math.PI / 180;
 
 /**
- * 카드 z(px). 카메라가 1700 떨어져 있어 깊이 정밀도가 1 안팎이라, 레이어끼리 수 px씩 띄워야 섞이지 않는다.
- * 씬 순서(뒤→앞): RecordBase 1 · RecordHeader 3 · 카드 6~9.3 · NavBottom 14 · NavTop 17 · Fab 20/23 · Veil 28
+ * 카드 z(px). 텍스처 평면은 반투명으로 취급돼 깊이가 아니라 "오브젝트 원점이 카메라에 가까운 순"으로 그려진다.
+ * 그래서 Veil·RecordNav·RecordFab은 커스텀 메시로 원점을 앞(45/60/62)에 두고 면은 실제 위치(28/14/23)에 둔다
+ * — 카드(원점 6~9.3) → 흐림 막 → 네비·＋ 순서가 폰 각도와 상관없이 고정된다.
  */
 const CARD_BASE_Z = 6;
 const CARD_Z_STEP = 0.3;
@@ -136,8 +137,7 @@ export const SplineStage = ({ sceneUrl, onFail }: SplineStageProps) => {
 
   const handleLoad = (app: Application) => {
     if (isFailedRef.current) return;
-    appRef.current = app;
-    // 기록 스택 오브젝트가 없는 옛 export면 record 구간은 합쳐진 정면 폰 그대로 둔다
+    appRef.current = app; // 기록 스택 오브젝트가 없는 옛 export면 record 구간은 합쳐진 정면 폰 그대로 둔다
     recordObjectsRef.current = findRecordObjects(app);
     // RecordLayer는 export에 들어가도록 씬에선 보이게 두므로(숨긴 오브젝트는 export에서 빠짐),
     // 스크롤이 없어도 첫 프레임을 받아 지금 위치에 맞게 숨긴다
