@@ -21,8 +21,9 @@ export const STAGE_LAYOUT = {
   desktop: {
     /** 이 너비(px) 이상이면 데스크톱 레이아웃 */
     breakpoint: 1024,
-    scaleCap: 1,
-    scaleHeightRatio: 0.78,
+    /** 폰 크기 상한·뷰포트 높이 비율 — 원본(1 / 0.78)이 커서 사용자 요청으로 줄임(2026-10-01) */
+    scaleCap: 0.82,
+    scaleHeightRatio: 0.62,
     scaleWidthDivisor: 1400,
     centerXRatio: 0.7,
     centerYOffset: 20,
@@ -32,8 +33,8 @@ export const STAGE_LAYOUT = {
     convergeDx: 105,
   },
   mobile: {
-    scaleCap: 0.62,
-    scaleHeightRatio: 0.46,
+    scaleCap: 0.52,
+    scaleHeightRatio: 0.39,
     scaleWidthDivisor: 620,
     centerXRatio: 0.5,
     centerYRatio: 0.7,
