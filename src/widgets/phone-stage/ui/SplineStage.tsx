@@ -20,9 +20,12 @@ const LOAD_TIMEOUT_MS = 10_000;
 
 const DEG = Math.PI / 180;
 
-/** 카드끼리, 카드와 RecordBase가 같은 평면에서 깜빡이지 않도록 띄우는 z(px) */
-const CARD_BASE_Z = 1;
-const CARD_Z_STEP = 0.01;
+/**
+ * 카드 z(px). 카메라가 1700 떨어져 있어 깊이 정밀도가 1 안팎이라, 레이어끼리 수 px씩 띄워야 섞이지 않는다.
+ * 씬 순서(뒤→앞): RecordBase 1 · RecordHeader 3 · 카드 6~9.3 · NavBottom 14 · NavTop 17 · Fab 20/23 · Veil 28
+ */
+const CARD_BASE_Z = 6;
+const CARD_Z_STEP = 0.3;
 
 /** record 섹션에서 코드가 움직이는 씬 오브젝트(`docs/plans/0004`) */
 type RecordObjects = {
