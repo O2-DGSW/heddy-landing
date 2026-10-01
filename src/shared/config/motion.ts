@@ -25,7 +25,8 @@ export const STAGE_LAYOUT = {
     scaleCap: 0.8,
     scaleHeightRatio: 0.5,
     scaleWidthDivisor: 1400,
-    centerXRatio: 0.7,
+    /** 폰 가로 중심 — 카피 오른쪽 빈 영역의 가운데(원본 0.7, 2026-10-01 조정) */
+    centerXRatio: 0.65,
     centerYOffset: 20,
     /** 좌측 카피 최대 너비(vw) */
     copyMaxWidthVw: 40,
