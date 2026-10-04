@@ -1,8 +1,14 @@
+"use client";
+
+import { useRef } from "react";
+
 import Image from "next/image";
 
 import { RECORD_CARDS } from "@/entities/record";
-import { COPY, RECORD_STACK } from "@/shared/config";
+import { COPY, DETAIL_SCREEN, PHONE, RECORD_STACK } from "@/shared/config";
+import { useSceneFrame } from "@/shared/lib/scroll";
 
+import { computeDetailScroll } from "../model/detailScroll";
 import { computeSettledRecordCards } from "../model/recordStack";
 
 /** 홈 화면 — 실제 앱 홈 화면 캡처 (`docs/design/spec.md` §4) */
@@ -74,21 +80,36 @@ export const RecordScreen = () => {
   );
 };
 
-/** 리포트 화면: 지표 막대 모션은 TODO(docs/plans/0001) */
-export const ReportScreen = () => {
-  const { report } = COPY.phoneScreens;
+/**
+ * 리포트 구간 화면 — 다운펌 분석완료 상세(`docs/plans/0005`). 상단(상태바+앱바)·하단(탭바)은 고정하고
+ * 본문만 페이지 스크롤에 맞춰 폰 안에서 올라간다. 프레임마다 ref로 transform만 쓴다.
+ */
+export const DetailScreen = () => {
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const scale = PHONE.screenWidth / DETAIL_SCREEN.imageWidthPx;
+  const screen = { width: PHONE.screenWidth, height: PHONE.screenHeight };
+
+  useSceneFrame((frame) => {
+    if (!bodyRef.current) return;
+    const { offsetPx } = computeDetailScroll(frame, screen);
+    bodyRef.current.style.transform = `translateY(${-offsetPx}px)`;
+  });
+
   return (
-    <div className="flex h-full flex-col gap-4 p-4">
-      <p className="text-16 font-semibold">{report.title}</p>
-      <p className="text-14">{report.subtitle}</p>
-      <ul className="flex flex-col gap-2">
-        {report.metrics.map((metric) => (
-          <li key={metric} className="text-14">
-            {metric}
-          </li>
-        ))}
-      </ul>
-      <p className="mt-auto text-12">{report.recommendedTiming}</p>
+    <div className="relative h-full w-full overflow-hidden bg-[#F7F7F7]">
+      <div
+        ref={bodyRef}
+        className="absolute left-0 w-full will-change-transform"
+        style={{ top: DETAIL_SCREEN.fixedTopPx * scale, height: DETAIL_SCREEN.bodyHeightPx * scale }}
+      >
+        <Image src="/screens/detail/body.png" alt="다운펌 분석 결과" fill loading="eager" sizes="280px" className="object-cover" />
+      </div>
+      <div className="absolute left-0 top-0 w-full" style={{ height: DETAIL_SCREEN.fixedTopPx * scale }}>
+        <Image src="/screens/detail/top.png" alt="" fill loading="eager" sizes="280px" className="object-cover" />
+      </div>
+      <div className="absolute bottom-0 left-0 w-full" style={{ height: DETAIL_SCREEN.fixedBottomPx * scale }}>
+        <Image src="/screens/detail/bottom.png" alt="" fill loading="eager" sizes="280px" className="object-cover" />
+      </div>
     </div>
   );
 };

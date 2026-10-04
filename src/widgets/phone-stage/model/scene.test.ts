@@ -1,16 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  SECTION_HEIGHT_VH,
-  SECTION_KEYS,
-  type SectionKey,
-} from "@/shared/config";
-import {
-  computeStageLayout,
-  createFrame,
-  stackSections,
-  type SceneFrame,
-} from "@/shared/lib/scroll";
+import { SECTION_HEIGHT_VH, SECTION_KEYS, type SectionKey } from "@/shared/config";
+import { computeStageLayout, createFrame, stackSections, type SceneFrame } from "@/shared/lib/scroll";
 
 import { computePhones, computeScreens } from "./scene";
 
@@ -25,8 +16,7 @@ const sections = stackSections(heightsPx, H);
 const layout = computeStageLayout(W, H);
 const documentHeight = sections[sections.length - 1].end;
 
-const frameAtScrollY = (scrollY: number): SceneFrame =>
-  createFrame(scrollY, layout, sections, false);
+const frameAtScrollY = (scrollY: number): SceneFrame => createFrame(scrollY, layout, sections, false);
 
 /** 특정 섹션의 내부 진행도(p, 0~1)에 해당하는 scrollY로 프레임을 만든다 */
 const frameAtSectionProgress = (key: SectionKey, p: number): SceneFrame => {
@@ -82,6 +72,18 @@ describe("computeScreens", () => {
     expect(a.recommend).toBeCloseTo(0);
     expect(a.ar).toBeCloseTo(0);
     expect(a.qrShare).toBeCloseTo(0);
+  });
+
+  it("리포트 섹션이 화면에 붙기 전에 상세(리포트) 화면으로 다 바뀌고, 그 전까지는 기록 화면이다", () => {
+    // 3D→CSS 넘기기(record 고정 끝 + 140px) 직후에는 아직 기록 화면
+    const record = sections.find((section) => section.key === "record");
+    if (!record) throw new Error("record not found");
+    const afterHandoff = computeScreens(frameAtScrollY(record.end - H + 200)).a;
+    expect(afterHandoff.record).toBeCloseTo(1);
+    // 리포트 섹션 시작(본문 스크롤 시작 전)에는 리포트 화면만 보인다
+    const atReport = computeScreens(frameAtSectionProgress("report", 0)).a;
+    expect(atReport.report).toBeCloseTo(1);
+    expect(atReport.record).toBeCloseTo(0);
   });
 
   it("어느 지점이든 A 화면 opacity 합은 1을 넘지 않는다", () => {

@@ -66,6 +66,17 @@ export const PHONE_3D = {
 } as const;
 
 /**
+ * 리포트 구간 폰 화면 — 다운펌 분석완료 상세 화면 이미지(713×2000)를 3장으로 자른 치수(`docs/plans/0005`).
+ * 상단(상태바+앱바)과 하단(탭바)은 고정, 본문만 페이지 스크롤에 따라 폰 안에서 올라간다.
+ */
+export const DETAIL_SCREEN = {
+  imageWidthPx: 713,
+  fixedTopPx: 263,
+  bodyHeightPx: 1537,
+  fixedBottomPx: 200,
+} as const;
+
+/**
  * record 섹션 3D 기록 스택 (`docs/plans/0004`). 좌표는 폰 화면 기준 px(좌상단 원점, y 아래로),
  * 각도는 도. Spline 씬의 RecordRig·RecordLayer·Card01~12와 같은 값이어야 한다.
  */
@@ -147,6 +158,13 @@ export const TIMELINE = {
     barStartOffsetVh: -0.3,
     barStaggerVh: 0.06,
     barDurationRatioOfL: 0.4,
+    /** report 진행도: 폰 안 상세 화면 본문이 위로 스크롤되는 구간(`docs/plans/0005`) */
+    detailScroll: [0.1, 0.9] as Range,
+    /**
+     * 기록 → 리포트(상세) 화면 크로스페이드: record 섹션 end 기준 뷰포트 높이 배수.
+     * 공통 밴드(end 이후 35~65%)보다 앞당겨, 리포트 섹션이 붙을 때 이미 상세 화면이 다 보이게 한다.
+     */
+    fromRecordBand: [-0.45, -0.15] as Range,
   },
   recommend: {
     /** 선 i: top - 0.2H + i·0.12L ~ top + 0.2L + i·0.12L */
