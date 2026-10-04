@@ -42,7 +42,7 @@ export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
   const dimRef = useRef<HTMLDivElement>(null);
   const detailRef = useRef<HTMLDivElement>(null);
   const fixedBarsRef = useRef<HTMLDivElement>(null);
-  const { screen } = PHONE_3D;
+  const { screen, island } = PHONE_3D;
   const imageScale = screen.width / DETAIL_SCREEN.imageWidthPx;
 
   useSceneFrame((frame) => {
@@ -89,8 +89,8 @@ export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
           style={{
             left: `${(TAP_POINT.x / RECORD_STACK.screen.width) * 100}%`,
             top: `${(TAP_POINT.y / RECORD_STACK.screen.height) * 100}%`,
-            width: RECORD_STACK.card.width,
-            height: RECORD_STACK.card.height,
+            width: `${(RECORD_STACK.card.width / RECORD_STACK.screen.width) * 100}%`,
+            height: `${(RECORD_STACK.card.height / RECORD_STACK.screen.height) * 100}%`,
             borderRadius: CARD_RADIUS,
           }}
         >
@@ -127,6 +127,11 @@ export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
             <Image src="/screens/detail/bottom.png" alt="" fill loading="eager" sizes="280px" className="object-cover" />
           </div>
         </div>
+        {/* 다이내믹 아일랜드: 3D 폰 화면의 구멍 자리를 오버레이가 덮으므로 다시 그린다 */}
+        <div
+          className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black"
+          style={{ top: island.centerY, width: island.width, height: island.height }}
+        />
       </div>
     </div>
   );
