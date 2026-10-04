@@ -3,6 +3,8 @@ import { RECORD_STACK, TIMELINE } from "@/shared/config";
 import { clamp, easeInOutCubic, lerp, progressIn } from "@/shared/lib/motion";
 import type { SceneFrame } from "@/shared/lib/scroll";
 
+import { computeTapToDetail } from "./tapToDetail";
+
 /** RecordRig 회전(도). 폰 A(정면 합체 상태) 위에 더해진다 */
 export type RecordRig = {
   rotX: number;
@@ -99,10 +101,22 @@ const layoutRecordCards = (
  * 화면 밖으로 튀어나오고(pop), 다음 기록이 오면 제자리로 내려앉으며 한 칸 밀린다.
  * 네비에 닿는 카드는 윗변을 고정한 채 접혀 사라진다.
  */
+/** 화면 맨 위(slot 0)에 보이는 카드 인덱스 */
+export const topCardIndex = (cards: readonly RecordCardPose[]): number =>
+  cards.reduce((best, card, index) => (card.isVisible && card.y < cards[best].y ? index : best), cards.length - 1);
+
 export const computeRecordStack = (frame: SceneFrame, count: number): RecordStackScene => {
   const steps = computeRecordSteps(frame, count);
   const rig = computeRecordRig(frame, steps.settle);
   const cards = layoutRecordCards(steps.entered, steps.settle, normalizeDeg(rig.rotY));
+
+  // 상세 화면으로 들어가기 전, 맨 위 카드를 눌렀다 뗀다(`computeTapToDetail`)
+  const { press } = computeTapToDetail(frame);
+  if (press > 0) {
+    const top = topCardIndex(cards);
+    const shrink = 1 - TIMELINE.report.tapPressScale * press;
+    cards[top] = { ...cards[top], scaleX: cards[top].scaleX * shrink, scaleY: cards[top].scaleY * shrink };
+  }
   const veil = frame.isReducedMotion
     ? 0
     : RECORD_STACK.veilAlpha * (steps.entered[0] ?? 0) * (1 - steps.settle);

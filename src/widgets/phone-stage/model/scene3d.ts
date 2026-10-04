@@ -2,7 +2,7 @@ import { PHONE_3D } from "@/shared/config";
 import { progressIn } from "@/shared/lib/motion";
 import type { SceneFrame, StageLayout } from "@/shared/lib/scroll";
 
-import { computeScreens } from "./scene";
+import { computeTapToDetail } from "./tapToDetail";
 
 export type SplineViewport = { left: number; top: number; width: number; height: number };
 
@@ -57,17 +57,27 @@ export type ScreenOverlay = {
   perspective: number;
   rotateXDeg: number;
   translateZ: number;
+  /** 캔버스와 함께 사라지는 오버레이 전체 opacity(탭·push 전에는 0) */
   opacity: number;
+  /** 맨 위 카드가 눌린 정도(0 → 1 → 0) */
+  press: number;
+  /** 탭 물결 진행도(0이면 없음) */
+  ripple: number;
+  /** 상세 화면이 오른쪽에서 들어온 정도(0~1) */
+  push: number;
 };
 
 /**
  * 3D 폰 화면 위에 HTML 화면(리포트 상세)을 겹치는 CSS 3D 변환. 씬 카메라(정면, 거리 D, 캔버스 높이로
  * 1px = scale)와 같은 투영이 되도록 `translate(x,y) scale(S) perspective(D) rotateX(8°) translateZ(z)`를 쓴다.
- * opacity는 리포트 화면 크로스페이드 × 캔버스 opacity — 캔버스가 CSS 폰으로 넘어가면 같이 사라진다.
+ * 기록 → 상세는 크로스페이드 대신 탭 + push(`computeTapToDetail`)로 바뀐다. 오버레이 opacity는 캔버스를
+ * 따라가서, 캔버스가 CSS 폰으로 넘어가면 같이 사라진다.
  */
 export const computeScreenOverlay = (frame: SceneFrame): ScreenOverlay => {
   const { layout } = frame;
   const { canvasOpacity } = computeSplineHandoff(frame);
+  const { press, ripple, push } = computeTapToDetail(frame);
+  const isActive = ripple > 0 || push > 0;
   return {
     x: layout.center.x,
     y: layout.center.y,
@@ -75,6 +85,9 @@ export const computeScreenOverlay = (frame: SceneFrame): ScreenOverlay => {
     perspective: PHONE_3D.camera.distance,
     rotateXDeg: PHONE_3D.screen.tiltDeg,
     translateZ: PHONE_3D.screen.z,
-    opacity: computeScreens(frame).a.report * canvasOpacity,
+    opacity: isActive ? canvasOpacity : 0,
+    press,
+    ripple,
+    push,
   };
 };

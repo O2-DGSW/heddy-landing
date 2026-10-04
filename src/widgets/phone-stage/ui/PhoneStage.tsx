@@ -2,13 +2,14 @@
 
 import { useRef, type ReactNode } from "react";
 
-import { PHONE, PHONE_3D } from "@/shared/config";
+import { PHONE } from "@/shared/config";
 import { useSceneFrame } from "@/shared/lib/scroll";
 import { PhoneFrame } from "@/shared/ui";
 
 import { computePhones, computeScreens } from "../model/scene";
 import type { PhoneAScreenKey, PhoneBScreenKey, PhonePose } from "../model/scene";
-import { computeScreenOverlay, computeSplineHandoff } from "../model/scene3d";
+import { computeSplineHandoff } from "../model/scene3d";
+import { ScreenOverlay } from "./ScreenOverlay";
 import { SplineStage } from "./SplineStage";
 import {
   ArScreen,
@@ -56,7 +57,6 @@ export const PhoneStage = () => {
   const bScreenRefs = useRef<Partial<Record<PhoneBScreenKey, HTMLDivElement | null>>>({});
   const isSplineFailedRef = useRef(false);
   const isSplineLoadedRef = useRef(false);
-  const screenOverlayRef = useRef<HTMLDivElement>(null);
 
   useSceneFrame((frame) => {
     const { a, b, qrFlight } = computePhones(frame);
@@ -68,14 +68,6 @@ export const PhoneStage = () => {
 
     applyPose(phoneARef.current, { ...a, opacity: a.opacity * cssOpacity });
 
-    // 리포트 구간: 3D 폰 화면 위에 상세 화면(HTML)을 같은 투영으로 겹친다
-    if (screenOverlayRef.current) {
-      const overlay = computeScreenOverlay(frame);
-      const isOverlayShown = isSplineActive && isSplineLoadedRef.current && overlay.opacity > 0;
-      screenOverlayRef.current.style.transform = `translate(${overlay.x}px, ${overlay.y}px) scale(${overlay.scale}) perspective(${overlay.perspective}px) rotateX(${overlay.rotateXDeg}deg) translateZ(${overlay.translateZ}px)`;
-      screenOverlayRef.current.style.opacity = isOverlayShown ? String(overlay.opacity) : "0";
-      screenOverlayRef.current.style.visibility = isOverlayShown ? "visible" : "hidden";
-    }
     applyPose(phoneBRef.current, { ...b, opacity: b.opacity * cssOpacity });
 
     if (qrFlightRef.current) {
@@ -109,24 +101,7 @@ export const PhoneStage = () => {
         />
       )}
       {SPLINE_HERO_SCENE && (
-        <div
-          ref={screenOverlayRef}
-          className="invisible absolute left-0 top-0 origin-top-left"
-          style={{ width: 0, height: 0 }}
-        >
-          <div
-            className="absolute overflow-hidden"
-            style={{
-              left: -PHONE_3D.screen.width / 2,
-              top: -PHONE_3D.screen.height / 2,
-              width: PHONE_3D.screen.width,
-              height: PHONE_3D.screen.height,
-              borderRadius: `${PHONE_3D.screen.radiusX}px / ${PHONE_3D.screen.radiusY}px`,
-            }}
-          >
-            <DetailScreen width={PHONE_3D.screen.width} height={PHONE_3D.screen.height} />
-          </div>
-        </div>
+        <ScreenOverlay getIsEnabled={() => !isSplineFailedRef.current && isSplineLoadedRef.current} />
       )}
       <PhoneFrame ref={phoneBRef}>
         {B_SCREENS.map(({ key, node }) => (

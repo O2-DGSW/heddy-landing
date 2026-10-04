@@ -78,6 +78,8 @@ export const PHONE_3D = {
 export const DETAIL_SCREEN = {
   imageWidthPx: 713,
   fixedTopPx: 263,
+  /** fixedTop 중 상태바(시간·배터리) 높이 — 기록 → 상세 push 때 상태바는 그대로 둔다 */
+  statusBarPx: 85,
   bodyHeightPx: 1537,
   fixedBottomPx: 200,
 } as const;
@@ -173,6 +175,16 @@ export const TIMELINE = {
      * 공통 밴드(end 이후 35~65%)보다 앞당겨, 리포트 섹션이 붙을 때 이미 상세 화면이 다 보이게 한다.
      */
     fromRecordBand: [-0.45, -0.15] as Range,
+    /**
+     * 3D 폰에서 기록 → 상세: 맨 위 카드(최신 기록)를 누르고(tap) 상세 화면이 오른쪽에서 밀려 들어온다(push).
+     * record 섹션 end 기준 뷰포트 높이 배수. push가 끝나는 지점은 fromRecordBand 끝과 같다.
+     */
+    tapBand: [-0.5, -0.34] as Range,
+    pushBand: [-0.34, -0.15] as Range,
+    /** 눌릴 때 카드가 줄어드는 최대 비율 */
+    tapPressScale: 0.05,
+    /** push 중 뒤 화면(기록 리스트)이 어두워지는 최대 불투명도 */
+    pushDimAlpha: 0.12,
   },
   recommend: {
     /** 선 i: top - 0.2H + i·0.12L ~ top + 0.2L + i·0.12L */

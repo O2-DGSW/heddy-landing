@@ -24,7 +24,10 @@ created: 2026-10-01
 
 - 투영: `translate(캔버스 중심) scale(S) perspective(1700) rotateX(8°) translateZ(18)` — 씬 카메라(정면, 거리 1700)와 같은 식이라 네 모서리가 1px 안으로 맞는다(테스트).
 - 화면 268×583, 모서리 반경 36/57(스쿼클 근사). 텍스트가 HTML이라 선명하고 본문 스크롤·지표 막대도 그대로 쓴다.
-- 기록 → 상세 전환은 오버레이 opacity로 Spline 폰 위에서 크로스페이드.
+- 기록 → 상세 전환은 "카드를 눌러 들어가는" 느낌으로(`computeTapToDetail`, `TIMELINE.report.tapBand`·`pushBand`):
+  1. 탭: 리스트 맨 위 카드(최신 2026.09 다운펌 = 상세 화면의 기록)가 살짝 눌렸다 돌아오고(3D 카드 scale), 카드 안에 하이라이트·물결.
+  2. push: 상세 화면이 오른쪽에서 밀려 들어오고 뒤 리스트는 살짝 어두워진다. 상태바·하단 탭바는 두 화면이 같아 고정.
+  - CSS 폰(Spline 실패·reduced motion)은 기존 크로스페이드 그대로.
 - report 끝에서 CSS 폰으로 넘어갈 때 두 폰의 화면 크기(280 vs 268)가 달라 140px 동안 겹쳐 보인다. recommend 이후도 Spline으로 옮기면 사라진다.
 
 ## 이미지

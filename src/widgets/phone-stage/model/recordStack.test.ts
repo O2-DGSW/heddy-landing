@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { RECORD_STACK, TIMELINE } from "@/shared/config";
 import { computeStageLayout, createFrame, stackSections, type SceneFrame } from "@/shared/lib/scroll";
 
-import { computeRecordStack, computeSettledRecordCards } from "./recordStack";
+import { computeRecordStack, computeSettledRecordCards, topCardIndex } from "./recordStack";
 
 const COUNT = 12;
 
@@ -199,5 +199,24 @@ describe("computeSettledRecordCards", () => {
       expect(card.y).toBeCloseTo(cards[index].y);
       expect(card.scaleY).toBeCloseTo(cards[index].scaleY);
     });
+  });
+});
+
+describe("computeRecordStack — 상세 화면으로 들어가는 탭", () => {
+  it("탭 가운데서 맨 위 카드만 눌려 작아지고, 나머지는 그대로다", () => {
+    const { at, record } = viewport();
+    const [start, end] = TIMELINE.report.tapBand;
+    const { cards } = computeRecordStack(at(record.end + ((start + end) / 2) * 900), COUNT);
+    const settled = computeSettledRecordCards(COUNT);
+    const top = topCardIndex(settled);
+
+    expect(cards[top].scaleX).toBeCloseTo(settled[top].scaleX * (1 - TIMELINE.report.tapPressScale));
+    cards.forEach((card, index) => {
+      if (index !== top) expect(card.scaleX).toBeCloseTo(settled[index].scaleX);
+    });
+  });
+
+  it("맨 위 카드는 가장 최신 기록이다(상세 화면과 같은 기록)", () => {
+    expect(topCardIndex(computeSettledRecordCards(COUNT))).toBe(COUNT - 1);
   });
 });
