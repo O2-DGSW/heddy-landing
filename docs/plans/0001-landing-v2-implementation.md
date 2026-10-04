@@ -21,6 +21,8 @@ Claude Design "Heddy Landing v2"를 실제 Next.js 사이트로 옮긴다. 폰 �
 - [ ] 디자인 토큰 값 채우기: Main 램프(97~10), Neutral(99~5), label/line/fill/background/status 시맨틱 토큰(라이트·다크). `docs/design/reference/`가 들어와야 값을 알 수 있어 `src/app/styles/tokens.css`에 TODO로만 남겨둠
 - [ ] record: 좌측 레일 + "핀 진행 %" + 큰 날짜 색 보간 + 포커스 밴드(12행, 가운데만 선명) — `TIMELINE.record` → 3D 기록 스택으로 대체, `docs/plans/0004`
 - [ ] report: 지표 막대 3개 scaleX 스태거 (섹션 카피 + 폰 화면 둘 다) — `TIMELINE.report`
+  - [x] 섹션 카피 막대(`section-report/model/reportBars.ts`, 값 0.28·0.72·0.58은 사용자 영상 2026-10-04 기준)
+  - [ ] 폰 화면 막대 — 리포트 폰 화면이 상세 화면 이미지로 바뀌어(`docs/plans/0005`) 따로 정해야 함
 - [ ] recommend: 기록 3건 → 추천 선 드로잉(strokeDashoffset) — `TIMELINE.recommend`
 - [ ] ar: pill 분할 → 다크 패널 → 패널 문구 → 카피 + 폰 재등장 → 스타일 3단 전환, 헤더 로고 숨김 — `TIMELINE.ar`
 - [ ] share: QR clip-path 생성 → 미용실 폰 슬라이드 인 → QR 포물선 비행 → 웹뷰 — `TIMELINE.share`

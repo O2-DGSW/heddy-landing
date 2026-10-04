@@ -24,7 +24,12 @@ export const COPY = {
     },
     report: {
       title: ["12번의 기록이,", "나를 설명합니다"],
-      metrics: ["모발 손상도 낮음", "선호 톤 애쉬 계열", "시술 주기 평균 7주"],
+      /** 막대 행: 왼쪽 지표 이름 + 오른쪽 값. 막대 길이는 `TIMELINE.report.barValues` */
+      metrics: [
+        { label: "모발 손상도", value: "낮음" },
+        { label: "선호 톤", value: "애쉬 계열" },
+        { label: "시술 주기", value: "평균 7주" },
+      ],
     },
     recommend: {
       title: ["검색이 아니라,", "기록에서 시작하는 추천"],

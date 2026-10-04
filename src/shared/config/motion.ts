@@ -158,6 +158,8 @@ export const TIMELINE = {
     barStartOffsetVh: -0.3,
     barStaggerVh: 0.06,
     barDurationRatioOfL: 0.4,
+    /** 막대 i가 다 찼을 때 길이(트랙 대비) — 사용자 영상(2026-10-04 18:03) 마지막 프레임에서 잰 값 */
+    barValues: [0.28, 0.72, 0.58] as readonly number[],
     /** report 진행도: 폰 안 상세 화면 본문이 위로 스크롤되는 구간(`docs/plans/0005`) */
     detailScroll: [0.1, 0.9] as Range,
     /**
