@@ -7,7 +7,7 @@ interface PhoneFrameProps {
 }
 
 /**
- * 폰 목업 프레임(300×615, radius 42) + 화면(inset 10px, radius 34). spec §2 고정 치수.
+ * 폰 목업 프레임(300×615, radius 42) + 화면(inset 6px, radius 38). spec §2 고정 치수.
  * 바깥 div(ref)는 `PhoneStage`의 `applyPose`가 매 프레임 transform/opacity를 직접 덮어쓰는
  * pose 캐리어라 위치만 차지하고 시각 스타일이 없다 — 베젤·노치·버튼·3D 틸트는 전부 안쪽
  * "디바이스 바디" 레이어(스크롤과 무관한 고정 transform)에 둬서 pose 로직과 분리한다.
@@ -26,13 +26,13 @@ export const PhoneFrame = forwardRef<HTMLDivElement, PhoneFrameProps>(function P
         <div className="absolute -left-[2px] top-[110px] h-[28px] w-[3px] rounded-l-full bg-black/25" />
         <div className="absolute -left-[2px] top-[150px] h-[46px] w-[3px] rounded-l-full bg-black/25" />
         <div className="absolute -right-[2px] top-[130px] h-[60px] w-[3px] rounded-r-full bg-black/25" />
-        <div className="absolute inset-[10px] overflow-hidden rounded-[34px] bg-phone-screen">
+        <div className="absolute inset-[6px] overflow-hidden rounded-[38px] bg-phone-screen">
           {children}
           {/* 유리 반사 하이라이트 */}
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,.16)_0%,rgba(255,255,255,0)_30%,rgba(255,255,255,0)_75%,rgba(255,255,255,.08)_100%)]" />
         </div>
         {/* 다이내믹 아일랜드(3D 폰과 같은 크기·자리): 화면(opaque) 위에 그려져야 해서 스크린 div 앞에 둔다 */}
-        <div className="pointer-events-none absolute left-1/2 top-[20px] h-[25px] w-[85px] -translate-x-1/2 rounded-full bg-black" />
+        <div className="pointer-events-none absolute left-1/2 top-[16px] h-[25px] w-[87px] -translate-x-1/2 rounded-full bg-black" />
       </div>
     </div>
   );

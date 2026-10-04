@@ -8,10 +8,11 @@ export const PHONE = {
   pivot: 307.5,
   frameColor: "#1C1E20",
   frameRadius: 42,
-  screenInset: 10,
-  screenWidth: 280,
-  screenHeight: 595,
-  screenRadius: 34,
+  /** 베젤(화면 inset) — 3D 폰처럼 얇게(원본 10, 2026-10-05 조정) */
+  screenInset: 6,
+  screenWidth: 288,
+  screenHeight: 603,
+  screenRadius: 38,
   screenBackground: "#FBFBFB",
   shadow: "0 40px 70px -30px rgba(13,13,13,.45)",
 } as const;
@@ -67,14 +68,15 @@ export const PHONE_3D = {
    * 합쳐진 PhoneA의 화면(ScreenA = RecordBase 윤곽, 씬 단위 = px). 리포트 구간은 이 위에 HTML 화면을
    * CSS 3D로 투영해 겹친다(`docs/plans/0005`). z는 폰 중심에서 화면 면까지(RecordLayer 0.08×222.84 + 0.3),
    * tiltDeg는 합쳐진 자세의 뒤로 눕힘(씬 rotX −8°). 모서리는 가로·세로 반경이 다른 스쿼클이다.
-   * RecordLayer도 ScreenA와 같은 크기로 맞췄다(2026-10-04, 268×583 → 274×596) — 작으면 베젤이 두꺼워 보인다.
+   * 베젤을 얇게 하려고 ScreenA를 274×596 → 280×601로 키우고 RecordLayer도 같은 크기로 맞췄다(2026-10-05).
+   * 한쪽 베젤 ≈ 폰 폭의 1.6%(원본 ≈ 3%).
    */
-  screen: { width: 274.3, height: 595.7, z: 18, tiltDeg: 8, radiusX: 37, radiusY: 58 },
+  screen: { width: 280, height: 601.4, z: 18, tiltDeg: 8, radiusX: 38, radiusY: 59 },
   /**
    * 다이내믹 아일랜드(ScreenA에 뚫린 구멍 = 뒤의 검은 유리). 화면 좌상단 기준 px.
    * 기록 화면(RecordIsland)과 상세 화면 오버레이는 화면을 덮으므로 같은 자리에 다시 그린다.
    */
-  island: { centerY: 22.35, width: 85.3, height: 24.9 },
+  island: { centerY: 22.6, width: 87.1, height: 25.1 },
 } as const;
 
 /**
