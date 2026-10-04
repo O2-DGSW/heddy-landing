@@ -80,14 +80,23 @@ export const RecordScreen = () => {
   );
 };
 
+interface DetailScreenProps {
+  /** 화면 크기(px). CSS 폰은 280×595, 3D 폰 화면 오버레이는 `PHONE_3D.screen` */
+  width?: number;
+  height?: number;
+}
+
 /**
  * 리포트 구간 화면 — 다운펌 분석완료 상세(`docs/plans/0005`). 상단(상태바+앱바)·하단(탭바)은 고정하고
  * 본문만 페이지 스크롤에 맞춰 폰 안에서 올라간다. 프레임마다 ref로 transform만 쓴다.
  */
-export const DetailScreen = () => {
+export const DetailScreen = ({
+  width = PHONE.screenWidth,
+  height = PHONE.screenHeight,
+}: DetailScreenProps) => {
   const bodyRef = useRef<HTMLDivElement>(null);
-  const scale = PHONE.screenWidth / DETAIL_SCREEN.imageWidthPx;
-  const screen = { width: PHONE.screenWidth, height: PHONE.screenHeight };
+  const scale = width / DETAIL_SCREEN.imageWidthPx;
+  const screen = { width, height };
 
   useSceneFrame((frame) => {
     if (!bodyRef.current) return;

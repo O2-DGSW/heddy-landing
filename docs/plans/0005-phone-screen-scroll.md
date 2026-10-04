@@ -18,6 +18,15 @@ created: 2026-10-01
 - **구현 방식: B(CSS 폰)**. 이 구간은 record가 끝나면서 이미 Spline → CSS 폰으로 넘어간 정면 구간이라, Spline 실험(A) 없이 `overflow: hidden` + translateY로 구현한다. 글자도 선명하다.
 - **기록 → 상세 화면 전환 시점**: 공통 밴드(섹션 end 이후 35~65%)를 쓰면 리포트 섹션 전반부에 기록 화면이 남아 본문 스크롤과 겹친다. 그래서 이 전환만 record end 기준 −45%~−15%로 앞당겼다(`TIMELINE.report.fromRecordBand`). 리포트 섹션이 붙을 때 이미 상세 화면이 다 보인다.
 
+## 변경 (2026-10-04): CSS 폰 → Spline 폰
+
+사용자 요청으로 리포트 구간도 Spline 3D 폰을 쓴다. 3D 캔버스를 report 섹션 끝까지 유지하고(`computeSplineHandoff`), 같은 상세 화면 HTML을 폰 화면 위에 CSS 3D로 투영해 겹친다(`computeScreenOverlay`, `PHONE_3D.screen`).
+
+- 투영: `translate(캔버스 중심) scale(S) perspective(1700) rotateX(8°) translateZ(18)` — 씬 카메라(정면, 거리 1700)와 같은 식이라 네 모서리가 1px 안으로 맞는다(테스트).
+- 화면 268×583, 모서리 반경 36/57(스쿼클 근사). 텍스트가 HTML이라 선명하고 본문 스크롤·지표 막대도 그대로 쓴다.
+- 기록 → 상세 전환은 오버레이 opacity로 Spline 폰 위에서 크로스페이드.
+- report 끝에서 CSS 폰으로 넘어갈 때 두 폰의 화면 크기(280 vs 268)가 달라 140px 동안 겹쳐 보인다. recommend 이후도 Spline으로 옮기면 사라진다.
+
 ## 이미지
 
 원본 713×2000(모서리 투명)을 3장으로 잘라 투명 모서리는 배경색으로 채웠다(`public/screens/detail/`).

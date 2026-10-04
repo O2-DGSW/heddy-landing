@@ -2,6 +2,8 @@ import { PHONE_3D } from "@/shared/config";
 import { progressIn } from "@/shared/lib/motion";
 import type { SceneFrame, StageLayout } from "@/shared/lib/scroll";
 
+import { computeScreens } from "./scene";
+
 export type SplineViewport = { left: number; top: number; width: number; height: number };
 
 export type SplineHandoff = {
@@ -32,17 +34,47 @@ export const computeSplineViewport = (layout: StageLayout): SplineViewport => {
 };
 
 /**
- * hero부터 record 섹션(기록 스택, `docs/plans/0004`) 끝까지는 3D 폰으로 보여 주고, record가
- * 끝난 뒤(report 화면 전환 전) CSS 폰 A로 크로스페이드한다. 그 시점엔 RecordRig가 정면으로
+ * hero부터 report 섹션(상세 화면 스크롤, `docs/plans/0005`) 끝까지는 3D 폰으로 보여 주고, report가
+ * 끝난 뒤(recommend 화면 전환 전) CSS 폰 A로 크로스페이드한다. record 끝에서 RecordRig가 정면으로
  * 돌아와 있어 이음새가 없다. Spline 합체(페이지 px 고정)가 더 늦게 끝나면 그 뒤로 미룬다.
  */
 export const computeSplineHandoff = (frame: SceneFrame): SplineHandoff => {
   if (frame.isReducedMotion) return { canvasOpacity: 0, cssOpacity: 1 };
 
-  const record = frame.sections.find((section) => section.key === "record");
-  const recordEndAt = record ? record.top + Math.max(record.height - frame.layout.viewportHeight, 1) : 0;
-  const start = Math.max(PHONE_3D.mergeEndScrollPx, recordEndAt);
+  const report = frame.sections.find((section) => section.key === "report");
+  const reportEndAt = report ? report.top + Math.max(report.height - frame.layout.viewportHeight, 1) : 0;
+  const start = Math.max(PHONE_3D.mergeEndScrollPx, reportEndAt);
   const handoff = progressIn(frame.scrollY, [start, start + PHONE_3D.handoffScrollPx]);
   const canvasOpacity = 1 - handoff;
   return { canvasOpacity, cssOpacity: handoff };
+};
+
+export type ScreenOverlay = {
+  /** 화면 중심의 페이지 좌표(= 캔버스 중심) */
+  x: number;
+  y: number;
+  scale: number;
+  perspective: number;
+  rotateXDeg: number;
+  translateZ: number;
+  opacity: number;
+};
+
+/**
+ * 3D 폰 화면 위에 HTML 화면(리포트 상세)을 겹치는 CSS 3D 변환. 씬 카메라(정면, 거리 D, 캔버스 높이로
+ * 1px = scale)와 같은 투영이 되도록 `translate(x,y) scale(S) perspective(D) rotateX(8°) translateZ(z)`를 쓴다.
+ * opacity는 리포트 화면 크로스페이드 × 캔버스 opacity — 캔버스가 CSS 폰으로 넘어가면 같이 사라진다.
+ */
+export const computeScreenOverlay = (frame: SceneFrame): ScreenOverlay => {
+  const { layout } = frame;
+  const { canvasOpacity } = computeSplineHandoff(frame);
+  return {
+    x: layout.center.x,
+    y: layout.center.y,
+    scale: layout.scale,
+    perspective: PHONE_3D.camera.distance,
+    rotateXDeg: PHONE_3D.screen.tiltDeg,
+    translateZ: PHONE_3D.screen.z,
+    opacity: computeScreens(frame).a.report * canvasOpacity,
+  };
 };

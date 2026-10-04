@@ -81,6 +81,7 @@ const applyRecordStack = (objects: RecordObjects, scene: RecordStackScene): void
 
 interface SplineStageProps {
   sceneUrl: string;
+  onLoad: () => void;
   onFail: () => void;
 }
 
@@ -111,7 +112,7 @@ class SplineErrorBoundary extends Component<SplineErrorBoundaryProps, { hasError
  * record의 회전·기록 스택은 여기서 런타임 API로 쓴다(Scroll 이벤트는 px 고정이라 뷰포트마다 어긋남).
  * 캔버스를 CSS 폰 A 자리에 맞추고, record가 끝나면 CSS 폰으로 페이드해 넘긴다.
  */
-export const SplineStage = ({ sceneUrl, onFail }: SplineStageProps) => {
+export const SplineStage = ({ sceneUrl, onLoad, onFail }: SplineStageProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const fadeRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
@@ -142,6 +143,7 @@ export const SplineStage = ({ sceneUrl, onFail }: SplineStageProps) => {
     recordObjectsRef.current = findRecordObjects(app);
     // RecordLayer는 export에 들어가도록 씬에선 보이게 두므로(숨긴 오브젝트는 export에서 빠짐),
     // 스크롤이 없어도 첫 프레임을 받아 지금 위치에 맞게 숨긴다
+    onLoad();
     window.dispatchEvent(new Event("scroll"));
     fadeRef.current?.classList.remove("opacity-0");
   };

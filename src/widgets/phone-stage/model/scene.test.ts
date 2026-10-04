@@ -75,7 +75,7 @@ describe("computeScreens", () => {
   });
 
   it("리포트 섹션이 화면에 붙기 전에 상세(리포트) 화면으로 다 바뀌고, 그 전까지는 기록 화면이다", () => {
-    // 3D→CSS 넘기기(record 고정 끝 + 140px) 직후에는 아직 기록 화면
+    // record 고정 끝 직후에는 아직 기록 화면
     const record = sections.find((section) => section.key === "record");
     if (!record) throw new Error("record not found");
     const afterHandoff = computeScreens(frameAtScrollY(record.end - H + 200)).a;

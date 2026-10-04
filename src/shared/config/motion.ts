@@ -63,6 +63,12 @@ export const PHONE_3D = {
   mergeEndScrollPx: 1678,
   /** CSS 폰 A로 크로스페이드하는 스크롤 길이(px) */
   handoffScrollPx: 140,
+  /**
+   * 합쳐진 PhoneA의 화면(ScreenA = RecordBase 윤곽, 씬 단위 = px). 리포트 구간은 이 위에 HTML 화면을
+   * CSS 3D로 투영해 겹친다(`docs/plans/0005`). z는 폰 중심에서 화면 면까지(RecordLayer 0.08×222.84 + 0.3),
+   * tiltDeg는 합쳐진 자세의 뒤로 눕힘(씬 rotX −8°). 모서리는 가로·세로 반경이 다른 스쿼클이다.
+   */
+  screen: { width: 804 / 3, height: 1748 / 3, z: 18, tiltDeg: 8, radiusX: 36, radiusY: 57 },
 } as const;
 
 /**

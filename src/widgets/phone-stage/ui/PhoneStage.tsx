@@ -2,13 +2,13 @@
 
 import { useRef, type ReactNode } from "react";
 
-import { PHONE } from "@/shared/config";
+import { PHONE, PHONE_3D } from "@/shared/config";
 import { useSceneFrame } from "@/shared/lib/scroll";
 import { PhoneFrame } from "@/shared/ui";
 
 import { computePhones, computeScreens } from "../model/scene";
 import type { PhoneAScreenKey, PhoneBScreenKey, PhonePose } from "../model/scene";
-import { computeSplineHandoff } from "../model/scene3d";
+import { computeScreenOverlay, computeSplineHandoff } from "../model/scene3d";
 import { SplineStage } from "./SplineStage";
 import {
   ArScreen,
@@ -55,16 +55,27 @@ export const PhoneStage = () => {
   const aScreenRefs = useRef<Partial<Record<PhoneAScreenKey, HTMLDivElement | null>>>({});
   const bScreenRefs = useRef<Partial<Record<PhoneBScreenKey, HTMLDivElement | null>>>({});
   const isSplineFailedRef = useRef(false);
+  const isSplineLoadedRef = useRef(false);
+  const screenOverlayRef = useRef<HTMLDivElement>(null);
 
   useSceneFrame((frame) => {
     const { a, b, qrFlight } = computePhones(frame);
     const screens = computeScreens(frame);
-    // 3D 폰 구간(hero 합체~record 기록 스택)은 로드 전부터 CSS 폰을 숨기고, 같은 자세에서 넘겨받는다.
+    // 3D 폰 구간(hero 합체~report 상세 화면)은 로드 전부터 CSS 폰을 숨기고, 같은 자세에서 넘겨받는다.
     // Spline이 실패/타임아웃이면 CSS 폰으로 되돌린다
     const isSplineActive = Boolean(SPLINE_HERO_SCENE) && !isSplineFailedRef.current;
     const cssOpacity = isSplineActive ? computeSplineHandoff(frame).cssOpacity : 1;
 
     applyPose(phoneARef.current, { ...a, opacity: a.opacity * cssOpacity });
+
+    // 리포트 구간: 3D 폰 화면 위에 상세 화면(HTML)을 같은 투영으로 겹친다
+    if (screenOverlayRef.current) {
+      const overlay = computeScreenOverlay(frame);
+      const isOverlayShown = isSplineActive && isSplineLoadedRef.current && overlay.opacity > 0;
+      screenOverlayRef.current.style.transform = `translate(${overlay.x}px, ${overlay.y}px) scale(${overlay.scale}) perspective(${overlay.perspective}px) rotateX(${overlay.rotateXDeg}deg) translateZ(${overlay.translateZ}px)`;
+      screenOverlayRef.current.style.opacity = isOverlayShown ? String(overlay.opacity) : "0";
+      screenOverlayRef.current.style.visibility = isOverlayShown ? "visible" : "hidden";
+    }
     applyPose(phoneBRef.current, { ...b, opacity: b.opacity * cssOpacity });
 
     if (qrFlightRef.current) {
@@ -87,12 +98,35 @@ export const PhoneStage = () => {
       {SPLINE_HERO_SCENE && (
         <SplineStage
           sceneUrl={SPLINE_HERO_SCENE}
+          onLoad={() => {
+            isSplineLoadedRef.current = true;
+          }}
           onFail={() => {
             isSplineFailedRef.current = true;
             // 스크롤이 없어도 CSS 폰이 바로 보이도록 프레임을 한 번 다시 받는다
             window.dispatchEvent(new Event("scroll"));
           }}
         />
+      )}
+      {SPLINE_HERO_SCENE && (
+        <div
+          ref={screenOverlayRef}
+          className="invisible absolute left-0 top-0 origin-top-left"
+          style={{ width: 0, height: 0 }}
+        >
+          <div
+            className="absolute overflow-hidden"
+            style={{
+              left: -PHONE_3D.screen.width / 2,
+              top: -PHONE_3D.screen.height / 2,
+              width: PHONE_3D.screen.width,
+              height: PHONE_3D.screen.height,
+              borderRadius: `${PHONE_3D.screen.radiusX}px / ${PHONE_3D.screen.radiusY}px`,
+            }}
+          >
+            <DetailScreen width={PHONE_3D.screen.width} height={PHONE_3D.screen.height} />
+          </div>
+        </div>
       )}
       <PhoneFrame ref={phoneBRef}>
         {B_SCREENS.map(({ key, node }) => (
