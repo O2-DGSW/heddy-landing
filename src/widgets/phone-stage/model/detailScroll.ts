@@ -28,8 +28,8 @@ export const computeDetailScroll = (
 };
 
 /**
- * 본문 속 "상태 지표" 막대 i의 scaleX = 섹션 카피 막대와 같은 찬 정도(`computeReportBarProgress`) × 점수.
- * 섹션 막대와 같은 순간·같은 시차로 움직인다(2026-10-10 결정 — 아래 막대는 화면 밖에서 차 있을 수 있다).
+ * 본문 속 "상태 지표" 막대 i의 scaleX — 섹션 카피 막대와 같은 값(같은 순간·같은 시차·같은 길이).
+ * 아래 막대는 폰 화면에 올라오기 전에 차 있을 수 있다(2026-10-10 결정).
  */
 export const computeDetailBars = (frame: SceneFrame): number[] =>
-  DETAIL_SCREEN.bars.scores.map((score, i) => computeReportBarProgress(frame, i) * score);
+  TIMELINE.report.barValues.map((value, i) => computeReportBarProgress(frame, i) * value);

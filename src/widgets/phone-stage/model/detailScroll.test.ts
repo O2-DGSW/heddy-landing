@@ -62,7 +62,7 @@ describe("computeDetailScroll", () => {
 });
 
 describe("computeDetailBars", () => {
-  const { scores } = DETAIL_SCREEN.bars;
+  const scores = TIMELINE.report.barValues;
 
   it("막대 수는 이미지 속 막대 수(4)와 같다", () => {
     expect(computeDetailBars(atP(0))).toHaveLength(4);

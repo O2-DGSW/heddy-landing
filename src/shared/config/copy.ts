@@ -24,11 +24,15 @@ export const COPY = {
     },
     report: {
       title: ["12번의 기록이,", "나를 설명합니다"],
-      /** 막대 행: 왼쪽 지표 이름 + 오른쪽 값. 막대 길이는 `TIMELINE.report.barValues` */
+      /**
+       * 막대 행: 폰 상세 화면(다운펌 분석완료)의 "상태 지표" 4개와 같은 문구(2026-10-10, 사용자 요청).
+       * 막대 길이는 `TIMELINE.report.barValues`(점수 비례).
+       */
       metrics: [
-        { label: "모발 손상도", value: "낮음" },
-        { label: "선호 톤", value: "애쉬 계열" },
-        { label: "시술 주기", value: "평균 7주" },
+        { label: "색 균일도", value: "78점 · 신뢰도 상" },
+        { label: "볼륨 균형", value: "64점 · 신뢰도 중" },
+        { label: "형태 대칭성", value: "71점 · 신뢰도 상" },
+        { label: "거칠기 징후", value: "41점 · 신뢰도 하" },
       ],
     },
     recommend: {

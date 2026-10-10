@@ -92,11 +92,10 @@ export const DETAIL_SCREEN = {
   fixedBottomPx: 200,
   /**
    * 본문 이미지 속 "상태 지표" 막대 4개(이미지 px). 이미지 위에 같은 자리로 HTML 막대를 덮어
-   * 섹션 카피 막대와 같은 순간·같은 시차로 채운다. 길이는 각 지표 점수(78·64·71·41점) 비례(2026-10-10 결정).
+   * 섹션 카피 막대와 같은 순간·같은 시차·같은 길이(`TIMELINE.report.barValues`)로 채운다.
    */
   bars: {
     centerY: [972.5, 1087.5, 1203.5, 1318] as readonly number[],
-    scores: [0.78, 0.64, 0.71, 0.41] as readonly number[],
     x: 58,
     width: 600,
     height: 10,
@@ -185,8 +184,11 @@ export const TIMELINE = {
     barStartOffsetVh: -0.3,
     barStaggerVh: 0.06,
     barDurationRatioOfL: 0.4,
-    /** 막대 i가 다 찼을 때 길이(트랙 대비) — 사용자 영상(2026-10-04 18:03) 마지막 프레임에서 잰 값 */
-    barValues: [0.28, 0.72, 0.58] as readonly number[],
+    /**
+     * 막대 i가 다 찼을 때 길이(트랙 대비) — 폰 상세 화면 "상태 지표" 점수(색 균일도 78·볼륨 균형 64·
+     * 형태 대칭성 71·거칠기 징후 41) 비례. 섹션 카피 막대와 폰 화면 막대가 같이 쓴다.
+     */
+    barValues: [0.78, 0.64, 0.71, 0.41] as readonly number[],
     /** report 진행도: 폰 안 상세 화면 본문이 위로 스크롤되는 구간(`docs/plans/0005`) */
     detailScroll: [0.1, 0.9] as Range,
     /**
