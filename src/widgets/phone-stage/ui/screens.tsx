@@ -106,7 +106,7 @@ export const DetailScreen = ({
     if (!bodyRef.current) return;
     const { offsetPx } = computeDetailScroll(frame, screen);
     bodyRef.current.style.transform = `translateY(${-offsetPx}px)`;
-    computeDetailBars(frame, screen).forEach((fill, i) => {
+    computeDetailBars(frame).forEach((fill, i) => {
       const bar = barRefs.current[i];
       if (bar) bar.style.transform = `scaleX(${fill})`;
     });
@@ -120,7 +120,7 @@ export const DetailScreen = ({
         style={{ top: DETAIL_SCREEN.fixedTopPx * scale, height: DETAIL_SCREEN.bodyHeightPx * scale }}
       >
         <Image src="/screens/detail/body.png" alt="다운펌 분석 결과" fill loading="eager" sizes="280px" className="object-cover" />
-        {/* 상태 지표 막대: 이미지 속 막대를 같은 자리에서 덮고 스크롤에 맞춰 채운다 */}
+        {/* 상태 지표 막대: 이미지 속 막대를 같은 자리에서 덮고, 섹션 카피 막대와 같이 점수만큼 채운다 */}
         {bars.centerY.map((centerY, i) => (
           <div
             key={centerY}
@@ -139,9 +139,9 @@ export const DetailScreen = ({
                 ref={(node) => {
                   barRefs.current[i] = node;
                 }}
-                className="h-full origin-left rounded-full bg-[#41BD91]"
+                className="h-full w-full origin-left rounded-full bg-[#41BD91]"
                 // Tailwind scale-x-*는 별도 `scale` 속성이라 ref로 쓰는 transform과 곱해진다 → 초기값도 transform으로
-                style={{ width: `${(bars.fillWidth / bars.width) * 100}%`, transform: "scaleX(0)" }}
+                style={{ transform: "scaleX(0)" }}
               />
             </div>
           </div>
