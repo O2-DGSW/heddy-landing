@@ -7,15 +7,11 @@ import { StoreButtons } from "@/shared/ui";
 
 import { DownloadQr } from "./DownloadQr";
 
-export interface DownloadAppButtonProps {
-  tone?: "light" | "dark";
-}
-
 /**
  * "앱 다운로드" 버튼. 터치 기기(`pointer: coarse`)에서는 팝오버 없이 바로 `/download`로 이동하고,
  * 마우스 기기에서는 QR 팝오버("휴대폰으로 스캔하세요" + 스토어 버튼)를 연다. 바깥 클릭·ESC로 닫힌다.
  */
-export const DownloadAppButton = ({ tone = "light" }: DownloadAppButtonProps) => {
+export const DownloadAppButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -46,11 +42,13 @@ export const DownloadAppButton = ({ tone = "light" }: DownloadAppButtonProps) =>
     };
   }, [isOpen]);
 
-  const buttonClassName = `text-14 rounded-DEFAULT border px-4 py-2 ${tone === "dark" ? "border-white text-white" : "border-black text-black"}`;
-
   return (
     <div ref={containerRef} className="relative">
-      <button type="button" onClick={handleClick} className={buttonClassName}>
+      <button
+        type="button"
+        onClick={handleClick}
+        className="bg-[#F2F3F6] px-3 py-2 rounded-lg leading-5 text-Label-Alternative font-medium"
+      >
         {COPY.header.downloadButton}
       </button>
       {isOpen ? (

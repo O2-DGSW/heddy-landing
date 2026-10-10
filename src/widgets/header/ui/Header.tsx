@@ -9,8 +9,8 @@ import { DownloadAppButton } from "@/features/download-app";
  */
 export const Header = () => {
   return (
-    <header className="fixed inset-x-0 top-0 z-50 flex items-center justify-between px-6 py-4">
-      <div className="relative h-6 w-24">
+    <header className="fixed inset-x-0 top-0 z-50 flex items-center justify-between px-16 py-4">
+      <div className="relative h-7 w-20">
         <Image
           src="/brand/logo-wordmark.png"
           alt="Heddy"
