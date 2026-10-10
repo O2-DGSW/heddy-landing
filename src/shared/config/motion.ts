@@ -90,6 +90,17 @@ export const DETAIL_SCREEN = {
   statusBarPx: 85,
   bodyHeightPx: 1537,
   fixedBottomPx: 200,
+  /**
+   * 본문 이미지 속 "상태 지표" 막대 4개(이미지 px). 이미지 위에 같은 자리로 HTML 막대를 덮어
+   * 스크롤에 맞춰 채운다. 채움 길이는 이미지 그대로(트랙 600 중 100).
+   */
+  bars: {
+    centerY: [972.5, 1087.5, 1203.5, 1318] as readonly number[],
+    x: 58,
+    width: 600,
+    height: 10,
+    fillWidth: 100,
+  },
 } as const;
 
 /**
@@ -178,6 +189,10 @@ export const TIMELINE = {
     barValues: [0.28, 0.72, 0.58] as readonly number[],
     /** report 진행도: 폰 안 상세 화면 본문이 위로 스크롤되는 구간(`docs/plans/0005`) */
     detailScroll: [0.1, 0.9] as Range,
+    /** 폰 상세 화면 지표 막대: 막대가 창 아래에서 이만큼(화면 px) 올라오면 채우기 시작 */
+    detailBarRevealPx: 12,
+    /** 막대 하나가 다 차는 데 쓰는 본문 스크롤 진행도(0~1) */
+    detailBarFillSpan: 0.2,
     /**
      * 기록 → 리포트(상세) 화면 크로스페이드: record 섹션 end 기준 뷰포트 높이 배수.
      * 공통 밴드(end 이후 35~65%)보다 앞당겨, 리포트 섹션이 붙을 때 이미 상세 화면이 다 보이게 한다.

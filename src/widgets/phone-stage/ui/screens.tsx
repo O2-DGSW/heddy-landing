@@ -8,7 +8,7 @@ import { RECORD_CARDS } from "@/entities/record";
 import { COPY, DETAIL_SCREEN, PHONE, RECORD_STACK } from "@/shared/config";
 import { useSceneFrame } from "@/shared/lib/scroll";
 
-import { computeDetailScroll } from "../model/detailScroll";
+import { computeDetailBars, computeDetailScroll } from "../model/detailScroll";
 import { computeSettledRecordCards } from "../model/recordStack";
 
 /** 홈 화면 — 실제 앱 홈 화면 캡처 (`docs/design/spec.md` §4) */
@@ -81,7 +81,7 @@ export const RecordScreen = () => {
 };
 
 interface DetailScreenProps {
-  /** 화면 크기(px). CSS 폰은 280×595, 3D 폰 화면 오버레이는 `PHONE_3D.screen` */
+  /** 화면 크기(px). CSS 폰은 `PHONE.screenWidth/Height`, 3D 폰 화면 오버레이는 `PHONE_3D.screen` */
   width?: number;
   height?: number;
 }
@@ -95,13 +95,21 @@ export const DetailScreen = ({
   height = PHONE.screenHeight,
 }: DetailScreenProps) => {
   const bodyRef = useRef<HTMLDivElement>(null);
+  const barRefs = useRef<(HTMLDivElement | null)[]>([]);
   const scale = width / DETAIL_SCREEN.imageWidthPx;
   const screen = { width, height };
+  const { bars, imageWidthPx, bodyHeightPx } = DETAIL_SCREEN;
+  /** 이미지 속 막대의 안티앨리어싱 테두리까지 덮도록 사방으로 넓히는 여유(이미지 px) */
+  const barCoverPad = 3;
 
   useSceneFrame((frame) => {
     if (!bodyRef.current) return;
     const { offsetPx } = computeDetailScroll(frame, screen);
     bodyRef.current.style.transform = `translateY(${-offsetPx}px)`;
+    computeDetailBars(frame, screen).forEach((fill, i) => {
+      const bar = barRefs.current[i];
+      if (bar) bar.style.transform = `scaleX(${fill})`;
+    });
   });
 
   return (
@@ -112,6 +120,32 @@ export const DetailScreen = ({
         style={{ top: DETAIL_SCREEN.fixedTopPx * scale, height: DETAIL_SCREEN.bodyHeightPx * scale }}
       >
         <Image src="/screens/detail/body.png" alt="다운펌 분석 결과" fill loading="eager" sizes="280px" className="object-cover" />
+        {/* 상태 지표 막대: 이미지 속 막대를 같은 자리에서 덮고 스크롤에 맞춰 채운다 */}
+        {bars.centerY.map((centerY, i) => (
+          <div
+            key={centerY}
+            aria-hidden="true"
+            className="absolute bg-[#F7F7F7]"
+            style={{
+              left: `${((bars.x - barCoverPad) / imageWidthPx) * 100}%`,
+              width: `${((bars.width + barCoverPad * 2) / imageWidthPx) * 100}%`,
+              top: `${((centerY - bars.height / 2 - barCoverPad) / bodyHeightPx) * 100}%`,
+              height: `${((bars.height + barCoverPad * 2) / bodyHeightPx) * 100}%`,
+              padding: barCoverPad * scale,
+            }}
+          >
+            <div className="relative h-full w-full overflow-hidden rounded-full bg-[#E7E7E7]">
+              <div
+                ref={(node) => {
+                  barRefs.current[i] = node;
+                }}
+                className="h-full origin-left rounded-full bg-[#41BD91]"
+                // Tailwind scale-x-*는 별도 `scale` 속성이라 ref로 쓰는 transform과 곱해진다 → 초기값도 transform으로
+                style={{ width: `${(bars.fillWidth / bars.width) * 100}%`, transform: "scaleX(0)" }}
+              />
+            </div>
+          </div>
+        ))}
       </div>
       <div className="absolute left-0 top-0 w-full" style={{ height: DETAIL_SCREEN.fixedTopPx * scale }}>
         <Image src="/screens/detail/top.png" alt="" fill loading="eager" sizes="280px" className="object-cover" />
