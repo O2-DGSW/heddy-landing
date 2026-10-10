@@ -8,10 +8,11 @@ export const PHONE = {
   pivot: 307.5,
   frameColor: "#1C1E20",
   frameRadius: 42,
-  screenInset: 10,
-  screenWidth: 280,
-  screenHeight: 595,
-  screenRadius: 34,
+  /** 베젤(화면 inset) — 3D 폰처럼 얇게(원본 10, 2026-10-05 조정) */
+  screenInset: 6,
+  screenWidth: 288,
+  screenHeight: 603,
+  screenRadius: 38,
   screenBackground: "#FBFBFB",
   shadow: "0 40px 70px -30px rgba(13,13,13,.45)",
 } as const;
@@ -21,10 +22,12 @@ export const STAGE_LAYOUT = {
   desktop: {
     /** 이 너비(px) 이상이면 데스크톱 레이아웃 */
     breakpoint: 1024,
-    scaleCap: 1,
-    scaleHeightRatio: 0.78,
+    /** 폰 크기 상한·뷰포트 높이 비율 — 원본(1 / 0.78)이 커서 사용자 요청으로 줄임(2026-10-01) */
+    scaleCap: 0.8,
+    scaleHeightRatio: 0.5,
     scaleWidthDivisor: 1400,
-    centerXRatio: 0.7,
+    /** 폰 가로 중심 — 카피 오른쪽 빈 영역의 가운데(원본 0.7, 2026-10-01 조정) */
+    centerXRatio: 0.65,
     centerYOffset: 20,
     /** 좌측 카피 최대 너비(vw) */
     copyMaxWidthVw: 40,
@@ -32,8 +35,8 @@ export const STAGE_LAYOUT = {
     convergeDx: 105,
   },
   mobile: {
-    scaleCap: 0.62,
-    scaleHeightRatio: 0.46,
+    scaleCap: 0.52,
+    scaleHeightRatio: 0.39,
     scaleWidthDivisor: 620,
     centerXRatio: 0.5,
     centerYRatio: 0.7,
@@ -61,6 +64,80 @@ export const PHONE_3D = {
   mergeEndScrollPx: 1678,
   /** CSS 폰 A로 크로스페이드하는 스크롤 길이(px) */
   handoffScrollPx: 140,
+  /**
+   * 합쳐진 PhoneA의 화면(ScreenA = RecordBase 윤곽, 씬 단위 = px). 리포트 구간은 이 위에 HTML 화면을
+   * CSS 3D로 투영해 겹친다(`docs/plans/0005`). z는 폰 중심에서 화면 면까지(RecordLayer 0.08×222.84 + 0.3),
+   * tiltDeg는 합쳐진 자세의 뒤로 눕힘(씬 rotX −8°). 모서리는 가로·세로 반경이 다른 스쿼클이다.
+   * 베젤을 얇게 하려고 ScreenA를 274×596 → 280×601로 키우고 RecordLayer도 같은 크기로 맞췄다(2026-10-05).
+   * 한쪽 베젤 ≈ 폰 폭의 1.6%(원본 ≈ 3%).
+   */
+  screen: { width: 280, height: 601.4, z: 18, tiltDeg: 8, radiusX: 38, radiusY: 59 },
+  /**
+   * 다이내믹 아일랜드(ScreenA에 뚫린 구멍 = 뒤의 검은 유리). 화면 좌상단 기준 px.
+   * 기록 화면(RecordIsland)과 상세 화면 오버레이는 화면을 덮으므로 같은 자리에 다시 그린다.
+   */
+  island: { centerY: 22.6, width: 87.1, height: 25.1 },
+} as const;
+
+/**
+ * 리포트 구간 폰 화면 — 다운펌 분석완료 상세 화면 이미지(713×2000)를 3장으로 자른 치수(`docs/plans/0005`).
+ * 상단(상태바+앱바)과 하단(탭바)은 고정, 본문만 페이지 스크롤에 따라 폰 안에서 올라간다.
+ */
+export const DETAIL_SCREEN = {
+  imageWidthPx: 713,
+  fixedTopPx: 263,
+  /** fixedTop 중 상태바(시간·배터리) 높이 — 기록 → 상세 push 때 상태바는 그대로 둔다 */
+  statusBarPx: 85,
+  bodyHeightPx: 1537,
+  fixedBottomPx: 200,
+  /**
+   * 본문 이미지 속 "상태 지표" 막대 4개(이미지 px). 이미지 위에 같은 자리로 HTML 막대를 덮어
+   * 섹션 카피 막대와 같은 순간·같은 시차·같은 길이(`TIMELINE.report.barValues`)로 채운다.
+   */
+  bars: {
+    centerY: [972.5, 1087.5, 1203.5, 1318] as readonly number[],
+    x: 58,
+    width: 600,
+    height: 10,
+  },
+} as const;
+
+/**
+ * record 섹션 3D 기록 스택 (`docs/plans/0004`). 좌표는 폰 화면 기준 px(좌상단 원점, y 아래로),
+ * 각도는 도. Spline 씬의 RecordRig·RecordLayer·Card01~12와 같은 값이어야 한다.
+ */
+export const RECORD_STACK = {
+  /** 기울어진 자세: 폰 A(정면)에 더해지는 RecordRig 회전 — 이미지 2 각도 */
+  tiltPose: { rotX: 0, rotY: -25, rotZ: -15 },
+  /** 화면(= Spline PhoneA ScreenA) 크기. 씬 단위 = px */
+  screen: { width: 804 / 3, height: 1748 / 3 },
+  /**
+   * 첫 카드(slot 0) 윗변 y, 카드 크기, 슬롯 간격, 하단 네비 윗변 y — 실제 기록 화면(804×1748)을
+   * 1/3로 줄인 값. 카드 크기는 그림자 여백을 뺀 카드 본체(724×236) 기준이다(Spline Card01~12와 같음).
+   * 카드는 네비 뒤로 들어가 clipBottom에서 잘린다(네비가 카드를 덮는다).
+   */
+  listTop: 330 / 3,
+  card: { width: 724 / 3, height: 236 / 3 },
+  slotGap: 268 / 3,
+  navTop: 1536 / 3,
+  /**
+   * 카드가 내려갈 수 있는 가장 아래 y. 화면 아래 둥근 모서리(반경 ~34) 위에서 멈춰야
+   * 네비 뒤에서 잘리는 카드 모서리가 폰 테두리 쪽으로 뾰족하게 삐져나오지 않는다.
+   */
+  clipBottom: 1748 / 3 - 34,
+  /**
+   * 새 카드의 팝: 화면에 붙은 채 살짝 커진다(폰 밖으로 나가거나 화면 위로 뜨지 않는다).
+   * z는 같은 면에서 겹칠 때 위에 오도록 하는 아주 작은 값, faceCamera는 리그 Y회전을 되돌리는 비율.
+   */
+  pop: { z: 0.4, x: 0, scale: 1.04, faceCamera: 0 },
+  /** 흐림 막이 비워 두는 slot 0 띠의 위아래 여백(팝 카드는 이 띠 안에서 선명하게 보인다) */
+  veilBandPad: 4,
+  /** 새 카드가 들어올 때 시작 크기 비율(토스처럼 작게 시작해 커지며 튀어나온다, 회전 없음) */
+  enterScaleFrom: 0.6,
+  /** 스크롤을 빨리 내려도 끊기지 않게, 표시 위치가 실제 스크롤을 따라잡는 반감기(ms) */
+  smoothHalfLifeMs: 90,
+  /** 흐림 막 최대 불투명도 */
+  veilAlpha: 0.55,
 } as const;
 
 /**
@@ -93,14 +170,42 @@ export const TIMELINE = {
 
   // --- 섹션별 모션 (§5, 상세 구현은 각 섹션 위젯에서 TODO로 남김) ---
   record: {
-    /** record 진행도 p × 11 = raw. band는 p 기준 구간 */
+    /** record 진행도: 기록 12건이 한 건씩 추가되는 구간 (`docs/plans/0004`) */
     band: [0.06, 0.94] as Range,
+    /** record.top 기준 뷰포트 높이 배수: 폰이 한 바퀴 돌며 기울어지는 구간 */
+    spinVh: [-0.6, 0.15] as Range,
+    /** 한 건 추가 스텝(0~1) 중 밀림·등장·튀어나옴이 끝나는 지점. 나머지는 멈춰서 읽는 시간 */
+    stepEnter: 0.45,
+    /** record 진행도: 마지막 카드가 내려앉고 폰이 정면으로 돌아오는 구간 */
+    settle: [0.94, 1] as Range,
   },
   report: {
     /** 막대 i: top - 0.3H + i·0.06H ~ top + 0.4L + i·0.06H (H=뷰포트, L=섹션 스크롤 길이) */
     barStartOffsetVh: -0.3,
     barStaggerVh: 0.06,
     barDurationRatioOfL: 0.4,
+    /**
+     * 막대 i가 다 찼을 때 길이(트랙 대비) — 폰 상세 화면 "상태 지표" 점수(색 균일도 78·볼륨 균형 64·
+     * 형태 대칭성 71·거칠기 징후 41) 비례. 섹션 카피 막대와 폰 화면 막대가 같이 쓴다.
+     */
+    barValues: [0.78, 0.64, 0.71, 0.41] as readonly number[],
+    /** report 진행도: 폰 안 상세 화면 본문이 위로 스크롤되는 구간(`docs/plans/0005`) */
+    detailScroll: [0.1, 0.9] as Range,
+    /**
+     * 기록 → 리포트(상세) 화면 크로스페이드: record 섹션 end 기준 뷰포트 높이 배수.
+     * 공통 밴드(end 이후 35~65%)보다 앞당겨, 리포트 섹션이 붙을 때 이미 상세 화면이 다 보이게 한다.
+     */
+    fromRecordBand: [-0.45, -0.15] as Range,
+    /**
+     * 3D 폰에서 기록 → 상세: 맨 위 카드(최신 기록)를 누르고(tap) 상세 화면이 오른쪽에서 밀려 들어온다(push).
+     * record 섹션 end 기준 뷰포트 높이 배수. push가 끝나는 지점은 fromRecordBand 끝과 같다.
+     */
+    tapBand: [-0.5, -0.34] as Range,
+    pushBand: [-0.34, -0.15] as Range,
+    /** 눌릴 때 카드가 줄어드는 최대 비율 */
+    tapPressScale: 0.05,
+    /** push 중 뒤 화면(기록 리스트)이 어두워지는 최대 불투명도 */
+    pushDimAlpha: 0.12,
   },
   recommend: {
     /** 선 i: top - 0.2H + i·0.12L ~ top + 0.2L + i·0.12L */

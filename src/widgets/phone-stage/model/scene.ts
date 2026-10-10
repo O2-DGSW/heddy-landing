@@ -1,15 +1,5 @@
-import {
-  PHONE,
-  STAGE_LAYOUT,
-  TIMELINE,
-  type SectionKey,
-} from "@/shared/config";
-import {
-  easeInOutCubic,
-  lerp,
-  progressIn,
-  type Range,
-} from "@/shared/lib/motion";
+import { PHONE, STAGE_LAYOUT, TIMELINE, type SectionKey } from "@/shared/config";
+import { easeInOutCubic, lerp, progressIn, type Range } from "@/shared/lib/motion";
 import type { SceneFrame, SectionFrame } from "@/shared/lib/scroll";
 
 export type PhonePose = {
@@ -35,13 +25,7 @@ export type PhonesScene = {
   qrFlight: QrFlightPose;
 };
 
-export type PhoneAScreenKey =
-  | "home"
-  | "record"
-  | "report"
-  | "recommend"
-  | "ar"
-  | "qrShare";
+export type PhoneAScreenKey = "home" | "record" | "report" | "recommend" | "ar" | "qrShare";
 export type PhoneBScreenKey = "ar" | "scan" | "webview";
 
 export type ScreensScene = {
@@ -80,30 +64,14 @@ export const computePhones = (frame: SceneFrame): PhonesScene => {
   const pivot = PHONE.pivot * scale;
   const tilt = STAGE_LAYOUT.heroTilt;
   const convergeDx =
-    (layout.isMobile
-      ? STAGE_LAYOUT.mobile.convergeDx
-      : STAGE_LAYOUT.desktop.convergeDx) * scale;
+    (layout.isMobile ? STAGE_LAYOUT.mobile.convergeDx : STAGE_LAYOUT.desktop.convergeDx) * scale;
 
   const pArchive = frame.progress("archive");
-  const converge = easeInOutCubic(
-    progressIn(pArchive, TIMELINE.heroArchiveConverge),
-  );
+  const converge = easeInOutCubic(progressIn(pArchive, TIMELINE.heroArchiveConverge));
   const remaining = 1 - converge;
 
-  const aPoint = convergePoint(
-    cx,
-    cy,
-    pivot,
-    -convergeDx * remaining,
-    -tilt * remaining,
-  );
-  const bPoint = convergePoint(
-    cx,
-    cy,
-    pivot,
-    convergeDx * remaining,
-    tilt * remaining,
-  );
+  const aPoint = convergePoint(cx, cy, pivot, -convergeDx * remaining, -tilt * remaining);
+  const bPoint = convergePoint(cx, cy, pivot, convergeDx * remaining, tilt * remaining);
   const bFadeOpacity = 1 - progressIn(pArchive, TIMELINE.archiveBFade);
 
   let a: PhonePose = {
@@ -142,18 +110,12 @@ export const computePhones = (frame: SceneFrame): PhonesScene => {
   if (isPastShareStart) {
     const pShare = frame.progress("share");
     const sh = easeInOutCubic(progressIn(pShare, TIMELINE.shareXShift));
-    const back = easeInOutCubic(
-      progressIn(frame.scrollY, [shareSection.end, closingSection.top]),
-    );
+    const back = easeInOutCubic(progressIn(frame.scrollY, [shareSection.end, closingSection.top]));
 
     const viewportWidth = layout.viewportWidth;
-    const aTargetX = layout.isMobile
-      ? viewportWidth * 0.29
-      : cx - 0.13 * viewportWidth;
+    const aTargetX = layout.isMobile ? viewportWidth * 0.29 : cx - 0.13 * viewportWidth;
     const bRestX = viewportWidth + 220 * scale;
-    const bTargetX = layout.isMobile
-      ? viewportWidth * 0.73
-      : cx + 0.13 * viewportWidth;
+    const bTargetX = layout.isMobile ? viewportWidth * 0.73 : cx + 0.13 * viewportWidth;
 
     const aX = lerp(lerp(cx, aTargetX, sh), cx, back);
     const bX = lerp(lerp(bRestX, bTargetX, sh), bRestX, back);
@@ -170,12 +132,7 @@ export const computePhones = (frame: SceneFrame): PhonesScene => {
 };
 
 /** QR 비행: A 화면 위(y-57.5S)에서 B 화면 위(y-17.5S)로 포물선을 그리며 이동한다 (§3, §5 share) */
-const computeQrFlight = (
-  frame: SceneFrame,
-  a: PhonePose,
-  b: PhonePose,
-  scale: number,
-): QrFlightPose => {
+const computeQrFlight = (frame: SceneFrame, a: PhonePose, b: PhonePose, scale: number): QrFlightPose => {
   const f = progressIn(frame.progress("share"), TIMELINE.qrFlight);
   const isVisible = f > 0 && f < 1;
 
@@ -206,10 +163,7 @@ const crossfadeAfter = (
   band: Range = TIMELINE.screenCrossfadeBand,
 ): number => {
   const vh = frame.layout.viewportHeight;
-  return progressIn(frame.scrollY, [
-    sectionEnd + band[0] * vh,
-    sectionEnd + band[1] * vh,
-  ]);
+  return progressIn(frame.scrollY, [sectionEnd + band[0] * vh, sectionEnd + band[1] * vh]);
 };
 
 /**
@@ -227,7 +181,7 @@ export const computeScreens = (frame: SceneFrame): ScreensScene => {
   const arSection = getSection(frame, "ar");
 
   const t0 = crossfadeAfter(frame, archiveEnd); // home -> record
-  const t1 = crossfadeAfter(frame, recordEnd); // record -> report
+  const t1 = crossfadeAfter(frame, recordEnd, TIMELINE.report.fromRecordBand); // record -> report(상세)
   const t2 = crossfadeAfter(frame, reportEnd); // report -> recommend
   const t3 = crossfadeAfter(frame, recommendEnd); // recommend -> ar
   const t4 = crossfadeAfter(frame, arEnd); // ar -> qrShare
@@ -243,10 +197,7 @@ export const computeScreens = (frame: SceneFrame): ScreensScene => {
   };
 
   const isPastArStart = frame.scrollY >= arSection.top;
-  const scanToWebview = progressIn(
-    frame.progress("share"),
-    TIMELINE.bScanToWebview,
-  );
+  const scanToWebview = progressIn(frame.progress("share"), TIMELINE.bScanToWebview);
   const b: Record<PhoneBScreenKey, number> = {
     ar: isPastArStart ? 0 : 1,
     scan: isPastArStart ? 1 - scanToWebview : 0,

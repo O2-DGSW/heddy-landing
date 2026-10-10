@@ -9,6 +9,7 @@ import { PhoneFrame } from "@/shared/ui";
 import { computePhones, computeScreens } from "../model/scene";
 import type { PhoneAScreenKey, PhoneBScreenKey, PhonePose } from "../model/scene";
 import { computeSplineHandoff } from "../model/scene3d";
+import { ScreenOverlay } from "./ScreenOverlay";
 import { SplineStage } from "./SplineStage";
 import {
   ArScreen,
@@ -18,7 +19,7 @@ import {
   QrShareScreen,
   RecommendScreen,
   RecordScreen,
-  ReportScreen,
+  DetailScreen,
 } from "./screens";
 
 /** Spline 씬 URL. 없으면 CSS 폰만 쓴다(`docs/plans/0003`) */
@@ -27,7 +28,7 @@ const SPLINE_HERO_SCENE = process.env.NEXT_PUBLIC_SPLINE_HERO_SCENE;
 const A_SCREENS: readonly { key: PhoneAScreenKey; node: ReactNode }[] = [
   { key: "home", node: <HomeScreen /> },
   { key: "record", node: <RecordScreen /> },
-  { key: "report", node: <ReportScreen /> },
+  { key: "report", node: <DetailScreen /> },
   { key: "recommend", node: <RecommendScreen /> },
   { key: "ar", node: <ArScreen /> },
   { key: "qrShare", node: <QrShareScreen /> },
@@ -55,16 +56,18 @@ export const PhoneStage = () => {
   const aScreenRefs = useRef<Partial<Record<PhoneAScreenKey, HTMLDivElement | null>>>({});
   const bScreenRefs = useRef<Partial<Record<PhoneBScreenKey, HTMLDivElement | null>>>({});
   const isSplineFailedRef = useRef(false);
+  const isSplineLoadedRef = useRef(false);
 
   useSceneFrame((frame) => {
     const { a, b, qrFlight } = computePhones(frame);
     const screens = computeScreens(frame);
-    // 3D 폰 구간(hero~archive 합체)은 로드 전부터 CSS 폰을 숨기고, 같은 자세에서 넘겨받는다.
+    // 3D 폰 구간(hero 합체~report 상세 화면)은 로드 전부터 CSS 폰을 숨기고, 같은 자세에서 넘겨받는다.
     // Spline이 실패/타임아웃이면 CSS 폰으로 되돌린다
     const isSplineActive = Boolean(SPLINE_HERO_SCENE) && !isSplineFailedRef.current;
     const cssOpacity = isSplineActive ? computeSplineHandoff(frame).cssOpacity : 1;
 
     applyPose(phoneARef.current, { ...a, opacity: a.opacity * cssOpacity });
+
     applyPose(phoneBRef.current, { ...b, opacity: b.opacity * cssOpacity });
 
     if (qrFlightRef.current) {
@@ -87,12 +90,18 @@ export const PhoneStage = () => {
       {SPLINE_HERO_SCENE && (
         <SplineStage
           sceneUrl={SPLINE_HERO_SCENE}
+          onLoad={() => {
+            isSplineLoadedRef.current = true;
+          }}
           onFail={() => {
             isSplineFailedRef.current = true;
             // 스크롤이 없어도 CSS 폰이 바로 보이도록 프레임을 한 번 다시 받는다
             window.dispatchEvent(new Event("scroll"));
           }}
         />
+      )}
+      {SPLINE_HERO_SCENE && (
+        <ScreenOverlay getIsEnabled={() => !isSplineFailedRef.current && isSplineLoadedRef.current} />
       )}
       <PhoneFrame ref={phoneBRef}>
         {B_SCREENS.map(({ key, node }) => (
