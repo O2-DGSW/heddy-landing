@@ -21,6 +21,27 @@ const LOAD_TIMEOUT_MS = 10_000;
 const DEG = Math.PI / 180;
 
 /**
+ * 일반 모니터(DPR 1)에서도 최소 2배로 그린 뒤 브라우저가 줄이게 한다. 히어로처럼 폰이 작게 보이면
+ * 화면 텍스처가 밉맵 축소로 뭉개지는데, 2배로 그리면 한 단계 선명한 밉맵을 쓴다.
+ */
+const MIN_PIXEL_RATIO = 2;
+
+/** 공개 API에 없는 런타임 내부 — 버전이 바뀌어 없으면 기본 해상도로 둔다 */
+type SplineInternals = {
+  _renderer?: { getPixelRatio: () => number; setPixelRatio: (ratio: number) => void };
+  _resize?: (force?: boolean) => void;
+};
+
+const supersample = (app: Application): void => {
+  const internals = app as unknown as SplineInternals;
+  const renderer = internals._renderer;
+  if (!renderer || typeof internals._resize !== "function") return;
+  if (renderer.getPixelRatio() >= MIN_PIXEL_RATIO) return;
+  renderer.setPixelRatio(MIN_PIXEL_RATIO);
+  internals._resize(true);
+};
+
+/**
  * 카드 z(px). 모든 층은 화면에 붙어 있다(면 z 0.3~2.4) — 높이 차가 크면 폰이 기울 때 옆으로 밀려 떠 보인다.
  * 텍스처 판은 반투명으로 취급돼 깊이가 아니라 "오브젝트 원점이 카메라에 가까운 순"으로 그려지므로,
  * Veil·RecordNav·RecordFab은 커스텀 메시로 원점만 앞(45/60/62)에 두고 면은 화면에 붙여 순서를 고정한다
@@ -139,6 +160,7 @@ export const SplineStage = ({ sceneUrl, onLoad, onFail }: SplineStageProps) => {
 
   const handleLoad = (app: Application) => {
     if (isFailedRef.current) return;
+    supersample(app);
     appRef.current = app; // 기록 스택 오브젝트가 없는 옛 export면 record 구간은 합쳐진 정면 폰 그대로 둔다
     recordObjectsRef.current = findRecordObjects(app);
     // RecordLayer는 export에 들어가도록 씬에선 보이게 두므로(숨긴 오브젝트는 export에서 빠짐),
