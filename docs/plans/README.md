@@ -15,3 +15,4 @@ Claude는 작업을 시작하기 전에 여기서 관련 계획을 찾아 읽고
 | 0004 | [record 3D 기록 스택](./0004-record-3d-stack.md)             | 진행 |
 | 0005 | [폰 화면 안 스크롤](./0005-phone-screen-scroll.md)           | 진행 |
 | 0006 | [Vercel 배포와 /mobile 연결](./0006-vercel-deploy-mobile.md) | 진행 |
+| 0007 | [추천 섹션 3D 폰 카드 팝아웃](./0007-recommend-card-pop.md)  | 진행 |

@@ -208,12 +208,21 @@ export const TIMELINE = {
     pushDimAlpha: 0.12,
   },
   recommend: {
-    /** 선 i: top - 0.2H + i·0.12L ~ top + 0.2L + i·0.12L */
-    lineStartOffsetVh: -0.2,
-    lineStaggerRatioOfL: 0.12,
-    lineDurationRatioOfL: 0.2,
-    /** 미니 카드 opacity 0.35 + 0.65×R(v, 0.85~1) */
-    miniCardFadeIn: [0.85, 1] as Range,
+    /**
+     * 리포트 상세 → 추천 화면: 하단 "추천" 탭을 눌렀다 떼고(tap, 물결) 추천 화면이 오른쪽에서 밀려
+     * 들어온다(slide, 탭이 오른쪽에 있으니). report 섹션 end 기준 뷰포트 높이 배수(`docs/plans/0007`).
+     * 추천 섹션이 화면에 붙을 때(recommend 진행도 0) 이미 다 넘어가 있다.
+     */
+    tabTapBand: [-0.62, -0.46] as Range,
+    tabSlideBand: [-0.46, -0.2] as Range,
+    /** tap 진행도 중 탭바 활성 색이 기록 → 추천으로 옮겨 가는 구간 */
+    tabActiveIn: [0.35, 0.65] as Range,
+    /** recommend 진행도: 카드 i가 폰 밖으로 떠오르는 구간 = [start + i·stagger, start + i·stagger + duration] */
+    cardPop: { start: 0.06, stagger: 0.07, duration: 0.18 },
+    /** recommend 진행도: 카드 i가 제자리로 돌아가는 구간(위와 같은 식) */
+    cardReturn: { start: 0.6, stagger: 0.03, duration: 0.12 },
+    /** recommend 진행도: 폰 화면 본문이 "추천 근거 데이터"까지 내려가는 구간 */
+    screenScroll: [0.8, 0.97] as Range,
   },
   ar: {
     /** pill 교차축/주축 모핑 3단계 */
@@ -248,4 +257,34 @@ export const HEADER = {
   alwaysVisibleY: 0,
   /** 스크롤 입력이 이만큼(ms) 없으면 걸쳐 있던 헤더를 완전히 보이거나 숨긴다 */
   settleIdleMs: 140,
+} as const;
+
+/**
+ * 추천 화면 — 피그마 landing / S6-스타일추천(964:2081). 피그마 px(폭 402) 그대로 짜고 화면 폭에 맞춰
+ * 통째로 줄인다(`docs/plans/0007`). 상단(상태바+제목)·하단(탭바)은 고정, 본문만 스크롤된다.
+ */
+export const RECOMMEND_SCREEN = {
+  designWidth: 402,
+  fixedTop: 112,
+  fixedBottom: 106,
+  /** 회색 본문 높이(카드 3장 + 추천 근거 데이터) */
+  bodyHeight: 911,
+  /** 본문 안 카드 슬롯: 왼쪽 x, 첫 카드 윗변 y, 크기, 다음 카드까지 간격 */
+  card: { x: 19, firstTop: 75, width: 363, height: 137, pitch: 150 },
+  /**
+   * 카드 사진(117×117 칸)에 같은 사진 한 장을 카드마다 다르게 잘라 넣는다(피그마 그대로):
+   * 칸 기준 사진 위치·크기(px)와 칸 모서리 반경.
+   */
+  photoCrops: [
+    { left: -116, top: 0, size: 350, radius: 10 },
+    { left: -255.77, top: -5.44, size: 376.85, radius: 13.6 },
+    { left: -115.64, top: -115.64, size: 348.28, radius: 13.6 },
+  ],
+  /**
+   * 폰 밖으로 떠오른 자세(피그마 px, 슬롯 기준 이동량) — 레퍼런스 영상처럼 오른쪽으로 비켜 나며
+   * 살짝 엇갈려 기운다. 카드 i마다 y·회전이 다르다.
+   */
+  pop: { dx: 330, dy: [-12, 8, 24], rotateDeg: [-4, 3, -3], scale: 1.06 },
+  /** 탭바 속 "추천" 아이콘 중심(탭바 좌상단 기준 px) — 상세 → 추천 탭 전환 때 누르는 자리 */
+  recommendTabCenter: { x: 279, y: 33.4 },
 } as const;
