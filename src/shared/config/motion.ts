@@ -241,3 +241,11 @@ export const TIMELINE = {
     subtitleIn: [0.74, 0.88] as Range,
   },
 } as const;
+
+/** 헤더: 스크롤 양만큼 위로 밀려 올라가고(숨김), 위로 올리면 같은 양만큼 내려온다 */
+export const HEADER = {
+  /** 이 위치(px) 이하에서는 항상 완전히 보인다 */
+  alwaysVisibleY: 0,
+  /** 스크롤 입력이 이만큼(ms) 없으면 걸쳐 있던 헤더를 완전히 보이거나 숨긴다 */
+  settleIdleMs: 140,
+} as const;
