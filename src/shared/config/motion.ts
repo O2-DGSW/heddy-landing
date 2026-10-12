@@ -242,12 +242,8 @@ export const TIMELINE = {
   },
 } as const;
 
-/** 헤더: 아래로 스크롤하면 숨기고, 위로 올리면 다시 보인다 */
+/** 헤더: 스크롤 양만큼 위로 밀려 올라가고(숨김), 위로 올리면 같은 양만큼 내려온다 */
 export const HEADER = {
-  /** 이 위치(px) 이하에서는 항상 보인다 */
-  alwaysVisibleY: 8,
-  /** 방향이 바뀐 지점에서 이만큼(px) 내려가야 숨긴다 — 살짝 흔들리는 스크롤에 깜빡이지 않게 */
-  hideDistance: 24,
-  /** 방향이 바뀐 지점에서 이만큼(px) 올라가야 다시 보인다 */
-  showDistance: 12,
+  /** 이 위치(px) 이하에서는 항상 완전히 보인다 */
+  alwaysVisibleY: 0,
 } as const;
