@@ -1,0 +1,79 @@
+---
+status: 진행 # 계획 | 진행 | 완료 | 보류
+owner: jang-gangmin
+created: 2026-10-12
+---
+
+# 추천 섹션 3D 폰 카드 팝아웃
+
+## 왜
+
+레퍼런스 영상(2026-10-12 19:36 화면 기록)처럼, 추천 섹션에서 3D 폰 화면의 "추천 결과 Top 3" 카드가 차례로 폰 밖으로 떠올랐다가 돌아가고, 화면이 "추천 근거 데이터"까지 내려가 추천이 기록에서 나온다는 흐름을 보여 준다. 이슈 #30.
+
+## 범위
+
+- 포함
+  - 3D 폰(Spline) 구간을 report 끝 → recommend 끝까지 연장.
+  - 피그마 landing / S6-스타일추천(964:2081)을 HTML로 옮긴 추천 화면.
+    - 상태바·제목 고정, 본문 스크롤, 탭바 고정.
+  - 카드 3장 팝아웃·복귀 모션.
+  - 화면 안 스크롤 모션.
+  - 섹션 길이 220vh → 320vh(읽기 편하게).
+- 제외
+  - 영상 맨 앞 "흐릿한 카드 벽 + 큰 글씨" 인트로(사용자 결정: 빼고 폰 장면부터).
+  - 원본 명세의 추천 선 드로잉·미니 카드(이 계획으로 대체).
+  - CSS 폰(Spline 실패·reduced motion)에서의 카드 팝아웃. 화면만 보여 준다.
+
+## 결정
+
+- 폰 본체는 Spline이고, 화면과 카드는 HTML로 만든다(사용자 선택).
+  - 리포트 상세 화면처럼 CSS 3D로 Spline 화면 위에 투영한다(`docs/plans/0005`).
+  - 글씨가 선명하고 화면 안 스크롤이 쉽다.
+- 화면 HTML은 피그마 치수(폭 402) 그대로 짜고 화면 폭에 맞춰 통째로 축소한다.
+  - 3D 폰은 280, CSS 폰은 288이다.
+  - 그래서 튀어나오는 카드도 피그마 px 단위로 계산한다.
+- 카피는 피그마 S6 문구를 그대로 쓴다. `COPY.phoneScreens.recommend`의 옛 원본 문구를 대체한다.
+
+## 할 일
+
+- [x] 피그마 에셋 내려받기(`public/screens/recommend/`: 사진 webp, 탭·상태바·화살표 svg)
+- [x] `TIMELINE.recommend`, `RECOMMEND_SCREEN` 수치와 명세 테스트 작성
+- [x] `recommendScene.ts`
+  - 화면 진입(report → recommend 크로스페이드)
+  - 카드 팝아웃·복귀 자세
+  - 화면 스크롤
+- [x] `computeSplineHandoff`: 넘기는 시점을 recommend 고정 끝으로
+- [x] `computeScreens`: CSS 폰의 report → recommend 전환 밴드를 3D와 같게
+- [x] `RecommendScreen` HTML(CSS 폰·3D 오버레이 공용)과 오버레이 팝아웃 카드 레이어
+- [x] 섹션 길이 320vh, `docs/design/spec.md` 갱신
+- [x] 브라우저 확인(Chrome 1372×874·1080×632, DPR 1), `pnpm verify`
+
+## 완료 기준 (돌려서 확인할 수 있게)
+
+- [x] `pnpm test -- recommendScene` 통과
+- [x] `pnpm test -- scene3d` 통과(3D 폰이 recommend 끝까지 유지)
+- [x] 브라우저에서 다음을 확인한다.
+  - 카드 1→2→3이 차례로 오른쪽으로 떠오른다.
+  - 머문 뒤 제자리로 돌아간다.
+  - 화면이 추천 근거 데이터까지 내려간다.
+- [x] `pnpm verify` 통과
+
+## 모션 명세
+
+- TIMELINE 키: `TIMELINE.recommend`
+  - `fromReportBand`: report 끝 기준 뷰포트 배수 [−0.5, −0.2]
+  - `cardPop`: 시작 0.06, 카드 간격 0.07, 길이 0.18. 카드 i는 [0.06+0.07i, 0.24+0.07i].
+  - `cardReturn`: 시작 0.6, 간격 0.03, 길이 0.12
+  - `screenScroll`: [0.8, 0.97]
+- 팝아웃 자세(피그마 px, 슬롯 기준)
+  - 오른쪽으로 330 이동
+  - y [−12, 8, 24]
+  - 회전 [−4°, 3°, −3°]
+  - 크기 1.06배
+  - 그림자는 진행도만큼
+- 명세 테스트 파일: `src/widgets/phone-stage/model/recommendScene.test.ts`
+
+## 변경 기록
+
+- 2026-10-12: 작성. 영상 분석과 사용자 결정(HTML 화면·카드, 인트로 제외, 섹션은 읽기 편한 길이)을 반영했다.
+- 2026-10-12: 구현. 3D → CSS 폰 넘김 때 오버레이만 반투명해져 아래 3D 화면(기록)이 비치던 문제를 고쳤다. 캔버스와 오버레이를 한 묶음으로 페이드한다(`PhoneStage`).
