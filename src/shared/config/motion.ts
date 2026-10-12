@@ -246,4 +246,6 @@ export const TIMELINE = {
 export const HEADER = {
   /** 이 위치(px) 이하에서는 항상 완전히 보인다 */
   alwaysVisibleY: 0,
+  /** 스크롤 입력이 이만큼(ms) 없으면 걸쳐 있던 헤더를 완전히 보이거나 숨긴다 */
+  settleIdleMs: 140,
 } as const;

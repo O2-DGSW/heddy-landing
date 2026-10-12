@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useRef, type RefObject } from "react";
 
+import { HEADER } from "@/shared/config";
 import { useSceneFrame, type SceneFrame } from "@/shared/lib/scroll";
 
-import { INITIAL_HEADER_STATE, consumeHeaderScroll, stepHeaderOffset, type HeaderState } from "./headerVisibility";
+import { INITIAL_HEADER_STATE, consumeHeaderScroll, settleHeaderOffset, stepHeaderOffset, type HeaderState } from "./headerVisibility";
 
 const LINE_HEIGHT_PX = 16;
 
@@ -18,6 +19,7 @@ const wheelDeltaPx = (event: WheelEvent): number => {
  * 헤더 오프셋(위로 밀려 올라간 양)을 CSS 변수 --header-offset으로만 쓴다(프레임마다 setState 금지).
  * - 아래로 휠·터치: 헤더가 먼저 올라가고 그동안 화면은 멈춘다. 다 숨은 뒤에 화면이 스크롤된다.
  * - 위로: 화면이 스크롤되는 만큼 헤더가 내려온다(스크롤 프레임 기준).
+ * - 스크롤이 멈추면 걸친 헤더는 가까운 쪽으로 마무리되고, 움직임은 CSS transition이 부드럽게 이어 준다.
  * - 스크롤바·키보드 등 휠/터치 밖의 스크롤도 스크롤 프레임이 같은 규칙으로 따라간다.
  */
 export const useHeaderOffset = (headerRef: RefObject<HTMLElement | null>): void => {
@@ -33,13 +35,32 @@ export const useHeaderOffset = (headerRef: RefObject<HTMLElement | null>): void 
     [headerRef],
   );
 
+  const settleTimerRef = useRef<number | null>(null);
+  /** 입력이 잠시 멈추면 걸쳐 있는 헤더를 가까운 쪽으로 마무리한다 — CSS transition이 부드럽게 이어 준다 */
+  const scheduleSettle = useCallback(() => {
+    if (settleTimerRef.current != null) window.clearTimeout(settleTimerRef.current);
+    settleTimerRef.current = window.setTimeout(() => {
+      settleTimerRef.current = null;
+      const header = headerRef.current;
+      if (header) write(settleHeaderOffset(stateRef.current, header.offsetHeight));
+    }, HEADER.settleIdleMs);
+  }, [headerRef, write]);
+
+  useEffect(
+    () => () => {
+      if (settleTimerRef.current != null) window.clearTimeout(settleTimerRef.current);
+    },
+    [],
+  );
+
   const handleFrame = useCallback(
     (frame: SceneFrame) => {
       const header = headerRef.current;
       if (!header) return;
       write(stepHeaderOffset(stateRef.current, frame.scrollY, header.offsetHeight));
+      scheduleSettle();
     },
-    [headerRef, write],
+    [headerRef, write, scheduleSettle],
   );
   useSceneFrame(handleFrame);
 
@@ -52,6 +73,7 @@ export const useHeaderOffset = (headerRef: RefObject<HTMLElement | null>): void 
       if (state === stateRef.current) return false;
       // 스크롤 프레임이 이 갱신을 다시 세지 않도록 lastY는 그대로 두고 오프셋만 쓴다
       write(state);
+      scheduleSettle();
       if (remainder > 0) window.scrollBy(0, remainder);
       return true;
     };
@@ -81,5 +103,5 @@ export const useHeaderOffset = (headerRef: RefObject<HTMLElement | null>): void 
       window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchmove", handleTouchMove);
     };
-  }, [headerRef, write]);
+  }, [headerRef, write, scheduleSettle]);
 };

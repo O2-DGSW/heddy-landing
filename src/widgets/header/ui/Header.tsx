@@ -22,7 +22,7 @@ export const Header = () => {
   return (
     <header
       ref={headerRef}
-      className="fixed inset-x-0 top-0 z-50 flex items-center justify-between px-16 py-4 [transform:translateY(calc(var(--header-offset,0px)*-1))] focus-within:[transform:none]"
+      className="fixed inset-x-0 top-0 z-50 flex items-center justify-between px-16 py-4 [transform:translateY(calc(var(--header-offset,0px)*-1))] transition-transform duration-200 ease-out focus-within:[transform:none] motion-reduce:transition-none"
     >
       <div className="relative h-7 w-20">
         <Image

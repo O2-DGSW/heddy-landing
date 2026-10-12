@@ -32,3 +32,9 @@ export const consumeHeaderScroll = (
   const offset = Math.min(wanted, headerHeight);
   return { state: { ...state, offset }, remainder: wanted - offset };
 };
+
+/** 스크롤이 멈췄을 때 어중간하게 걸친 헤더를 가까운 쪽(완전히 보임/숨음)으로 마무리한다 */
+export const settleHeaderOffset = (state: HeaderState, headerHeight: number): HeaderState => {
+  if (state.offset <= 0 || state.offset >= headerHeight) return state;
+  return { ...state, offset: state.offset > headerHeight / 2 ? headerHeight : 0 };
+};

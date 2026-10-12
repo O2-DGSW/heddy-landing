@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { INITIAL_HEADER_STATE, consumeHeaderScroll, stepHeaderOffset, type HeaderState } from "./headerVisibility";
+import { INITIAL_HEADER_STATE, consumeHeaderScroll, settleHeaderOffset, stepHeaderOffset, type HeaderState } from "./headerVisibility";
 
 const H = 68;
 
@@ -86,5 +86,23 @@ describe("consumeHeaderScroll", () => {
   it("헤더 높이가 0이면(측정 전) 가로채지 않는다", () => {
     const state = restingAt(0);
     expect(consumeHeaderScroll(state, 40, 0)).toEqual({ state, remainder: 40 });
+  });
+});
+
+describe("settleHeaderOffset", () => {
+  it("스크롤이 멈췄을 때 절반 넘게 숨어 있으면 마저 숨긴다", () => {
+    expect(settleHeaderOffset(restingAt(500, H / 2 + 1), H).offset).toBe(H);
+  });
+
+  it("절반 이하로 숨어 있으면 다시 완전히 보인다", () => {
+    expect(settleHeaderOffset(restingAt(500, H / 2), H).offset).toBe(0);
+    expect(settleHeaderOffset(restingAt(500, 5), H).offset).toBe(0);
+  });
+
+  it("이미 완전히 보이거나 숨었으면 그대로다", () => {
+    const shown = restingAt(500, 0);
+    const hidden = restingAt(500, H);
+    expect(settleHeaderOffset(shown, H)).toBe(shown);
+    expect(settleHeaderOffset(hidden, H)).toBe(hidden);
   });
 });
