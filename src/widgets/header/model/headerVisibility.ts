@@ -17,3 +17,18 @@ export const stepHeaderOffset = (state: HeaderState, scrollY: number, headerHeig
   const offset = Math.min(Math.max(state.offset + (scrollY - state.lastY), 0), Math.max(headerHeight, 0));
   return { lastY: scrollY, offset };
 };
+
+/**
+ * 아래로 스크롤하는 양을 헤더가 먼저 가져간다 — 헤더가 다 숨을 때까지 화면은 안 움직이고,
+ * 헤더가 숨은 뒤 남는 양(remainder)만 화면 스크롤로 넘긴다. 위로 스크롤은 가로채지 않는다.
+ */
+export const consumeHeaderScroll = (
+  state: HeaderState,
+  delta: number,
+  headerHeight: number,
+): { state: HeaderState; remainder: number } => {
+  if (delta <= 0 || headerHeight <= 0 || state.offset >= headerHeight) return { state, remainder: delta };
+  const wanted = state.offset + delta;
+  const offset = Math.min(wanted, headerHeight);
+  return { state: { ...state, offset }, remainder: wanted - offset };
+};

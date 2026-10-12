@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { INITIAL_HEADER_STATE, stepHeaderOffset, type HeaderState } from "./headerVisibility";
+import { INITIAL_HEADER_STATE, consumeHeaderScroll, stepHeaderOffset, type HeaderState } from "./headerVisibility";
 
 const H = 68;
 
@@ -56,5 +56,35 @@ describe("stepHeaderOffset", () => {
 
   it("헤더 높이가 0이면(측정 전) 항상 0이다", () => {
     expect(stepHeaderOffset(restingAt(400), 900, 0).offset).toBe(0);
+  });
+});
+
+describe("consumeHeaderScroll", () => {
+  it("아래로 스크롤하면 헤더가 먼저 올라가고, 그동안 화면은 스크롤되지 않는다(남는 양 0)", () => {
+    const result = consumeHeaderScroll(restingAt(0), 30, H);
+    expect(result.state.offset).toBe(30);
+    expect(result.remainder).toBe(0);
+  });
+
+  it("헤더가 다 숨는 순간 남는 양만 화면 스크롤로 넘긴다", () => {
+    const result = consumeHeaderScroll(restingAt(0, 50), 100, H);
+    expect(result.state.offset).toBe(H);
+    expect(result.remainder).toBe(100 - (H - 50));
+  });
+
+  it("이미 숨어 있으면 전부 화면 스크롤로 넘긴다", () => {
+    const result = consumeHeaderScroll(restingAt(500, H), 40, H);
+    expect(result.state.offset).toBe(H);
+    expect(result.remainder).toBe(40);
+  });
+
+  it("위로 스크롤은 헤더가 가로채지 않는다(그대로 화면 스크롤)", () => {
+    const state = restingAt(500, H);
+    expect(consumeHeaderScroll(state, -40, H)).toEqual({ state, remainder: -40 });
+  });
+
+  it("헤더 높이가 0이면(측정 전) 가로채지 않는다", () => {
+    const state = restingAt(0);
+    expect(consumeHeaderScroll(state, 40, 0)).toEqual({ state, remainder: 40 });
   });
 });
