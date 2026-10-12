@@ -241,3 +241,13 @@ export const TIMELINE = {
     subtitleIn: [0.74, 0.88] as Range,
   },
 } as const;
+
+/** 헤더: 아래로 스크롤하면 숨기고, 위로 올리면 다시 보인다 */
+export const HEADER = {
+  /** 이 위치(px) 이하에서는 항상 보인다 */
+  alwaysVisibleY: 8,
+  /** 방향이 바뀐 지점에서 이만큼(px) 내려가야 숨긴다 — 살짝 흔들리는 스크롤에 깜빡이지 않게 */
+  hideDistance: 24,
+  /** 방향이 바뀐 지점에서 이만큼(px) 올라가야 다시 보인다 */
+  showDistance: 12,
+} as const;
