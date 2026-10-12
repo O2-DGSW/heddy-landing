@@ -12,6 +12,7 @@ import { useHeaderOffset } from "../model/useHeaderOffset";
  * 상단바: 로고(PNG) + 다운로드 버튼. 아래로 스크롤하면 헤더가 먼저 올라가 숨고(그동안 화면은 멈춤), 숨은 뒤에 화면이 스크롤된다.
  * 위로 스크롤하면 화면이 스크롤되는 만큼 헤더가 내려온다. 동작은 `useHeaderOffset`.
  * TODO(docs/plans/0001, TIMELINE.ar): ar 다크 패널(c>0.95) 구간에서 배경 투명 + 로고 숨김.
+ * 배경은 흰색 90% + 블러 — 뒤로 지나가는 본문이 비쳐 겹쳐 보이지 않게 한다.
  * 로고 PNG(`public/brand/logo-wordmark.png`)는 아직 없다 — 넣으면 그대로 보인다.
  */
 export const Header = () => {
@@ -22,7 +23,7 @@ export const Header = () => {
   return (
     <header
       ref={headerRef}
-      className="fixed inset-x-0 top-0 z-50 flex items-center justify-between px-16 py-4 [transform:translateY(calc(var(--header-offset,0px)*-1))] transition-transform duration-200 ease-out focus-within:[transform:none] motion-reduce:transition-none"
+      className="fixed inset-x-0 top-0 z-50 flex items-center justify-between bg-white/90 px-16 py-4 backdrop-blur-md [transform:translateY(calc(var(--header-offset,0px)*-1))] transition-transform duration-200 ease-out focus-within:[transform:none] motion-reduce:transition-none"
     >
       <div className="relative h-7 w-20">
         <Image
