@@ -182,7 +182,7 @@ export const computeScreens = (frame: SceneFrame): ScreensScene => {
 
   const t0 = crossfadeAfter(frame, archiveEnd); // home -> record
   const t1 = crossfadeAfter(frame, recordEnd, TIMELINE.report.fromRecordBand); // record -> report(상세)
-  const t2 = crossfadeAfter(frame, reportEnd); // report -> recommend
+  const t2 = crossfadeAfter(frame, reportEnd, TIMELINE.recommend.fromReportBand); // report -> recommend(3D 오버레이와 같은 밴드)
   const t3 = crossfadeAfter(frame, recommendEnd); // recommend -> ar
   const t4 = crossfadeAfter(frame, arEnd); // ar -> qrShare
   const t5 = crossfadeAfter(frame, shareEnd, TIMELINE.shareEndToHomeBand); // qrShare -> home(loop)

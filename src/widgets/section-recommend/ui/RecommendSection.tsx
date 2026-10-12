@@ -1,7 +1,7 @@
 import { COPY, SECTION_HEIGHT_VH } from "@/shared/config";
 import { SectionShell } from "@/shared/ui";
 
-/** TODO(docs/plans/0001, TIMELINE.recommend): 기록 3건 → 추천 선 드로잉(strokeDashoffset). 지금은 카피만 */
+/** 카피만 둔다. 폰 화면·추천 카드 팝아웃 모션은 phone-stage가 맡는다(`docs/plans/0007`) */
 export const RecommendSection = () => {
   return (
     <SectionShell

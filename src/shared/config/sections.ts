@@ -22,7 +22,8 @@ export const SECTION_HEIGHT_VH: Record<SectionKey, number> = {
   archive: 220,
   record: 600,
   report: 220,
-  recommend: 220,
+  /** 카드 팝아웃 → 머무름 → 복귀 → 화면 스크롤을 읽을 수 있게 늘림(220 → 320, `docs/plans/0007`) */
+  recommend: 320,
   ar: 600,
   share: 320,
   closing: 100,

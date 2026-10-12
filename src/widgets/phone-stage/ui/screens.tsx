@@ -157,32 +157,6 @@ export const DetailScreen = ({
   );
 };
 
-/** 추천 화면: 추천 근거 선 드로잉 모션은 TODO(docs/plans/0001) */
-export const RecommendScreen = () => {
-  const { recommend } = COPY.phoneScreens;
-  return (
-    <div className="flex h-full flex-col gap-3 p-4">
-      <p className="text-14 font-medium">{recommend.title}</p>
-      <p className="text-12">{recommend.subtitle}</p>
-      <p className="text-20 font-semibold">{recommend.style}</p>
-      <p className="text-14">{recommend.description}</p>
-      <div className="flex flex-wrap gap-2">
-        {recommend.tags.map((tag) => (
-          <span key={tag} className="text-12 rounded-DEFAULT border px-2 py-1">
-            {tag}
-          </span>
-        ))}
-      </div>
-      <ul className="text-12 flex flex-col gap-1">
-        {recommend.basedOnRecords.map((entry) => (
-          <li key={entry}>{entry}</li>
-        ))}
-      </ul>
-      <p className="text-12 mt-auto">{recommend.footnote}</p>
-    </div>
-  );
-};
-
 /** AR 화면 — 실제 앱 AR 체험 화면 캡처. pill 분할/다크 패널 전환 모션은 TODO(docs/plans/0001) */
 export const ArScreen = () => (
   <Image src="/screens/ar.webp" alt="헤디 AR 스타일 체험 화면" fill sizes="280px" className="object-cover" />

@@ -52,14 +52,14 @@ describe("computeSplineHandoff", () => {
     expect(cssOpacity).toBe(0);
   });
 
-  it("record(시술기록)부터 report(리포트) 섹션 끝까지 3D 폰만 보인다", () => {
+  it("record(시술기록)부터 recommend(추천) 섹션 끝까지 3D 폰만 보인다(`docs/plans/0007`)", () => {
     for (const [width, height] of [
       [1440, 900],
       [1920, 1080],
       [1024, 700],
     ] as const) {
       const vp = frameForViewport(width, height);
-      for (const key of ["record", "report"] as const) {
+      for (const key of ["record", "report", "recommend"] as const) {
         for (const p of [0, 0.5, 0.99]) {
           const { canvasOpacity, cssOpacity } = computeSplineHandoff(vp.at(vp.scrollAt(key, p)));
           expect(canvasOpacity).toBe(1);
@@ -69,22 +69,22 @@ describe("computeSplineHandoff", () => {
     }
   });
 
-  it("report가 끝나면 CSS 폰으로 넘어가고, recommend 화면 전환(섹션 끝 + 0.35H)보다 먼저 끝난다", () => {
+  it("recommend가 끝나면 CSS 폰으로 넘어가고, ar 화면 전환(섹션 끝 + 0.35H)보다 먼저 끝난다", () => {
     const vp = frameForViewport(1440, 900);
-    const reportEndAt = vp.scrollAt("report", 1);
-    const done = computeSplineHandoff(vp.at(reportEndAt + PHONE_3D.handoffScrollPx));
+    const recommendEndAt = vp.scrollAt("recommend", 1);
+    const done = computeSplineHandoff(vp.at(recommendEndAt + PHONE_3D.handoffScrollPx));
     expect(done.canvasOpacity).toBe(0);
     expect(done.cssOpacity).toBe(1);
 
-    const report = sections.find((section) => section.key === "report");
-    if (!report) throw new Error("report not found");
-    const screenSwitchAt = report.end + TIMELINE.screenCrossfadeBand[0] * H;
-    expect(reportEndAt + PHONE_3D.handoffScrollPx).toBeLessThan(screenSwitchAt);
+    const recommend = sections.find((section) => section.key === "recommend");
+    if (!recommend) throw new Error("recommend not found");
+    const screenSwitchAt = recommend.end + TIMELINE.screenCrossfadeBand[0] * H;
+    expect(recommendEndAt + PHONE_3D.handoffScrollPx).toBeLessThan(screenSwitchAt);
   });
 
   it("넘기는 도중 두 opacity의 합은 항상 1이다", () => {
     const vp = frameForViewport(1440, 900);
-    const start = vp.scrollAt("report", 1);
+    const start = vp.scrollAt("recommend", 1);
     const { canvasOpacity, cssOpacity } = computeSplineHandoff(vp.at(start + PHONE_3D.handoffScrollPx / 2));
     expect(canvasOpacity).toBeCloseTo(0.5);
     expect(canvasOpacity + cssOpacity).toBeCloseTo(1);
@@ -143,6 +143,17 @@ describe("computeScreenOverlay", () => {
   it("기록 화면 구간에선 숨고, 리포트 섹션에선 상세 화면이 보인다", () => {
     const vp = frameForViewport(1440, 900);
     expect(computeScreenOverlay(vp.at(vp.scrollAt("record", 0.5))).opacity).toBe(0);
-    expect(computeScreenOverlay(vp.at(vp.scrollAt("report", 0.5))).opacity).toBeCloseTo(1);
+    const atReport = computeScreenOverlay(vp.at(vp.scrollAt("report", 0.5)));
+    expect(atReport.opacity).toBeCloseTo(1);
+    expect(atReport.recommendIn).toBe(0);
+  });
+
+  it("추천 섹션에선 오버레이가 계속 보이고 추천 화면으로 바뀌어 있다", () => {
+    const vp = frameForViewport(1440, 900);
+    for (const p of [0, 0.5, 0.99]) {
+      const overlay = computeScreenOverlay(vp.at(vp.scrollAt("recommend", p)));
+      expect(overlay.opacity).toBeCloseTo(1);
+      expect(overlay.recommendIn).toBe(1);
+    }
   });
 });

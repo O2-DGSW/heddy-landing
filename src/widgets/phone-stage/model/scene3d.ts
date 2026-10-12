@@ -2,6 +2,7 @@ import { PHONE_3D } from "@/shared/config";
 import { progressIn } from "@/shared/lib/motion";
 import type { SceneFrame, StageLayout } from "@/shared/lib/scroll";
 
+import { computeRecommendIn } from "./recommendScene";
 import { computeTapToDetail } from "./tapToDetail";
 
 export type SplineViewport = { left: number; top: number; width: number; height: number };
@@ -34,16 +35,18 @@ export const computeSplineViewport = (layout: StageLayout): SplineViewport => {
 };
 
 /**
- * hero부터 report 섹션(상세 화면 스크롤, `docs/plans/0005`) 끝까지는 3D 폰으로 보여 주고, report가
- * 끝난 뒤(recommend 화면 전환 전) CSS 폰 A로 크로스페이드한다. record 끝에서 RecordRig가 정면으로
+ * hero부터 recommend 섹션(추천 카드 팝아웃, `docs/plans/0007`) 끝까지는 3D 폰으로 보여 주고, recommend가
+ * 끝난 뒤(ar 화면 전환 전) CSS 폰 A로 크로스페이드한다. record 끝에서 RecordRig가 정면으로
  * 돌아와 있어 이음새가 없다. Spline 합체(페이지 px 고정)가 더 늦게 끝나면 그 뒤로 미룬다.
  */
 export const computeSplineHandoff = (frame: SceneFrame): SplineHandoff => {
   if (frame.isReducedMotion) return { canvasOpacity: 0, cssOpacity: 1 };
 
-  const report = frame.sections.find((section) => section.key === "report");
-  const reportEndAt = report ? report.top + Math.max(report.height - frame.layout.viewportHeight, 1) : 0;
-  const start = Math.max(PHONE_3D.mergeEndScrollPx, reportEndAt);
+  const recommend = frame.sections.find((section) => section.key === "recommend");
+  const recommendEndAt = recommend
+    ? recommend.top + Math.max(recommend.height - frame.layout.viewportHeight, 1)
+    : 0;
+  const start = Math.max(PHONE_3D.mergeEndScrollPx, recommendEndAt);
   const handoff = progressIn(frame.scrollY, [start, start + PHONE_3D.handoffScrollPx]);
   const canvasOpacity = 1 - handoff;
   return { canvasOpacity, cssOpacity: handoff };
@@ -65,6 +68,8 @@ export type ScreenOverlay = {
   ripple: number;
   /** 상세 화면이 오른쪽에서 들어온 정도(0~1) */
   push: number;
+  /** 상세 → 추천 화면 크로스페이드(0~1, `docs/plans/0007`) */
+  recommendIn: number;
 };
 
 /**
@@ -89,5 +94,6 @@ export const computeScreenOverlay = (frame: SceneFrame): ScreenOverlay => {
     press,
     ripple,
     push,
+    recommendIn: computeRecommendIn(frame),
   };
 };

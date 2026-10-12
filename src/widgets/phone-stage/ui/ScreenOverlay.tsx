@@ -5,18 +5,22 @@ import { useRef } from "react";
 import Image from "next/image";
 
 import { RECORD_CARDS } from "@/entities/record";
-import { DETAIL_SCREEN, PHONE_3D, RECORD_STACK, TIMELINE } from "@/shared/config";
+import { DETAIL_SCREEN, PHONE_3D, RECOMMEND_SCREEN, RECORD_STACK, TIMELINE } from "@/shared/config";
 import { lerp } from "@/shared/lib/motion";
 import { useSceneFrame } from "@/shared/lib/scroll";
 
+import { computeRecommendCards } from "../model/recommendScene";
 import { computeSettledRecordCards, topCardIndex } from "../model/recordStack";
 import { computeScreenOverlay } from "../model/scene3d";
+import { RecommendCard, RecommendScreen } from "./RecommendScreen";
 import { DetailScreen } from "./screens";
 
 /** 탭 물결 지름(px, 화면 좌표) — 다 퍼지면 카드 폭을 덮는다 */
 const RIPPLE_SIZE = 64;
 /** 카드 모서리 반경(px, 화면 좌표) */
 const CARD_RADIUS = 12;
+/** 폰 밖으로 떠오른 추천 카드 그림자(피그마 px) — 떠오른 정도만큼 진해진다 */
+const POP_SHADOW = { y: 18, blur: 40, alpha: 0.18 };
 
 /** 누르는 위치: 기록 리스트 맨 위 카드(최신 기록) 가운데 */
 const TAP_POINT = (() => {
@@ -33,7 +37,8 @@ interface ScreenOverlayProps {
 /**
  * 3D 폰 화면 위에 겹치는 HTML 화면(`docs/plans/0005`). 기록 리스트의 맨 위 카드를 누르면(물결)
  * 상세 화면이 오른쪽에서 밀려 들어오고(상태바·탭바는 고정), 뒤 리스트는 살짝 어두워진다.
- * 프레임마다 ref로만 쓴다.
+ * 추천 섹션에선 추천 화면으로 크로스페이드하고, 추천 카드 3장이 화면 밖(잘리지 않는 레이어)으로
+ * 떠올랐다가 돌아간다(`docs/plans/0007`). 프레임마다 ref로만 쓴다.
  */
 export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -42,7 +47,10 @@ export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
   const dimRef = useRef<HTMLDivElement>(null);
   const detailRef = useRef<HTMLDivElement>(null);
   const fixedBarsRef = useRef<HTMLDivElement>(null);
+  const recommendRef = useRef<HTMLDivElement>(null);
+  const popCardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const { screen, island } = PHONE_3D;
+  const designScale = screen.width / RECOMMEND_SCREEN.designWidth;
   const imageScale = screen.width / DETAIL_SCREEN.imageWidthPx;
 
   useSceneFrame((frame) => {
@@ -51,7 +59,8 @@ export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
     const overlay = computeScreenOverlay(frame);
     const isShown = getIsEnabled() && overlay.opacity > 0;
     root.style.transform = `translate(${overlay.x}px, ${overlay.y}px) scale(${overlay.scale}) perspective(${overlay.perspective}px) rotateX(${overlay.rotateXDeg}deg) translateZ(${overlay.translateZ}px)`;
-    root.style.opacity = isShown ? String(overlay.opacity) : "0";
+    // 캔버스와 같이 사라지는 페이드는 PhoneStage가 둘을 묶어서 한다 — 여기선 켜고 끄기만
+    root.style.opacity = isShown ? "1" : "0";
     root.style.visibility = isShown ? "visible" : "hidden";
 
     // 눌린 카드(3D 카드와 같이 줄어듦) 위에 옅은 하이라이트 + 카드 안에서만 퍼지는 물결
@@ -69,6 +78,19 @@ export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
       detailRef.current.style.visibility = overlay.push > 0 ? "visible" : "hidden";
     }
     if (fixedBarsRef.current) fixedBarsRef.current.style.visibility = overlay.push > 0 ? "visible" : "hidden";
+    if (recommendRef.current) {
+      recommendRef.current.style.opacity = String(overlay.recommendIn);
+      recommendRef.current.style.visibility = overlay.recommendIn > 0 ? "visible" : "hidden";
+    }
+
+    computeRecommendCards(frame).forEach((pose, index) => {
+      const card = popCardRefs.current[index];
+      if (!card) return;
+      card.style.visibility = pose.isVisible ? "visible" : "hidden";
+      if (!pose.isVisible) return;
+      card.style.transform = `translate(${pose.x}px, ${pose.y}px) rotate(${pose.rotateDeg}deg) scale(${pose.scale})`;
+      card.style.boxShadow = `0 ${POP_SHADOW.y * pose.amount}px ${POP_SHADOW.blur * pose.amount}px rgba(0,0,0,${POP_SHADOW.alpha * pose.amount})`;
+    });
   });
 
   return (
@@ -127,11 +149,43 @@ export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
             <Image src="/screens/detail/bottom.png" alt="" fill loading="eager" sizes="280px" className="object-cover" />
           </div>
         </div>
+        {/* 추천 화면: 상세 화면 위로 크로스페이드 */}
+        <div ref={recommendRef} className="invisible absolute inset-0 opacity-0">
+          <RecommendScreen width={screen.width} height={screen.height} />
+        </div>
         {/* 다이내믹 아일랜드: 3D 폰 화면의 구멍 자리를 오버레이가 덮으므로 다시 그린다 */}
         <div
           className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black"
           style={{ top: island.centerY, width: island.width, height: island.height }}
         />
+      </div>
+      {/* 폰 밖으로 떠오르는 추천 카드: 화면 모서리에 잘리지 않도록 화면 컨테이너 밖에, 같은 좌표(피그마 px)로 둔다 */}
+      <div
+        className="pointer-events-none absolute origin-top-left"
+        style={{
+          left: -screen.width / 2,
+          top: -screen.height / 2,
+          transform: `scale(${designScale})`,
+        }}
+      >
+        {RECOMMEND_SCREEN.photoCrops.map((_, index) => (
+          <div
+            key={index}
+            className="absolute"
+            style={{
+              left: RECOMMEND_SCREEN.card.x,
+              top: RECOMMEND_SCREEN.fixedTop + RECOMMEND_SCREEN.card.firstTop + index * RECOMMEND_SCREEN.card.pitch,
+            }}
+          >
+            <RecommendCard
+              ref={(node) => {
+                popCardRefs.current[index] = node;
+              }}
+              index={index}
+              className="invisible origin-center will-change-transform"
+            />
+          </div>
+        ))}
       </div>
     </div>
   );

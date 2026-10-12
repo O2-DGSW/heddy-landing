@@ -180,7 +180,8 @@ export const SplineStage = ({ sceneUrl, onLoad, onFail }: SplineStageProps) => {
     container.style.transform = `translate(${rect.left}px, ${rect.top}px)`;
     container.style.width = `${rect.width}px`;
     container.style.height = `${rect.height}px`;
-    container.style.opacity = String(canvasOpacity);
+    // 페이드는 PhoneStage가 캔버스·화면 오버레이를 묶어서 한다(따로 반투명하면 오버레이 아래가 비친다)
+    container.style.opacity = canvasOpacity > 0 ? "1" : "0";
 
     // CSS 폰으로 넘어간 뒤에는 캔버스를 숨겨 합성 비용을 없앤다. app.stop()은 쓰지 않는다 —
     // 멈췄다 켜면 Spline Scroll 상태가 합쳐진 채로 굳어 역스크롤 때 다시 갈라지지 않는다.

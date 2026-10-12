@@ -86,6 +86,12 @@ describe("computeScreens", () => {
     expect(atReport.record).toBeCloseTo(0);
   });
 
+  it("추천 섹션이 화면에 붙을 때(진행도 0) 이미 추천 화면이다 — 3D 오버레이와 같은 밴드(`docs/plans/0007`)", () => {
+    const atRecommend = computeScreens(frameAtSectionProgress("recommend", 0)).a;
+    expect(atRecommend.recommend).toBeCloseTo(1);
+    expect(atRecommend.report).toBeCloseTo(0);
+  });
+
   it("어느 지점이든 A 화면 opacity 합은 1을 넘지 않는다", () => {
     const step = 50;
     for (let scrollY = 0; scrollY <= documentHeight; scrollY += step) {
