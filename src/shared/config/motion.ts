@@ -209,10 +209,14 @@ export const TIMELINE = {
   },
   recommend: {
     /**
-     * 리포트 상세 → 추천 화면 크로스페이드: report 섹션 end 기준 뷰포트 높이 배수.
-     * 추천 섹션이 화면에 붙을 때(recommend 진행도 0) 이미 추천 화면이 다 보이게 한다(`docs/plans/0007`).
+     * 리포트 상세 → 추천 화면: 하단 "추천" 탭을 눌렀다 떼고(tap, 물결) 추천 화면이 오른쪽에서 밀려
+     * 들어온다(slide, 탭이 오른쪽에 있으니). report 섹션 end 기준 뷰포트 높이 배수(`docs/plans/0007`).
+     * 추천 섹션이 화면에 붙을 때(recommend 진행도 0) 이미 다 넘어가 있다.
      */
-    fromReportBand: [-0.5, -0.2] as Range,
+    tabTapBand: [-0.62, -0.46] as Range,
+    tabSlideBand: [-0.46, -0.2] as Range,
+    /** tap 진행도 중 탭바 활성 색이 기록 → 추천으로 옮겨 가는 구간 */
+    tabActiveIn: [0.35, 0.65] as Range,
     /** recommend 진행도: 카드 i가 폰 밖으로 떠오르는 구간 = [start + i·stagger, start + i·stagger + duration] */
     cardPop: { start: 0.06, stagger: 0.07, duration: 0.18 },
     /** recommend 진행도: 카드 i가 제자리로 돌아가는 구간(위와 같은 식) */
@@ -281,4 +285,6 @@ export const RECOMMEND_SCREEN = {
    * 살짝 엇갈려 기운다. 카드 i마다 y·회전이 다르다.
    */
   pop: { dx: 330, dy: [-12, 8, 24], rotateDeg: [-4, 3, -3], scale: 1.06 },
+  /** 탭바 속 "추천" 아이콘 중심(탭바 좌상단 기준 px) — 상세 → 추천 탭 전환 때 누르는 자리 */
+  recommendTabCenter: { x: 279, y: 33.4 },
 } as const;

@@ -145,7 +145,7 @@ describe("computeScreenOverlay", () => {
     expect(computeScreenOverlay(vp.at(vp.scrollAt("record", 0.5))).opacity).toBe(0);
     const atReport = computeScreenOverlay(vp.at(vp.scrollAt("report", 0.5)));
     expect(atReport.opacity).toBeCloseTo(1);
-    expect(atReport.recommendIn).toBe(0);
+    expect(atReport.tabSwitch.slide).toBe(0);
   });
 
   it("추천 섹션에선 오버레이가 계속 보이고 추천 화면으로 바뀌어 있다", () => {
@@ -153,7 +153,7 @@ describe("computeScreenOverlay", () => {
     for (const p of [0, 0.5, 0.99]) {
       const overlay = computeScreenOverlay(vp.at(vp.scrollAt("recommend", p)));
       expect(overlay.opacity).toBeCloseTo(1);
-      expect(overlay.recommendIn).toBe(1);
+      expect(overlay.tabSwitch.slide).toBe(1);
     }
   });
 });

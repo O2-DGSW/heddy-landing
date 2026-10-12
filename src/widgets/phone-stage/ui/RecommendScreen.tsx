@@ -47,7 +47,14 @@ export const RecommendCard = forwardRef<HTMLDivElement, RecommendCardProps>(
             className="absolute"
             style={{ left: crop.left, top: crop.top, width: crop.size, height: crop.size }}
           >
-            <Image src={`${ASSET}/photo.webp`} alt={card.style} fill loading="eager" sizes="400px" className="object-cover" />
+            <Image
+              src={`${ASSET}/photo.webp`}
+              alt={card.style}
+              fill
+              loading="eager"
+              sizes="400px"
+              className="object-cover"
+            />
           </div>
         </div>
         <div className="flex h-[110px] w-[213px] flex-col gap-[6px] leading-[1.3] tracking-[-0.02em]">
@@ -82,10 +89,43 @@ export const RecommendCard = forwardRef<HTMLDivElement, RecommendCardProps>(
 );
 RecommendCard.displayName = "RecommendCard";
 
+/**
+ * 하단 탭바(추천 활성) + 홈 인디케이터 — 피그마 402×106 px. 추천 화면 하단과, 상세 → 추천 탭 전환 때
+ * 오버레이가 기록 활성 탭바 위로 겹쳐 쓰는 탭바가 같이 쓴다. 부모가 위치를 정한다.
+ */
+export const RecommendTabBar = ({ className = "" }: { className?: string }) => (
+  <div
+    className={`h-[106px] w-[402px] overflow-hidden rounded-t-[20px] bg-white shadow-[0_-2px_6px_rgba(0,0,0,0.05)] ${className}`}
+  >
+    <div className="absolute left-1/2 top-[calc(50%-8.5px)] flex -translate-x-1/2 -translate-y-1/2 items-center gap-[44px]">
+      {TABS.map((tab) => (
+        <div key={tab.label} className="flex w-[35px] flex-col items-center gap-[4px]">
+          <div className="flex size-[35px] items-center justify-center">
+            <Image src={`${ASSET}/${tab.icon}`} alt="" width={tab.size} height={tab.size} unoptimized />
+          </div>
+          <p
+            className={`whitespace-nowrap text-center text-[14px] font-medium leading-[1.3] tracking-[-0.02em] ${
+              "isActive" in tab ? "text-[#41BE8E]" : "text-[#C1C2C3]"
+            }`}
+          >
+            {tab.label}
+          </p>
+        </div>
+      ))}
+    </div>
+    <div className="absolute bottom-[8px] left-1/2 h-[5px] w-[144px] -translate-x-1/2 rounded-full bg-black" />
+  </div>
+);
+
 interface RecommendScreenProps {
   /** 화면 크기(px). CSS 폰은 `PHONE.screenWidth/Height`, 3D 폰 화면 오버레이는 `PHONE_3D.screen` */
   width?: number;
   height?: number;
+  /**
+   * 상태바·하단 탭바를 그릴지. 3D 오버레이의 탭 전환(옆으로 밀기)에선 상태바·탭바가 제자리에 있어야 해서
+   * 오버레이가 따로 그리고, 여기선 본문·제목만 그린다.
+   */
+  hasChrome?: boolean;
 }
 
 /**
@@ -95,6 +135,7 @@ interface RecommendScreenProps {
 export const RecommendScreen = ({
   width = PHONE.screenWidth,
   height = PHONE.screenHeight,
+  hasChrome = true,
 }: RecommendScreenProps) => {
   const bodyRef = useRef<HTMLDivElement>(null);
   const { designWidth, fixedTop, bodyHeight } = RECOMMEND_SCREEN;
@@ -147,7 +188,7 @@ export const RecommendScreen = ({
 
         {/* 상단 고정: 상태바 + 제목 */}
         <div className="absolute left-0 top-0 w-full bg-white" style={{ height: fixedTop }}>
-          <div className="flex h-[54px] items-center pt-[21px]">
+          <div className={`flex h-[54px] items-center pt-[21px] ${hasChrome ? "" : "invisible"}`}>
             <p className="flex flex-1 justify-center pl-[16px] pr-[6px] text-[17px] font-semibold leading-[22px] text-black">
               {recommend.statusTime}
             </p>
@@ -164,25 +205,7 @@ export const RecommendScreen = ({
         </div>
 
         {/* 하단 고정: 탭바(추천 활성) + 홈 인디케이터 */}
-        <div className="absolute bottom-0 left-0 h-[106px] w-full overflow-hidden rounded-t-[20px] bg-white shadow-[0_-2px_6px_rgba(0,0,0,0.05)]">
-          <div className="absolute left-1/2 top-[calc(50%-8.5px)] flex -translate-x-1/2 -translate-y-1/2 items-center gap-[44px]">
-            {TABS.map((tab) => (
-              <div key={tab.label} className="flex w-[35px] flex-col items-center gap-[4px]">
-                <div className="flex size-[35px] items-center justify-center">
-                  <Image src={`${ASSET}/${tab.icon}`} alt="" width={tab.size} height={tab.size} unoptimized />
-                </div>
-                <p
-                  className={`whitespace-nowrap text-center text-[14px] font-medium leading-[1.3] tracking-[-0.02em] ${
-                    "isActive" in tab ? "text-[#41BE8E]" : "text-[#C1C2C3]"
-                  }`}
-                >
-                  {tab.label}
-                </p>
-              </div>
-            ))}
-          </div>
-          <div className="absolute bottom-[8px] left-1/2 h-[5px] w-[144px] -translate-x-1/2 rounded-full bg-black" />
-        </div>
+        {hasChrome && <RecommendTabBar className="absolute bottom-0 left-0" />}
       </div>
     </div>
   );

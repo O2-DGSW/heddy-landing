@@ -15,15 +15,40 @@ const staggerRange = ({ start, stagger, duration }: Stagger, index: number): [nu
 const sectionEnd = (frame: SceneFrame, key: "report" | "recommend"): number =>
   frame.sections.find((section) => section.key === key)?.end ?? 0;
 
+export type RecommendTabSwitch = {
+  /** "추천" 탭이 눌린 정도(0 → 1 → 0) */
+  press: number;
+  /** 탭 물결 진행도(0이면 없음) */
+  ripple: number;
+  /** 탭바 활성 색이 기록 → 추천으로 옮겨 간 정도(0~1) */
+  tabActive: number;
+  /** 추천 화면이 오른쪽에서 들어온 정도(0~1, 이징 적용) — 상세 화면은 같은 만큼 왼쪽으로 나간다 */
+  slide: number;
+};
+
 /**
- * 리포트 상세 → 추천 화면(크로스페이드) 진행도. report 섹션 end 기준 뷰포트 배수 밴드라,
- * 추천 섹션이 화면에 붙을 때 이미 1이다(`docs/plans/0007`).
+ * 리포트 상세 → 추천 화면: 하단 "추천" 탭을 눌렀다 떼면(물결) 탭바 활성 색이 옮겨 가고, 추천 화면이
+ * 오른쪽에서 밀려 들어온다(`docs/plans/0007`). report 섹션 end 기준 구간이라 추천 섹션이 화면에 붙을 때
+ * 이미 다 넘어가 있다.
  */
-export const computeRecommendIn = (frame: SceneFrame): number => {
+export const computeRecommendTabSwitch = (frame: SceneFrame): RecommendTabSwitch => {
   const vh = frame.layout.viewportHeight;
   const end = sectionEnd(frame, "report");
-  const [from, to] = TIMELINE.recommend.fromReportBand;
-  return progressIn(frame.scrollY, [end + from * vh, end + to * vh]);
+  const { tabTapBand, tabSlideBand, tabActiveIn } = TIMELINE.recommend;
+  const tap = progressIn(frame.scrollY, [end + tabTapBand[0] * vh, end + tabTapBand[1] * vh]);
+  const slide = progressIn(frame.scrollY, [end + tabSlideBand[0] * vh, end + tabSlideBand[1] * vh]);
+  if (frame.isReducedMotion) {
+    const isSwitched = slide > 0;
+    return { press: 0, ripple: 0, tabActive: isSwitched ? 1 : 0, slide: isSwitched ? 1 : 0 };
+  }
+
+  const isTapping = tap > 0 && tap < 1;
+  return {
+    press: isTapping ? Math.sin(Math.PI * tap) : 0,
+    ripple: isTapping ? tap : 0,
+    tabActive: progressIn(tap, tabActiveIn),
+    slide: easeInOutCubic(slide),
+  };
 };
 
 export type RecommendCardPose = {

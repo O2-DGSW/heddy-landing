@@ -5,8 +5,8 @@ import { computeStageLayout, createFrame, stackSections, type SceneFrame } from 
 
 import {
   computeRecommendCards,
-  computeRecommendIn,
   computeRecommendScroll,
+  computeRecommendTabSwitch,
   recommendScrollRangePx,
 } from "./recommendScene";
 
@@ -24,21 +24,60 @@ const atScrollY = (scrollY: number, isReducedMotion = false): SceneFrame =>
 const atP = (p: number, isReducedMotion = false): SceneFrame =>
   atScrollY(recommend.top + p * (recommend.height - H), isReducedMotion);
 
-const { cardPop, cardReturn, screenScroll, fromReportBand } = TIMELINE.recommend;
+const { cardPop, cardReturn, screenScroll, tabTapBand, tabSlideBand } = TIMELINE.recommend;
+/** report end 기준 뷰포트 배수 지점 */
+const atReportEndVh = (vh: number, isReducedMotion = false): SceneFrame =>
+  atScrollY(report.end + vh * H, isReducedMotion);
+const mid = ([a, b]: readonly [number, number]) => (a + b) / 2;
 const popEnd = (i: number) => cardPop.start + i * cardPop.stagger + cardPop.duration;
 const popStart = (i: number) => cardPop.start + i * cardPop.stagger;
 const returnStart = (i: number) => cardReturn.start + i * cardReturn.stagger;
 const returnEnd = (i: number) => returnStart(i) + cardReturn.duration;
 const CARD_COUNT = 3;
 
-describe("computeRecommendIn (리포트 상세 → 추천 화면)", () => {
-  it("밴드 전에는 0, 끝나면 1이다", () => {
-    expect(computeRecommendIn(atScrollY(report.end + (fromReportBand[0] - 0.01) * H))).toBe(0);
-    expect(computeRecommendIn(atScrollY(report.end + fromReportBand[1] * H))).toBe(1);
+describe("computeRecommendTabSwitch (상세 → 추천: 추천 탭 탭 + 옆으로 밀기)", () => {
+  it("탭 전에는 상세 화면 그대로다", () => {
+    expect(computeRecommendTabSwitch(atReportEndVh(tabTapBand[0] - 0.01))).toEqual({
+      press: 0,
+      ripple: 0,
+      tabActive: 0,
+      slide: 0,
+    });
   });
 
-  it("추천 섹션이 화면에 붙을 때(진행도 0) 이미 추천 화면이 다 보인다", () => {
-    expect(computeRecommendIn(atP(0))).toBe(1);
+  it("탭 가운데서 추천 탭이 가장 깊이 눌리고 물결이 퍼지며, 탭바 활성 색이 옮겨 가는 중이다", () => {
+    const tap = computeRecommendTabSwitch(atReportEndVh(mid(tabTapBand)));
+    expect(tap.press).toBeCloseTo(1);
+    expect(tap.ripple).toBeGreaterThan(0);
+    expect(tap.ripple).toBeLessThan(1);
+    expect(tap.tabActive).toBeGreaterThan(0);
+    expect(tap.tabActive).toBeLessThan(1);
+    expect(tap.slide).toBe(0);
+  });
+
+  it("탭이 끝나면 탭바는 추천이 활성이고, 그다음 추천 화면이 오른쪽에서 밀려 들어온다", () => {
+    const end = computeRecommendTabSwitch(atReportEndVh(tabTapBand[1]));
+    expect(end.press).toBeCloseTo(0);
+    expect(end.tabActive).toBe(1);
+    expect(end.slide).toBe(0);
+    expect(computeRecommendTabSwitch(atReportEndVh(mid(tabSlideBand))).slide).toBeCloseTo(0.5);
+  });
+
+  it("slide는 단조 증가한다", () => {
+    let prev = -1;
+    for (let vh = tabSlideBand[0]; vh <= tabSlideBand[1]; vh += 0.01) {
+      const { slide } = computeRecommendTabSwitch(atReportEndVh(vh));
+      expect(slide).toBeGreaterThanOrEqual(prev);
+      prev = slide;
+    }
+  });
+
+  it("추천 섹션이 화면에 붙을 때(진행도 0) 이미 추천 화면으로 다 넘어가 있다", () => {
+    expect(computeRecommendTabSwitch(atP(0))).toEqual({ press: 0, ripple: 0, tabActive: 1, slide: 1 });
+  });
+
+  it("reduced motion이면 누르는 연출 없이 위치에 따라 바로 바뀐다", () => {
+    expect(computeRecommendTabSwitch(atReportEndVh(mid(tabTapBand), true)).press).toBe(0);
   });
 });
 

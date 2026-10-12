@@ -2,7 +2,7 @@ import { PHONE_3D } from "@/shared/config";
 import { progressIn } from "@/shared/lib/motion";
 import type { SceneFrame, StageLayout } from "@/shared/lib/scroll";
 
-import { computeRecommendIn } from "./recommendScene";
+import { computeRecommendTabSwitch, type RecommendTabSwitch } from "./recommendScene";
 import { computeTapToDetail } from "./tapToDetail";
 
 export type SplineViewport = { left: number; top: number; width: number; height: number };
@@ -68,8 +68,8 @@ export type ScreenOverlay = {
   ripple: number;
   /** 상세 화면이 오른쪽에서 들어온 정도(0~1) */
   push: number;
-  /** 상세 → 추천 화면 크로스페이드(0~1, `docs/plans/0007`) */
-  recommendIn: number;
+  /** 상세 → 추천 화면: 추천 탭 탭 + 옆으로 밀기(`docs/plans/0007`) */
+  tabSwitch: RecommendTabSwitch;
 };
 
 /**
@@ -94,6 +94,6 @@ export const computeScreenOverlay = (frame: SceneFrame): ScreenOverlay => {
     press,
     ripple,
     push,
-    recommendIn: computeRecommendIn(frame),
+    tabSwitch: computeRecommendTabSwitch(frame),
   };
 };
