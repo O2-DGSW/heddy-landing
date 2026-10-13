@@ -14,7 +14,7 @@ Claude Design `Heddy Landing v2.dc.html`의 마크업과 `update()` 로직에서
 | recommend | s6 | 320 | 검색이 아니라, / 기록에서 시작하는 추천 (220 → 320, 카드 팝아웃을 읽을 수 있게, 2026-10-12) |
 | ar | s7 | 600 | 분할 문구 "거울 앞에 \| 앉기 전에" → 패널 문구 "머릿속 상상을 지우고 / 이제는 눈앞의 결과로" → 카피 "거울 앞에 앉기 전에, / 먼저 비춰보세요" |
 | share | s8 | 320 | 미용실에서 / 설명 없이 — 기록이 나를 대신해 설명합니다 |
-| closing | s9 | 100 | 다음 시술 전에, / 헤디에 기록부터 + 카드형 스토어 버튼(다운로드 · App Store / 원스토어, 원본 Google Play는 실제 스토어가 아니라 쓰지 않음) · © 2026 Heddy (2026-10-13, `docs/plans/0010`) |
+| closing | s9 | 100 | 다음 시술 전에, / 헤디에 기록부터 + 카드형 스토어 버튼(로고 · 다운로드 · App Store / 원스토어, 원본 Google Play는 실제 스토어가 아니라 쓰지 않음). 아래에 푸터(로고 · © 2026 Heddy · 운영 O2 · 문의 메일 · Instagram / GitHub) (2026-10-13, `docs/plans/0010`) |
 
 - 높이 = `100 + (base - 100) × scrollLength` (scrollLength 기본 1). 섹션 진행도 p = (scrollY − top) / (top + height − 뷰포트높이 − top), 0~1로 자름.
 - 원본 s2는 삭제됨.
