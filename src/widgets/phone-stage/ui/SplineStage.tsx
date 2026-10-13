@@ -35,6 +35,20 @@ const MIN_PIXEL_RATIO = 2;
 type SplineInternals = {
   _renderer?: { getPixelRatio: () => number; setPixelRatio: (ratio: number) => void };
   _resize?: (force?: boolean) => void;
+  /** 렌더 루프가 프레임마다 부르는 함수. 바뀐 게 없으면 그리지 않는다 */
+  render?: (time: number) => void;
+};
+
+/**
+ * 방금 쓴 오브젝트 값을 이 프레임에 바로 그린다. Spline 렌더 루프(rAF)는 스크롤 프레임보다 먼저 돌아서,
+ * 그대로 두면 캔버스가 DOM 화면 오버레이보다 한 프레임 늦어 빠르게 움직일 때 화면이 폰에서 미끄러진다.
+ * 시각은 이 프레임 rAF 시각을 써서 루프와 dt가 어긋나지 않게 한다. 그린 뒤엔 루프가 같은 장면을 다시 그리지 않는다.
+ */
+const renderNow = (app: Application): void => {
+  const { render } = app as unknown as SplineInternals;
+  if (typeof render !== "function") return;
+  const time = document.timeline.currentTime;
+  render(typeof time === "number" ? time : performance.now());
 };
 
 const supersample = (app: Application): void => {
@@ -232,6 +246,7 @@ export const SplineStage = ({ sceneUrl, onLoad, onFail }: SplineStageProps) => {
       setIfChanged(rigB.scale, "y", rig.scale);
       setIfChanged(rigB.scale, "z", rig.scale);
     }
+    if (appRef.current && canvasOpacity > 0) renderNow(appRef.current);
   });
 
   // 기록 스택은 부드럽게 따라가는 스크롤로 움직인다 — 빠르게 내려도 카드가 건너뛰지 않는다.
@@ -239,6 +254,7 @@ export const SplineStage = ({ sceneUrl, onLoad, onFail }: SplineStageProps) => {
   useSmoothSceneFrame((frame) => {
     if (!recordObjectsRef.current || isFailedRef.current) return;
     applyRecordStack(recordObjectsRef.current, computeRecordStack(frame, RECORD_CARDS.length));
+    if (appRef.current) renderNow(appRef.current);
   }, RECORD_STACK.smoothHalfLifeMs);
 
   return (
