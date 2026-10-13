@@ -63,8 +63,8 @@ export const computeSplineHandoff = (frame: SceneFrame): SplineHandoff => {
 };
 
 export type ShareRigs = {
-  /** RecordRig(폰 A) 가로 이동(씬 단위) */
-  a: { x: number };
+  /** RecordRig(폰 A) 가로 이동(씬 단위)·배율(closing에서 커짐, `docs/plans/0010`) */
+  a: { x: number; scale: number };
   /** 폰 B가 설 자리: A와 같은 면(z 0) 위 위치·z축 회전(도, 씬 기준 반시계) */
   b: ShareTargetB;
 };
@@ -80,7 +80,7 @@ export const computeShareRigs = (frame: SceneFrame): ShareRigs => {
   const { a, b } = computePhones(frame);
   const share = frame.sections.find((section) => section.key === "share");
   if (!share || frame.scrollY < share.top) {
-    return { a: { x: 0 }, b: { x: 0, y: 0, rotateZDeg: 0, isVisible: false } };
+    return { a: { x: 0, scale: 1 }, b: { x: 0, y: 0, rotateZDeg: 0, isVisible: false } };
   }
   const { scale, center, viewportWidth, viewportHeight } = frame.layout;
   // 퇴장 끝(share.end)은 레이아웃 반올림으로 최대 스크롤보다 1px 뒤일 수 있다 — 다 빠진 B는 숨겨 그림자를 없앤다.
@@ -89,7 +89,7 @@ export const computeShareRigs = (frame: SceneFrame): ShareRigs => {
   const isOffRight = b.x - (PHONE.width / 2) * b.scale >= viewportWidth;
   const isBVisible = b.opacity > 0 && !(isLeaving && isOffRight);
   return {
-    a: { x: (a.x - center.x) / scale },
+    a: { x: (a.x - center.x) / scale, scale: a.scale / scale },
     b: isBVisible
       ? {
           x: (b.x - center.x) / scale,
@@ -137,6 +137,8 @@ export type ScreenOverlay = {
   /** 화면 면 안의 회전(도, CSS 시계 방향) */
   rotateZDeg: number;
   scale: number;
+  /** 폰 묶음 배율(씬 안, 묶음 위치 기준) — closing에서 커진다(`docs/plans/0010`) */
+  phoneScale: number;
   perspective: number;
   rotateXDeg: number;
   translateZ: number;
@@ -154,8 +156,8 @@ export type ScreenOverlay = {
   isArScreen: boolean;
   /** AR → 기록 공유 화면 크로스페이드(0~1, `docs/plans/0009`) */
   shareIn: number;
-  /** 기록 공유 → 홈 화면 크로스페이드(share 끝 이후, CSS 폰과 같은 밴드) */
-  homeIn: number;
+  /** 기록 공유 → closing 홈 화면 크로스페이드(CSS 폰과 같은 밴드, `docs/plans/0010`) */
+  closingHomeIn: number;
 };
 
 /**
@@ -170,13 +172,15 @@ export const computeScreenOverlay = (frame: SceneFrame): ScreenOverlay => {
   const ar = frame.sections.find((section) => section.key === "ar");
   const { press, ripple, push } = computeTapToDetail(frame);
   const isActive = ripple > 0 || push > 0;
+  const rigA = computeShareRigs(frame).a;
   return {
     x: layout.center.x,
     y: layout.center.y + yOffset,
-    sceneX: computeShareRigs(frame).a.x,
+    sceneX: rigA.x,
     sceneY: 0,
     rotateZDeg: 0,
     scale: layout.scale,
+    phoneScale: rigA.scale,
     perspective: PHONE_3D.camera.distance,
     rotateXDeg: PHONE_3D.screen.tiltDeg,
     translateZ: PHONE_3D.screen.z,
@@ -187,7 +191,7 @@ export const computeScreenOverlay = (frame: SceneFrame): ScreenOverlay => {
     tabSwitch: computeRecommendTabSwitch(frame),
     isArScreen: ar ? frame.scrollY >= ar.top : false,
     shareIn: computeShareScreen(frame, PHONE_3D.screen).enter,
-    homeIn: computeScreens(frame).a.home * (frame.scrollY > (ar?.end ?? Infinity) ? 1 : 0),
+    closingHomeIn: computeScreens(frame).a.closingHome,
   };
 };
 
@@ -199,6 +203,7 @@ export type ScreenOverlayB = Pick<
   | "sceneY"
   | "rotateZDeg"
   | "scale"
+  | "phoneScale"
   | "perspective"
   | "rotateXDeg"
   | "translateZ"
@@ -217,6 +222,7 @@ export const computeScreenOverlayB = (frame: SceneFrame): ScreenOverlayB => {
     sceneY: b.y,
     rotateZDeg: -b.rotateZDeg,
     scale: layout.scale,
+    phoneScale: 1,
     perspective: PHONE_3D.camera.distance,
     rotateXDeg: PHONE_3D.screen.tiltDeg,
     translateZ: PHONE_3D.screen.z,

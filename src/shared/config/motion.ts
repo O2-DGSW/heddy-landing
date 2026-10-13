@@ -166,8 +166,6 @@ export const TIMELINE = {
   // --- 폰 화면 크로스페이드 (§4) ---
   /** 섹션 end 이후 뷰포트 높이의 35~65% 구간에서 다음 화면으로 전환 */
   screenCrossfadeBand: [0.35, 0.65] as Range,
-  /** share 끝 이후 30~70% 구간에서 폰 A가 QR 공유 화면 → 홈 화면으로 되돌아간다 */
-  shareEndToHomeBand: [0.3, 0.7] as Range,
 
   // --- 섹션별 모션 (§5, 상세 구현은 각 섹션 위젯에서 TODO로 남김) ---
   record: {
@@ -271,7 +269,25 @@ export const TIMELINE = {
     checkOut: [0.84, 0.9] as Range,
     /** 섹션 부제 */
     subtitleIn: [0.74, 0.88] as Range,
+    /**
+     * 기록 공유 → closing 홈 화면: share 고정 끝 기준 뷰포트 높이 배수(`docs/plans/0010`). 원본 "share 끝 이후
+     * 30~70%"는 페이지 끝을 넘어 닿지 않았다 — 폰이 closing 자리로 가는 동안(고정 끝 ~ share.end) 바뀐다.
+     */
+    toClosingHomeBand: [0.25, 0.65] as Range,
   },
+} as const;
+
+/**
+ * closing 섹션 폰 A 자세(데스크톱, `docs/plans/0010`): 오른쪽에 정면으로 크게 선다. share 고정 끝 ~ share.end
+ * 동안 share 자리에서 여기로 옮겨 간다. 모바일은 지금처럼 가운데로 돌아온다.
+ */
+export const CLOSING_PHONE = {
+  centerXRatio: 0.78,
+  centerYRatio: 0.5,
+  /** 폰 높이 / 뷰포트 높이 */
+  heightRatio: 0.8,
+  /** 폰 오른쪽 끝과 뷰포트 오른쪽 사이 최소 여백(px) — 좁은 화면에선 이 안에 들어가게 줄인다 */
+  edgeMarginPx: 32,
 } as const;
 
 /** 헤더: 스크롤 양만큼 위로 밀려 올라가고(숨김), 위로 올리면 같은 양만큼 내려온다 */

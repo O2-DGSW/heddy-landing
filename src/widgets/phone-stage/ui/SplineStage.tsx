@@ -95,6 +95,9 @@ type ShareObjects = {
   rigB: SPEObject;
   phoneA: SPEObject;
   phoneB: SPEObject;
+  /** 그림자 바닥과 로드 때 높이 — closing에서 폰이 커지면 같은 배율만큼 내린다(`docs/plans/0010`) */
+  floor: SPEObject | null;
+  floorY: number;
 };
 
 const findShareObjects = (app: Application): ShareObjects | null => {
@@ -102,7 +105,8 @@ const findShareObjects = (app: Application): ShareObjects | null => {
   const phoneA = app.findObjectByName("PhoneA");
   const phoneB = app.findObjectByName("PhoneB");
   if (!rigB || !phoneA || !phoneB) return null;
-  return { rigB, phoneA, phoneB };
+  const floor = app.findObjectByName("ShadowCatcher") ?? null;
+  return { rigB, phoneA, phoneB, floor, floorY: floor?.position.y ?? 0 };
 };
 
 /** 값이 바뀔 때만 쓴다 — 같은 값을 써도 Spline이 다시 그리므로 */
@@ -229,10 +233,18 @@ export const SplineStage = ({ sceneUrl, onLoad, onFail }: SplineStageProps) => {
     // share: 폰 A(RecordRig)는 왼쪽으로, 폰 B(ShareRigB)는 오른쪽에서 들어와 나란히 선다(`docs/plans/0009`)
     const rigs = computeShareRigs(frame);
     const recordRig = recordObjectsRef.current?.rig;
-    if (recordRig) setIfChanged(recordRig.position, "x", rigs.a.x);
+    if (recordRig) {
+      setIfChanged(recordRig.position, "x", rigs.a.x);
+      // closing: 폰 A가 커진다(묶음 원점 = 폰 중심이라 제자리에서 커짐)
+      setIfChanged(recordRig.scale, "x", rigs.a.scale);
+      setIfChanged(recordRig.scale, "y", rigs.a.scale);
+      setIfChanged(recordRig.scale, "z", rigs.a.scale);
+    }
     const share = shareObjectsRef.current;
     if (share) {
-      const { rigB, phoneA, phoneB } = share;
+      const { rigB, phoneA, phoneB, floor, floorY } = share;
+      // 커진 폰이 바닥을 뚫지 않게 바닥도 같은 배율만큼 내린다
+      if (floor) setIfChanged(floor.position, "y", floorY * rigs.a.scale);
       const rig = fitShareRigB(
         rigs.b,
         { x: phoneB.position.x, y: phoneB.position.y, z: phoneB.position.z, scale: phoneB.scale.x },
