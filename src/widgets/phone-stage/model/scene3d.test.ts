@@ -10,6 +10,7 @@ import {
   computeShareRigs,
   computeSplineHandoff,
   computeSplineViewport,
+  fitShareRigB,
 } from "./scene3d";
 
 const W = 1440;
@@ -119,7 +120,7 @@ describe("computeShareRigs (share: 폰 두 대 3D 배치, `docs/plans/0009`)", (
   it("share 전에는 두 묶음 다 제자리(히어로 합체 그대로)", () => {
     const rigs = computeShareRigs(frameAtScrollY(0));
     expect(rigs.a.x).toBe(0);
-    expect(rigs.b).toEqual({ x: 0, y: 0, z: 0, rotateZDeg: 0, isVisible: false });
+    expect(rigs.b).toEqual({ x: 0, y: 0, rotateZDeg: 0, isVisible: false });
   });
 
   it("CSS 폰과 같은 자리: A는 cx − 0.13W, B는 cx + 0.13W(씬 단위 = px / S)", () => {
@@ -132,8 +133,14 @@ describe("computeShareRigs (share: 폰 두 대 3D 배치, `docs/plans/0009`)", (
     expect(rigs.b.isVisible).toBe(true);
   });
 
-  it("B는 합쳐진 자리(A 뒤 z −40)에서 앞으로 40 나와 A와 같은 면에 선다", () => {
-    expect(computeShareRigs(atShare(0.6)).b.z).toBe(40);
+  it("B가 오른쪽 밖으로 다 빠지면 숨긴다 — 끝까지 내려도 퇴장이 1px 덜 끝나 그림자가 가장자리에 남지 않게", () => {
+    const frame = frameAtScrollY(share.end - 1);
+    expect(computePhones(frame).b.opacity).toBe(1);
+    expect(computeShareRigs(frame).b.isVisible).toBe(false);
+  });
+
+  it("들어올 때는 화면 밖에서부터 보인다(그림자가 먼저 들어온다)", () => {
+    expect(computeShareRigs(atShare(TIMELINE.shareXShift[0] + 0.001)).b.isVisible).toBe(true);
   });
 
   it("B가 들어오는 중엔 기울어 있다(CSS 회전과 반대 부호 = 씬 z축 반시계)", () => {
@@ -156,6 +163,58 @@ describe("computeShareRigs (share: 폰 두 대 3D 배치, `docs/plans/0009`)", (
   it("A 화면 오버레이도 A 묶음을 따라 옮겨 간다", () => {
     const frame = atShare(0.6);
     expect(computeScreenOverlay(frame).sceneX).toBeCloseTo(computeShareRigs(frame).a.x);
+  });
+});
+
+describe("fitShareRigB (Spline이 쥔 PhoneB 자세를 묶음으로 되돌린다)", () => {
+  /** 히어로 합체 끝 PhoneB "Gone" 상태: A 뒤 z −40, 크기 1%(Spline Scroll 이벤트가 계속 다시 쓴다) */
+  const GONE = { x: 0, y: 0, z: -40, scale: 2.2284 };
+  const PHONE_SCALE = 222.84;
+
+  /** 묶음 변환을 PhoneB 로컬 위치에 적용한 월드 위치·크기 */
+  const toWorld = (rig: ReturnType<typeof fitShareRigB>, local: typeof GONE) => {
+    const t = rig.rotateZDeg * (Math.PI / 180);
+    const lx = local.x * rig.scale;
+    const ly = local.y * rig.scale;
+    return {
+      x: rig.x + lx * Math.cos(t) - ly * Math.sin(t),
+      y: rig.y + lx * Math.sin(t) + ly * Math.cos(t),
+      z: rig.z + local.z * rig.scale,
+      scale: local.scale * rig.scale,
+    };
+  };
+
+  it("B가 안 보이면 묶음은 제자리 — 히어로 합체는 씬 그대로", () => {
+    const rig = fitShareRigB({ x: 0, y: 0, rotateZDeg: 0, isVisible: false }, GONE, PHONE_SCALE);
+    expect(rig).toEqual({ x: 0, y: 0, z: 0, rotateZDeg: 0, scale: 1 });
+  });
+
+  it("B가 보이면 PhoneB가 A와 같은 크기로, A와 같은 면(z 0)의 목표 자리에 선다", () => {
+    const target = { x: 213, y: -12, rotateZDeg: 6, isVisible: true };
+    const world = toWorld(fitShareRigB(target, GONE, PHONE_SCALE), GONE);
+    expect(world.x).toBeCloseTo(213);
+    expect(world.y).toBeCloseTo(-12);
+    expect(world.z).toBeCloseTo(0);
+    expect(world.scale).toBeCloseTo(PHONE_SCALE);
+  });
+
+  it("PhoneB가 로컬에서 비켜 있어도(회전 포함) 목표 자리에 맞춘다", () => {
+    const local = { x: 3, y: -2, z: -40, scale: 2.2284 };
+    const target = { x: -50, y: 30, rotateZDeg: -10, isVisible: true };
+    const world = toWorld(fitShareRigB(target, local, PHONE_SCALE), local);
+    expect(world.x).toBeCloseTo(-50);
+    expect(world.y).toBeCloseTo(30);
+    expect(world.z).toBeCloseTo(0);
+  });
+
+  it("PhoneB 크기가 0이어도 무한대로 튀지 않는다", () => {
+    const rig = fitShareRigB(
+      { x: 1, y: 1, rotateZDeg: 0, isVisible: true },
+      { ...GONE, scale: 0 },
+      PHONE_SCALE,
+    );
+    expect(Number.isFinite(rig.scale)).toBe(true);
+    expect(Number.isFinite(rig.z)).toBe(true);
   });
 });
 

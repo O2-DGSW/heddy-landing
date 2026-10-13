@@ -1,4 +1,4 @@
-import { PHONE_3D } from "@/shared/config";
+import { PHONE, PHONE_3D } from "@/shared/config";
 import type { SceneFrame, StageLayout } from "@/shared/lib/scroll";
 
 import { computeRecommendTabSwitch, type RecommendTabSwitch } from "./recommendScene";
@@ -65,38 +65,65 @@ export const computeSplineHandoff = (frame: SceneFrame): SplineHandoff => {
 export type ShareRigs = {
   /** RecordRig(폰 A) 가로 이동(씬 단위) */
   a: { x: number };
-  /** ShareRigB(폰 B) 위치·z축 회전(도, 씬 기준 반시계) */
-  b: { x: number; y: number; z: number; rotateZDeg: number; isVisible: boolean };
+  /** 폰 B가 설 자리: A와 같은 면(z 0) 위 위치·z축 회전(도, 씬 기준 반시계) */
+  b: ShareTargetB;
 };
 
-/** 폰 B는 합쳐진 상태에서 A 뒤(z −40)에 숨어 있다 — share에서 앞으로 꺼내 A와 같은 면에 세운다 */
-const B_BEHIND_A_Z = 40;
+export type ShareTargetB = { x: number; y: number; rotateZDeg: number; isVisible: boolean };
 
 /**
  * share 섹션 폰 두 대 3D 배치(`docs/plans/0009`): CSS 폰 A/B와 같은 자리(`computePhones`)를 씬 단위
- * (페이지 px ÷ S)로 옮긴다. A는 RecordRig, B는 ShareRigB(Spline 씬에서 PhoneB를 감싼 묶음)를 움직인다.
+ * (페이지 px ÷ S)로 옮긴다. A는 RecordRig를 움직이고, B는 `fitShareRigB`로 ShareRigB 변환을 구한다.
  * B가 안 보일 땐 두 묶음 다 제자리라 히어로 합체에는 영향이 없다.
  */
 export const computeShareRigs = (frame: SceneFrame): ShareRigs => {
   const { a, b } = computePhones(frame);
   const share = frame.sections.find((section) => section.key === "share");
-  const isPastShareStart = share ? frame.scrollY >= share.top : false;
-  if (!isPastShareStart) {
-    return { a: { x: 0 }, b: { x: 0, y: 0, z: 0, rotateZDeg: 0, isVisible: false } };
+  if (!share || frame.scrollY < share.top) {
+    return { a: { x: 0 }, b: { x: 0, y: 0, rotateZDeg: 0, isVisible: false } };
   }
-  const { scale, center } = frame.layout;
-  const isBVisible = b.opacity > 0;
+  const { scale, center, viewportWidth, viewportHeight } = frame.layout;
+  // 퇴장 끝(share.end)은 레이아웃 반올림으로 최대 스크롤보다 1px 뒤일 수 있다 — 다 빠진 B는 숨겨 그림자를 없앤다.
+  // 들어올 때는 밖에서부터 보여 그림자가 먼저 들어온다
+  const isLeaving = frame.scrollY > share.end - viewportHeight;
+  const isOffRight = b.x - (PHONE.width / 2) * b.scale >= viewportWidth;
+  const isBVisible = b.opacity > 0 && !(isLeaving && isOffRight);
   return {
     a: { x: (a.x - center.x) / scale },
     b: isBVisible
       ? {
           x: (b.x - center.x) / scale,
           y: -(b.y - center.y) / scale,
-          z: B_BEHIND_A_Z,
           rotateZDeg: -b.rotate,
           isVisible: true,
         }
-      : { x: 0, y: 0, z: 0, rotateZDeg: 0, isVisible: false },
+      : { x: 0, y: 0, rotateZDeg: 0, isVisible: false },
+  };
+};
+
+export type PhoneLocal = { x: number; y: number; z: number; scale: number };
+export type RigTransform = { x: number; y: number; z: number; rotateZDeg: number; scale: number };
+
+/** PhoneB 크기가 0에 가까울 때 묶음 배율이 무한대로 튀지 않게 막는 바닥값 */
+const MIN_PHONE_SCALE = 1e-3;
+
+/**
+ * ShareRigB 변환: 묶음 안 PhoneB를 목표 자리에 A와 같은 크기로 세운다.
+ * PhoneB 자체는 히어로 합체 끝 "Gone" 상태(A 뒤 z −40, 크기 1%)이고 Spline Scroll 이벤트가 계속 다시 써서
+ * 런타임에서 못 바꾼다. 그래서 지금 PhoneB 로컬 자세(`local`)를 읽어 묶음 배율·위치로 되돌린다.
+ */
+export const fitShareRigB = (target: ShareTargetB, local: PhoneLocal, phoneScale: number): RigTransform => {
+  if (!target.isVisible) return { x: 0, y: 0, z: 0, rotateZDeg: 0, scale: 1 };
+  const scale = phoneScale / Math.max(local.scale, MIN_PHONE_SCALE);
+  const t = target.rotateZDeg * (Math.PI / 180);
+  const lx = local.x * scale;
+  const ly = local.y * scale;
+  return {
+    x: target.x - (lx * Math.cos(t) - ly * Math.sin(t)),
+    y: target.y - (lx * Math.sin(t) + ly * Math.cos(t)),
+    z: -local.z * scale,
+    rotateZDeg: target.rotateZDeg,
+    scale,
   };
 };
 
@@ -166,7 +193,16 @@ export const computeScreenOverlay = (frame: SceneFrame): ScreenOverlay => {
 
 export type ScreenOverlayB = Pick<
   ScreenOverlay,
-  "x" | "y" | "sceneX" | "sceneY" | "rotateZDeg" | "scale" | "perspective" | "rotateXDeg" | "translateZ" | "opacity"
+  | "x"
+  | "y"
+  | "sceneX"
+  | "sceneY"
+  | "rotateZDeg"
+  | "scale"
+  | "perspective"
+  | "rotateXDeg"
+  | "translateZ"
+  | "opacity"
 >;
 
 /** 폰 B 화면 오버레이(스캔 → 공유된 시술기록) — B 묶음과 같은 씬 위치·기울기로 투영한다(`docs/plans/0009`) */
