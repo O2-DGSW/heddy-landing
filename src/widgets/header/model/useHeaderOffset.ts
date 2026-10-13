@@ -3,17 +3,9 @@
 import { useCallback, useEffect, useRef, type RefObject } from "react";
 
 import { HEADER } from "@/shared/config";
-import { useSceneFrame, type SceneFrame } from "@/shared/lib/scroll";
+import { smoothScrollBy, useSceneFrame, wheelDeltaPx, type SceneFrame } from "@/shared/lib/scroll";
 
 import { INITIAL_HEADER_STATE, consumeHeaderScroll, settleHeaderOffset, stepHeaderOffset, type HeaderState } from "./headerVisibility";
-
-const LINE_HEIGHT_PX = 16;
-
-const wheelDeltaPx = (event: WheelEvent): number => {
-  if (event.deltaMode === 1) return event.deltaY * LINE_HEIGHT_PX;
-  if (event.deltaMode === 2) return event.deltaY * window.innerHeight;
-  return event.deltaY;
-};
 
 /**
  * 헤더 오프셋(위로 밀려 올라간 양)을 CSS 변수 --header-offset으로만 쓴다(프레임마다 setState 금지).
@@ -21,6 +13,7 @@ const wheelDeltaPx = (event: WheelEvent): number => {
  * - 위로: 화면이 스크롤되는 만큼 헤더가 내려온다(스크롤 프레임 기준).
  * - 스크롤이 멈추면 걸친 헤더는 가까운 쪽으로 마무리되고, 움직임은 CSS transition이 부드럽게 이어 준다.
  * - 스크롤바·키보드 등 휠/터치 밖의 스크롤도 스크롤 프레임이 같은 규칙으로 따라간다.
+ * - 휠은 관성 스크롤(`useSmoothWheelScroll`)보다 먼저(캡처 단계) 받고, 헤더가 숨은 뒤 남는 양은 관성 스크롤로 넘긴다.
  */
 export const useHeaderOffset = (headerRef: RefObject<HTMLElement | null>): void => {
   const stateRef = useRef<HeaderState>(INITIAL_HEADER_STATE);
@@ -65,8 +58,11 @@ export const useHeaderOffset = (headerRef: RefObject<HTMLElement | null>): void 
   useSceneFrame(handleFrame);
 
   useEffect(() => {
-    /** delta(px)만큼 아래로 스크롤하려는 입력을 처리한다. 헤더가 가져갔으면 true(기본 스크롤을 막아야 함) */
-    const takeDown = (delta: number): boolean => {
+    /**
+     * delta(px)만큼 아래로 스크롤하려는 입력을 처리한다. 헤더가 가져갔으면 true(기본 스크롤을 막아야 함).
+     * 헤더가 숨은 뒤 남는 양은 scrollRest로 넘긴다(휠은 관성 스크롤, 터치는 바로)
+     */
+    const takeDown = (delta: number, scrollRest: (remainder: number) => void): boolean => {
       const header = headerRef.current;
       if (!header) return false;
       const { state, remainder } = consumeHeaderScroll(stateRef.current, delta, header.offsetHeight);
@@ -74,13 +70,13 @@ export const useHeaderOffset = (headerRef: RefObject<HTMLElement | null>): void 
       // 스크롤 프레임이 이 갱신을 다시 세지 않도록 lastY는 그대로 두고 오프셋만 쓴다
       write(state);
       scheduleSettle();
-      if (remainder > 0) window.scrollBy(0, remainder);
+      if (remainder > 0) scrollRest(remainder);
       return true;
     };
 
     const handleWheel = (event: WheelEvent) => {
       if (event.ctrlKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
-      if (takeDown(wheelDeltaPx(event))) event.preventDefault();
+      if (takeDown(wheelDeltaPx(event, window.innerHeight), smoothScrollBy)) event.preventDefault();
     };
 
     let lastTouchY: number | null = null;
@@ -92,14 +88,15 @@ export const useHeaderOffset = (headerRef: RefObject<HTMLElement | null>): void 
       if (y == null || lastTouchY == null) return;
       const delta = lastTouchY - y; // 손가락을 위로 올리면 아래로 스크롤
       lastTouchY = y;
-      if (takeDown(delta) && event.cancelable) event.preventDefault();
+      if (takeDown(delta, (remainder) => window.scrollBy(0, remainder)) && event.cancelable) event.preventDefault();
     };
 
-    window.addEventListener("wheel", handleWheel, { passive: false });
+    // 캡처 단계: 관성 스크롤(window 버블 단계)보다 먼저 받아 헤더가 먼저 가져간다
+    window.addEventListener("wheel", handleWheel, { passive: false, capture: true });
     window.addEventListener("touchstart", handleTouchStart, { passive: true });
     window.addEventListener("touchmove", handleTouchMove, { passive: false });
     return () => {
-      window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("wheel", handleWheel, { capture: true });
       window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchmove", handleTouchMove);
     };
