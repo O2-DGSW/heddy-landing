@@ -15,11 +15,12 @@ const atP = (p: number) => createFrame(ar.top + p * (ar.height - H), layout, sec
 describe("isHeaderOverDarkPanel", () => {
   it("pill이 화면을 다 덮기 전에는 아니다", () => {
     expect(isHeaderOverDarkPanel(atP(0))).toBe(false);
-    expect(isHeaderOverDarkPanel(atP(TIMELINE.ar.pillMorphC[0]))).toBe(false);
+    const [start, end] = TIMELINE.ar.pillMorph;
+    expect(isHeaderOverDarkPanel(atP(start + 0.85 * (end - start)))).toBe(false);
   });
 
   it("다크 패널이 화면을 덮은 뒤 AR 섹션 끝까지 맞다", () => {
-    expect(isHeaderOverDarkPanel(atP(TIMELINE.ar.pillMorphC[1]))).toBe(true);
+    expect(isHeaderOverDarkPanel(atP(TIMELINE.ar.pillMorph[1]))).toBe(true);
     expect(isHeaderOverDarkPanel(atP(1))).toBe(true);
     // 고정이 끝나고 섹션이 위로 빠지는 동안에도 헤더 자리엔 아직 다크 패널이 있다
     expect(isHeaderOverDarkPanel(createFrame(ar.end - 10, layout, sections, false))).toBe(true);

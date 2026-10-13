@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clamp, damp, easeInOutCubic, lerp, mixRgb, progressIn } from "./math";
+import { clamp, damp, easeInOutCubic, easeInOutSine, lerp, mixRgb, monotoneCubic, progressIn } from "./math";
 
 describe("clamp", () => {
   it("범위 안 값은 그대로 반환한다", () => {
@@ -71,5 +71,44 @@ describe("damp", () => {
   });
   it("반감기가 0이면 바로 목표값이다", () => {
     expect(damp(0, 100, 16, 0)).toBe(100);
+  });
+});
+
+describe("monotoneCubic", () => {
+  const xs = [0, 0.3, 0.8, 1];
+  const ys = [1, 2, 10, 11];
+  const f = monotoneCubic(xs, ys);
+
+  it("기준점을 그대로 지난다", () => {
+    xs.forEach((x, i) => expect(f(x)).toBeCloseTo(ys[i]));
+  });
+  it("기준점이 늘어나기만 하면 사이도 줄지 않는다(넘치지 않음)", () => {
+    let prev = f(0);
+    for (let x = 0.01; x <= 1; x += 0.01) {
+      const y = f(x);
+      expect(y).toBeGreaterThanOrEqual(prev - 1e-9);
+      prev = y;
+    }
+  });
+  it("구간 밖은 끝값으로 자른다", () => {
+    expect(f(-1)).toBe(1);
+    expect(f(2)).toBe(11);
+  });
+  it("기준점에서 기울기가 끊기지 않는다(양쪽 기울기가 같다)", () => {
+    const h = 1e-5;
+    const left = (f(0.3) - f(0.3 - h)) / h;
+    const right = (f(0.3 + h) - f(0.3)) / h;
+    expect(right).toBeCloseTo(left, 2);
+  });
+});
+
+describe("easeInOutSine", () => {
+  it("0 → 0, 0.5 → 0.5, 1 → 1", () => {
+    expect(easeInOutSine(0)).toBeCloseTo(0);
+    expect(easeInOutSine(0.5)).toBeCloseTo(0.5);
+    expect(easeInOutSine(1)).toBeCloseTo(1);
+  });
+  it("시작이 easeInOutCubic보다 빨리 반응한다", () => {
+    expect(easeInOutSine(0.1)).toBeGreaterThan(easeInOutCubic(0.1));
   });
 });

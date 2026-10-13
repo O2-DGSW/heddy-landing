@@ -1,5 +1,5 @@
 import { AR_PANEL, TIMELINE } from "@/shared/config";
-import { easeInOutCubic, lerp, progressIn } from "@/shared/lib/motion";
+import { easeInOutCubic, easeInOutSine, monotoneCubic, progressIn } from "@/shared/lib/motion";
 import type { SceneFrame } from "@/shared/lib/scroll";
 
 export type ArScene = {
@@ -15,7 +15,7 @@ export type ArScene = {
 };
 
 /**
- * AR 섹션: "거울 앞에 | 앉기 전에" 사이 pill이 a → b → c로 커져 화면을 덮고(다크 패널), 패널 문구가
+ * AR 섹션: "거울 앞에 | 앉기 전에" 사이 pill이 한 곡선으로 커져 화면을 덮고(다크 패널), 패널 문구가
  * 나왔다 사라진 뒤 카피가 들어온다(`docs/design/spec.md` §5 ar, `docs/plans/0008`).
  */
 export const computeArScene = (frame: SceneFrame): ArScene => {
@@ -28,15 +28,17 @@ export const computeArScene = (frame: SceneFrame): ArScene => {
 
   const p = frame.isReducedMotion ? 1 : frame.progress("ar");
   const ar = TIMELINE.ar;
-  const a = easeInOutCubic(progressIn(p, ar.pillMorphA));
-  const bT = easeInOutCubic(progressIn(p, ar.pillMorphB));
-  const c = easeInOutCubic(progressIn(p, ar.pillMorphC));
-
-  const cross = lerp(lerp(lerp(AR_PANEL.pillStart.cross, AR_PANEL.pillA.cross, a), b.cross, bT), full.cross, c);
-  const main = lerp(lerp(lerp(AR_PANEL.pillStart.main, AR_PANEL.pillA.main, a), b.main, bT), full.main, c);
+  // 시작 → a → b → 전체를 한 곡선으로 잇는다(이슈 #43). 크기는 로그 스케일로 보간해 작을 땐 천천히,
+  // 커질수록 빠르게 — 단계 사이에서 멈추지 않는다
+  const t = easeInOutSine(progressIn(p, ar.pillMorph));
+  const sizeAt = (values: readonly number[]) => Math.exp(monotoneCubic(ar.pillKnots, values.map(Math.log))(t));
+  const cross = sizeAt([AR_PANEL.pillStart.cross, AR_PANEL.pillA.cross, b.cross, full.cross]);
+  const main = sizeAt([AR_PANEL.pillStart.main, AR_PANEL.pillA.main, b.main, full.main]);
   const width = isVertical ? cross : main;
   const height = isVertical ? main : cross;
-  const radius = (Math.min(width, height) / 2) * (1 - c);
+  // 작을 땐 알약, 커지면 둥근 사각형(반지름 상한) — 마지막 구간(b → 전체)에서 모서리가 각지며 화면을 덮는다
+  const c = easeInOutCubic(progressIn(t, [ar.pillKnots[2], 1]));
+  const radius = Math.min(Math.min(width, height) / 2, AR_PANEL.maxRadius) * (1 - c);
 
   const panelIn = easeInOutCubic(progressIn(p, ar.panelCopyIn));
   const panelOut = progressIn(p, ar.panelCopyOut);
