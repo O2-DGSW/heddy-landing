@@ -1,5 +1,5 @@
 ---
-status: 진행 # 계획 | 진행 | 완료 | 보류
+status: 완료 # 계획 | 진행 | 완료 | 보류
 owner: jang-gangmin
 created: 2026-10-13
 ---
@@ -26,6 +26,7 @@ created: 2026-10-13
   - 폰 두 대 모두 Spline 3D다(사용자 선택).
     - Spline 씬에 PhoneB를 감싼 `ShareRigB`를 추가했다.
     - A는 `RecordRig`를, B는 `ShareRigB`를 런타임에서 옮긴다.
+    - PhoneB는 히어로 합체 끝 "Gone" 상태(A 뒤 z −40, 크기 1%)이고 Spline Scroll 이벤트가 계속 다시 쓴다. 그래서 PhoneB는 건드리지 않고, 지금 PhoneB 로컬 자세를 읽어 `ShareRigB` 배율·위치로 되돌린다(`fitShareRigB`).
   - 화면은 피그마 landing 프레임 3개를 HTML로 옮긴다.
     - S4-공유화면(964:2296)
     - S4-공유QR화면(964:2416)
@@ -42,6 +43,7 @@ created: 2026-10-13
   - QR 비행은 [0.56, 0.70], 스캔 → 공유된 시술기록은 [0.71, 0.75]로 옮겼다.
 - share 고정이 끝나면 B는 오른쪽으로 빠지고 A는 가운데로 돌아온다.
   - 원본은 share.end ~ closing.top이라 길이가 0이었다. 이걸 share 고정 끝 ~ share.end로 바꿨다.
+  - share.end는 레이아웃 반올림으로 최대 스크롤보다 1px 뒤일 수 있다. 퇴장 중 화면 오른쪽 밖으로 다 빠진 3D B는 숨겨 그림자가 남지 않게 한다.
 - 화면 오버레이 투영은 원근 안쪽에서 옮긴다: `translate3d(sceneX, sceneY, 0) rotateZ`.
   - 가운데에서 비켜선 폰도 3D와 겹치게 하려는 것이다.
 
@@ -49,16 +51,16 @@ created: 2026-10-13
 
 - [x] 피그마 에셋(`public/screens/share/`)
 - [x] Spline 씬 `ShareRigB` 추가
-- [ ] 사용자 Spline export
+- [x] 사용자 Spline export
 - [x] `TIMELINE.share`, `SHARE_SCREEN` 수치와 명세 테스트(`shareScene`, `scene`, `scene3d`)
 - [x] `ShareScreen`(토글 → QR 모달), `ScanScreen`, `SharedRecordScreen`
 - [x] 폰 A/B 3D 배치(`computeShareRigs`), B 화면 오버레이, QR 비행
-- [ ] export 후 폰 B 본체 위치·기울기 브라우저 확인
+- [x] export 후 폰 B 본체 위치·기울기 브라우저 확인
 
 ## 완료 기준 (돌려서 확인할 수 있게)
 
 - [x] `pnpm test -- shareScene`, `pnpm test -- scene3d` 통과
-- [ ] 브라우저에서 다음을 확인한다.
+- [x] 브라우저에서 다음을 확인한다.
   - 토글이 차례로 켜진다.
   - 공유 링크 생성을 누르면 QR 모달이 뜬다.
   - B가 들어온다.
@@ -69,3 +71,9 @@ created: 2026-10-13
 ## 변경 기록
 
 - 2026-10-13: 작성·구현. 폰 A 흐름과 QR 비행은 Chrome에서 확인했다. 폰 B 본체는 Spline export 대기 중이다.
+- 2026-10-13: export 후 확인. PhoneB가 "Gone" 상태로 작게 남아 안 보여서 `fitShareRigB`로 묶음 배율을 되돌렸다. 앱 브라우저(1024×768)에서 확인했다.
+  - B가 기울어진 채 들어와 오버레이와 겹친다.
+  - 스캔 화면 → 공유된 시술기록 + 체크로 바뀐다.
+  - share 끝에서 오른쪽으로 빠진다.
+  - closing 끝에 그림자가 남지 않는다.
+  - 히어로 합체는 그대로다.
