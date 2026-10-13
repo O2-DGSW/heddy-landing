@@ -1,3 +1,4 @@
+import { Footer } from "@/widgets/footer";
 import { Header } from "@/widgets/header";
 import { PhoneStage } from "@/widgets/phone-stage";
 import { ArSection } from "@/widgets/section-ar";
@@ -22,6 +23,7 @@ export const LandingPage = () => {
       <ArSection />
       <ShareSection />
       <ClosingSection />
+      <Footer />
       <PhoneStage />
     </>
   );

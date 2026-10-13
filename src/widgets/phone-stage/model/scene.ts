@@ -142,10 +142,12 @@ export const computePhones = (frame: SceneFrame): PhonesScene => {
     const bX = lerp(lerp(bRestX, bTargetX, sh), bRestX, back);
     const bRotate = lerp(lerp(10, 0, sh), 10, back);
     const isBVisible = sh > 0 && back < 1;
+    // closing 아래 푸터가 올라오는 만큼 폰도 페이지와 함께 위로 빠진다
+    const footerScroll = Math.max(0, frame.scrollY - closingSection.top);
 
     a = {
       x: aX,
-      y: lerp(cy, closing.y, back),
+      y: lerp(cy, closing.y, back) - footerScroll,
       rotate: 0,
       scale: lerp(scale, closing.scale, back),
       opacity: 1,

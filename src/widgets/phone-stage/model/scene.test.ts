@@ -124,6 +124,16 @@ describe("closing: 폰 A가 오른쪽에 크게 선다(`docs/plans/0010`)", () =
     expect(b.x).toBeGreaterThan(W);
   });
 
+  it("closing 아래 푸터가 올라오면 폰도 페이지와 함께 위로 빠진다", () => {
+    const closing = sections.find((section) => section.key === "closing");
+    if (!closing) throw new Error("closing not found");
+    const atTop = computePhones(frameAtScrollY(closing.top)).a;
+    const scrolled = computePhones(frameAtScrollY(closing.top + 120)).a;
+    expect(scrolled.y).toBeCloseTo(atTop.y - 120);
+    expect(scrolled.x).toBeCloseTo(atTop.x);
+    expect(scrolled.scale).toBeCloseTo(atTop.scale);
+  });
+
   it("좁은 화면에선 폰 오른쪽 끝이 여백 안에 들어오게 줄인다", () => {
     const w = 1024;
     const h = 1000;

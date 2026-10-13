@@ -49,8 +49,15 @@ export const COPY = {
     },
     closing: {
       title: ["다음 시술 전에,", "헤디에 기록부터"],
-      copyright: "© 2026 Heddy",
     },
+  },
+  /** 푸터(`docs/plans/0010`) — 운영 주체·문의 메일은 heddy-app 이용약관 "문의처"와 같다 */
+  footer: {
+    copyright: "© 2026 Heddy",
+    operatorLabel: "운영",
+    operator: "O2",
+    contactLabel: "문의",
+    contactEmail: "teamo2.10th@gmail.com",
   },
   storeButtons: {
     /** 카드형 버튼(closing) 스토어명 위 작은 글자 */
