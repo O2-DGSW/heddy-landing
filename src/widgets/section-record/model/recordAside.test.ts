@@ -23,7 +23,7 @@ const pAtStep = (k: number, u: number): number => {
 describe("computeRecordAside", () => {
   it("처음엔 첫 카드의 연·월이 연한 색으로 보인다", () => {
     const aside = computeRecordAside(atP(0), RECORD_CARDS);
-    expect(aside.date).toBe("2025.03");
+    expect(aside.date).toBe("2026.01");
     expect(aside.prevDate).toBeNull();
     expect(aside.dateColor).toEqual([214, 208, 196]);
     expect(aside.railScale).toBeCloseTo(0.08);
@@ -31,8 +31,8 @@ describe("computeRecordAside", () => {
 
   it("폰에 카드 k가 들어오는 동안 날짜가 k-1 → k로 굴러 올라간다", () => {
     const entering = computeRecordAside(atP(pAtStep(4, 0.2)), RECORD_CARDS);
-    expect(entering.date).toBe("2025.09");
-    expect(entering.prevDate).toBe("2025.07");
+    expect(entering.date).toBe("2026.07");
+    expect(entering.prevDate).toBe("2026.06");
     expect(entering.roll).toBeGreaterThan(0);
     expect(entering.roll).toBeLessThan(1);
 
