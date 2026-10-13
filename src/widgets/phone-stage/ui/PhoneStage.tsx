@@ -17,6 +17,7 @@ import { ScanScreen, ShareScreen, SharedRecordScreen } from "./ShareScreens";
 import { SplineStage } from "./SplineStage";
 import { ArScreen } from "./ArScreen";
 import { ArSnapshotScreen, DetailScreen, HomeScreen, RecordScreen } from "./screens";
+import { ClosingHomeScreen } from "./ClosingHomeScreen";
 
 /** Spline 씬 URL. 없으면 CSS 폰만 쓴다(`docs/plans/0003`) */
 const SPLINE_HERO_SCENE = process.env.NEXT_PUBLIC_SPLINE_HERO_SCENE;
@@ -28,6 +29,7 @@ const A_SCREENS: readonly { key: PhoneAScreenKey; node: ReactNode }[] = [
   { key: "recommend", node: <RecommendScreen /> },
   { key: "ar", node: <ArScreen /> },
   { key: "qrShare", node: <ShareScreen /> },
+  { key: "closingHome", node: <ClosingHomeScreen /> },
 ];
 
 const B_SCREENS: readonly { key: PhoneBScreenKey; node: ReactNode }[] = [

@@ -19,7 +19,7 @@ import {
 } from "../model/scene3d";
 import { ArScreen } from "./ArScreen";
 import { ScanScreen, ShareScreen, SharedRecordScreen } from "./ShareScreens";
-import { HomeScreen } from "./screens";
+import { ClosingHomeScreen } from "./ClosingHomeScreen";
 import { RecommendCard, RecommendScreen, RecommendTabBar } from "./RecommendScreen";
 import { DetailScreen } from "./screens";
 
@@ -41,10 +41,10 @@ const TAP_POINT = (() => {
 
 /**
  * 씬 카메라와 같은 투영: 캔버스 중심(카메라 축)으로 옮기고 1 씬 단위 = S px로 줄인 뒤, 원근 안에서 폰 묶음
- * 위치(sceneX/Y, y 위로)·화면 면 회전·뒤로 눕힘(rotateX)·화면 면 높이(translateZ)를 적용한다.
+ * 위치(sceneX/Y, y 위로)·묶음 배율·화면 면 회전·뒤로 눕힘(rotateX)·화면 면 높이(translateZ)를 적용한다.
  */
 const overlayTransform = (o: ScreenOverlayBScene): string =>
-  `translate(${o.x}px, ${o.y}px) scale(${o.scale}) perspective(${o.perspective}px) translate3d(${o.sceneX}px, ${-o.sceneY}px, 0) rotateZ(${o.rotateZDeg}deg) rotateX(${o.rotateXDeg}deg) translateZ(${o.translateZ}px)`;
+  `translate(${o.x}px, ${o.y}px) scale(${o.scale}) perspective(${o.perspective}px) translate3d(${o.sceneX}px, ${-o.sceneY}px, 0) scale3d(${o.phoneScale}, ${o.phoneScale}, ${o.phoneScale}) rotateZ(${o.rotateZDeg}deg) rotateX(${o.rotateXDeg}deg) translateZ(${o.translateZ}px)`;
 
 interface ScreenOverlayProps {
   /** Spline이 로드돼 3D 폰이 보이는 중인지 — 아니면 오버레이를 숨긴다 */
@@ -71,7 +71,7 @@ export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
   const tabRippleRef = useRef<HTMLDivElement>(null);
   const arRef = useRef<HTMLDivElement>(null);
   const shareRef = useRef<HTMLDivElement>(null);
-  const homeRef = useRef<HTMLDivElement>(null);
+  const closingHomeRef = useRef<HTMLDivElement>(null);
   const popCardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const { screen, island } = PHONE_3D;
   const designScale = screen.width / RECOMMEND_SCREEN.designWidth;
@@ -126,9 +126,9 @@ export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
       shareRef.current.style.opacity = String(overlay.shareIn);
       shareRef.current.style.visibility = overlay.shareIn > 0 ? "visible" : "hidden";
     }
-    if (homeRef.current) {
-      homeRef.current.style.opacity = String(overlay.homeIn);
-      homeRef.current.style.visibility = overlay.homeIn > 0 ? "visible" : "hidden";
+    if (closingHomeRef.current) {
+      closingHomeRef.current.style.opacity = String(overlay.closingHomeIn);
+      closingHomeRef.current.style.visibility = overlay.closingHomeIn > 0 ? "visible" : "hidden";
     }
 
     computeRecommendCards(frame).forEach((pose, index) => {
@@ -236,12 +236,12 @@ export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
         <div ref={arRef} className="invisible absolute inset-0">
           <ArScreen width={screen.width} height={screen.height} />
         </div>
-        {/* 기록 공유 화면(토글 → QR 모달), share가 끝나면 홈 화면 */}
+        {/* 기록 공유 화면(토글 → QR 모달), share가 끝나면 closing 홈 화면(`docs/plans/0010`) */}
         <div ref={shareRef} className="invisible absolute inset-0 opacity-0">
           <ShareScreen width={screen.width} height={screen.height} />
         </div>
-        <div ref={homeRef} className="invisible absolute inset-0 opacity-0">
-          <HomeScreen />
+        <div ref={closingHomeRef} className="invisible absolute inset-0 opacity-0">
+          <ClosingHomeScreen />
         </div>
         {/* 다이내믹 아일랜드: 3D 폰 화면의 구멍 자리를 오버레이가 덮으므로 다시 그린다 */}
         <div

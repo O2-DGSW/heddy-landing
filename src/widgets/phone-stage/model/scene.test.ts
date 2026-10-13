@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { PHONE_3D, SECTION_HEIGHT_VH, SECTION_KEYS, SHARE_SCREEN, TIMELINE, type SectionKey } from "@/shared/config";
+import {
+  CLOSING_PHONE,
+  PHONE,
+  PHONE_3D,
+  SECTION_HEIGHT_VH,
+  SECTION_KEYS,
+  SHARE_SCREEN,
+  TIMELINE,
+  type SectionKey,
+} from "@/shared/config";
 import { computeStageLayout, createFrame, stackSections, type SceneFrame } from "@/shared/lib/scroll";
 
 import { computePhones, computeScreens } from "./scene";
@@ -88,15 +97,78 @@ describe("share: 폰 B 등장과 QR 비행(`docs/plans/0009`)", () => {
     expect(start.qrFlight.y).toBeCloseTo(start.a.y + SHARE_SCREEN.qrModal.qrOffsetY * k * S, 0);
     const end = computePhones(frameAtSectionProgress("share", TIMELINE.qrFlight[1] - 1e-4));
     expect(end.qrFlight.x).toBeCloseTo(end.b.x, 0);
-    expect(end.qrFlight.y).toBeCloseTo(end.b.y + (SHARE_SCREEN.scanFrame.centerYRatio - 0.5) * designHeight * k * S, 0);
+    expect(end.qrFlight.y).toBeCloseTo(
+      end.b.y + (SHARE_SCREEN.scanFrame.centerYRatio - 0.5) * designHeight * k * S,
+      0,
+    );
+  });
+});
+
+describe("closing: 폰 A가 오른쪽에 크게 선다(`docs/plans/0010`)", () => {
+  const share = sections.find((section) => section.key === "share");
+  if (!share) throw new Error("share not found");
+  const stickyEnd = share.end - H;
+
+  it("share 고정 끝까지는 share 자리·원래 크기다", () => {
+    const { a } = computePhones(frameAtScrollY(stickyEnd));
+    expect(a.x).toBeCloseTo(layout.center.x - 0.13 * W);
+    expect(a.scale).toBeCloseTo(layout.scale);
   });
 
-  it("share 고정이 끝나면 B는 오른쪽으로 빠지고 A는 가운데로 돌아온다", () => {
-    const shareSection = sections.find((section) => section.key === "share");
-    if (!shareSection) throw new Error("share not found");
-    const { a, b } = computePhones(frameAtScrollY(shareSection.end - 1));
-    expect(a.x).toBeCloseTo(layout.center.x, 0);
+  it("share가 끝나면 B는 오른쪽으로 빠지고, A는 (0.78W, 0.5H)에서 화면 높이 80%로 선다", () => {
+    const { a, b } = computePhones(frameAtScrollY(share.end));
+    expect(a.x).toBeCloseTo(CLOSING_PHONE.centerXRatio * W);
+    expect(a.y).toBeCloseTo(CLOSING_PHONE.centerYRatio * H);
+    expect(a.scale * PHONE.height).toBeCloseTo(CLOSING_PHONE.heightRatio * H);
+    expect(a.rotate).toBe(0);
     expect(b.x).toBeGreaterThan(W);
+  });
+
+  it("closing 아래 푸터가 올라오면 폰도 페이지와 함께 위로 빠진다", () => {
+    const closing = sections.find((section) => section.key === "closing");
+    if (!closing) throw new Error("closing not found");
+    const atTop = computePhones(frameAtScrollY(closing.top)).a;
+    const scrolled = computePhones(frameAtScrollY(closing.top + 120)).a;
+    expect(scrolled.y).toBeCloseTo(atTop.y - 120);
+    expect(scrolled.x).toBeCloseTo(atTop.x);
+    expect(scrolled.scale).toBeCloseTo(atTop.scale);
+  });
+
+  it("좁은 화면에선 폰 오른쪽 끝이 여백 안에 들어오게 줄인다", () => {
+    const w = 1024;
+    const h = 1000;
+    const narrowSections = stackSections({}, h);
+    const narrowLayout = computeStageLayout(w, h);
+    const narrowShare = narrowSections.find((section) => section.key === "share");
+    if (!narrowShare) throw new Error("share not found");
+    const { a } = computePhones(createFrame(narrowShare.end, narrowLayout, narrowSections, false));
+    const rightEdge = a.x + (PHONE.width / 2) * a.scale;
+    expect(rightEdge).toBeCloseTo(w - CLOSING_PHONE.edgeMarginPx);
+    expect(a.scale * PHONE.height).toBeLessThan(CLOSING_PHONE.heightRatio * h);
+  });
+
+  it("폰이 작아지지는 않는다(배율 1 이상)", () => {
+    const w = 1100;
+    const h = 600;
+    const wideSections = stackSections({}, h);
+    const wideLayout = computeStageLayout(w, h);
+    const wideShare = wideSections.find((section) => section.key === "share");
+    if (!wideShare) throw new Error("share not found");
+    const { a } = computePhones(createFrame(wideShare.end, wideLayout, wideSections, false));
+    expect(a.scale).toBeGreaterThanOrEqual(wideLayout.scale);
+  });
+
+  it("모바일은 가운데로 돌아오고 크기는 그대로다", () => {
+    const w = 390;
+    const h = 844;
+    const mobileSections = stackSections({}, h);
+    const mobileLayout = computeStageLayout(w, h);
+    const mobileShare = mobileSections.find((section) => section.key === "share");
+    if (!mobileShare) throw new Error("share not found");
+    const { a } = computePhones(createFrame(mobileShare.end, mobileLayout, mobileSections, false));
+    expect(a.x).toBeCloseTo(mobileLayout.center.x);
+    expect(a.y).toBeCloseTo(mobileLayout.center.y);
+    expect(a.scale).toBeCloseTo(mobileLayout.scale);
   });
 });
 
@@ -109,6 +181,7 @@ describe("computeScreens", () => {
     expect(a.recommend).toBeCloseTo(0);
     expect(a.ar).toBeCloseTo(0);
     expect(a.qrShare).toBeCloseTo(0);
+    expect(a.closingHome).toBeCloseTo(0);
   });
 
   it("리포트 섹션이 화면에 붙기 전에 상세(리포트) 화면으로 다 바뀌고, 그 전까지는 기록 화면이다", () => {
@@ -129,11 +202,23 @@ describe("computeScreens", () => {
     expect(atRecommend.report).toBeCloseTo(0);
   });
 
+  it("share 고정 끝까진 기록 공유 화면이고, share가 끝나면 closing 홈 화면이다(히어로 홈과 다른 화면)", () => {
+    const share = sections.find((section) => section.key === "share");
+    if (!share) throw new Error("share not found");
+    const atStickyEnd = computeScreens(frameAtScrollY(share.end - H)).a;
+    expect(atStickyEnd.qrShare).toBeCloseTo(1);
+    expect(atStickyEnd.closingHome).toBeCloseTo(0);
+    const atEnd = computeScreens(frameAtScrollY(share.end)).a;
+    expect(atEnd.closingHome).toBeCloseTo(1);
+    expect(atEnd.qrShare).toBeCloseTo(0);
+    expect(atEnd.home).toBeCloseTo(0);
+  });
+
   it("어느 지점이든 A 화면 opacity 합은 1을 넘지 않는다", () => {
     const step = 50;
     for (let scrollY = 0; scrollY <= documentHeight; scrollY += step) {
       const { a } = computeScreens(frameAtScrollY(scrollY));
-      const sum = a.home + a.record + a.report + a.recommend + a.ar + a.qrShare;
+      const sum = a.home + a.record + a.report + a.recommend + a.ar + a.qrShare + a.closingHome;
       expect(sum).toBeLessThanOrEqual(1 + 1e-6);
     }
   });

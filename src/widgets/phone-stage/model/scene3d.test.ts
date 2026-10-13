@@ -119,8 +119,26 @@ describe("computeShareRigs (share: 폰 두 대 3D 배치, `docs/plans/0009`)", (
 
   it("share 전에는 두 묶음 다 제자리(히어로 합체 그대로)", () => {
     const rigs = computeShareRigs(frameAtScrollY(0));
-    expect(rigs.a.x).toBe(0);
+    expect(rigs.a).toEqual({ x: 0, scale: 1 });
     expect(rigs.b).toEqual({ x: 0, y: 0, rotateZDeg: 0, isVisible: false });
+  });
+
+  it("closing: A 묶음은 CSS 폰 A와 같은 자리·배율로 커진다(`docs/plans/0010`)", () => {
+    const frame = frameAtScrollY(share.end);
+    const { a } = computePhones(frame);
+    const rigs = computeShareRigs(frame);
+    expect(rigs.a.x).toBeCloseTo((a.x - layout.center.x) / S);
+    expect(rigs.a.scale).toBeCloseTo(a.scale / S);
+    expect(rigs.a.scale).toBeGreaterThan(1);
+    expect(computeShareRigs(atShare(0.6)).a.scale).toBeCloseTo(1);
+  });
+
+  it("closing: A 화면 오버레이도 같은 배율로 키우고, 홈 화면을 보인다", () => {
+    const frame = frameAtScrollY(share.end);
+    const overlay = computeScreenOverlay(frame);
+    expect(overlay.phoneScale).toBeCloseTo(computeShareRigs(frame).a.scale);
+    expect(overlay.closingHomeIn).toBeCloseTo(1);
+    expect(computeScreenOverlay(atShare(0.6)).closingHomeIn).toBe(0);
   });
 
   it("CSS 폰과 같은 자리: A는 cx − 0.13W, B는 cx + 0.13W(씬 단위 = px / S)", () => {

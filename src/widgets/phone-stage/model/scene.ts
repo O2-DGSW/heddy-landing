@@ -1,6 +1,14 @@
-import { PHONE, PHONE_3D, SHARE_SCREEN, STAGE_LAYOUT, TIMELINE, type SectionKey } from "@/shared/config";
+import {
+  CLOSING_PHONE,
+  PHONE,
+  PHONE_3D,
+  SHARE_SCREEN,
+  STAGE_LAYOUT,
+  TIMELINE,
+  type SectionKey,
+} from "@/shared/config";
 import { easeInOutCubic, lerp, progressIn, type Range } from "@/shared/lib/motion";
-import type { SceneFrame, SectionFrame } from "@/shared/lib/scroll";
+import type { SceneFrame, SectionFrame, StageLayout } from "@/shared/lib/scroll";
 
 export type PhonePose = {
   x: number;
@@ -25,7 +33,8 @@ export type PhonesScene = {
   qrFlight: QrFlightPose;
 };
 
-export type PhoneAScreenKey = "home" | "record" | "report" | "recommend" | "ar" | "qrShare";
+/** `home`은 히어로 홈(실제 앱 스크린샷), `closingHome`은 마지막 섹션 홈(`docs/plans/0010`) — 서로 다른 화면이다 */
+export type PhoneAScreenKey = "home" | "record" | "report" | "recommend" | "ar" | "qrShare" | "closingHome";
 export type PhoneBScreenKey = "ar" | "scan" | "webview";
 
 export type ScreensScene = {
@@ -117,27 +126,52 @@ export const computePhones = (frame: SceneFrame): PhonesScene => {
   if (isPastShareStart) {
     const pShare = frame.progress("share");
     const sh = easeInOutCubic(progressIn(pShare, TIMELINE.shareXShift));
-    // share 고정이 끝나면 B는 오른쪽으로 빠지고 A는 가운데로 돌아온다(원본은 share.end~closing.top, 길이 0이라 순간 이동)
+    // share 고정이 끝나면 B는 오른쪽으로 빠지고 A는 closing 자리로 간다(원본은 share.end~closing.top, 길이 0이라 순간 이동)
     const shareStickyEnd = shareSection.end - layout.viewportHeight;
-    const back = easeInOutCubic(progressIn(frame.scrollY, [shareStickyEnd, Math.max(shareSection.end, closingSection.top)]));
+    const back = easeInOutCubic(
+      progressIn(frame.scrollY, [shareStickyEnd, Math.max(shareSection.end, closingSection.top)]),
+    );
 
     const viewportWidth = layout.viewportWidth;
     const aTargetX = layout.isMobile ? viewportWidth * 0.29 : cx - 0.13 * viewportWidth;
     const bRestX = viewportWidth + 220 * scale;
     const bTargetX = layout.isMobile ? viewportWidth * 0.73 : cx + 0.13 * viewportWidth;
+    const closing = computeClosingPose(layout);
 
-    const aX = lerp(lerp(cx, aTargetX, sh), cx, back);
+    const aX = lerp(lerp(cx, aTargetX, sh), closing.x, back);
     const bX = lerp(lerp(bRestX, bTargetX, sh), bRestX, back);
     const bRotate = lerp(lerp(10, 0, sh), 10, back);
     const isBVisible = sh > 0 && back < 1;
+    // closing 아래 푸터가 올라오는 만큼 폰도 페이지와 함께 위로 빠진다
+    const footerScroll = Math.max(0, frame.scrollY - closingSection.top);
 
-    a = { x: aX, y: cy, rotate: 0, scale, opacity: 1 };
+    a = {
+      x: aX,
+      y: lerp(cy, closing.y, back) - footerScroll,
+      rotate: 0,
+      scale: lerp(scale, closing.scale, back),
+      opacity: 1,
+    };
     b = { x: bX, y: cy, rotate: bRotate, scale, opacity: isBVisible ? 1 : 0 };
   }
 
   const qrFlight = computeQrFlight(frame, a, b, scale);
 
   return { a, b, qrFlight };
+};
+
+/**
+ * closing 폰 A 자세(`docs/plans/0010`): 데스크톱은 오른쪽(0.78W, 0.5H)에 화면 높이 80%로 선다. 좁은 화면에선
+ * 오른쪽 여백 안에 들어오게 줄이되, 원래 크기(S)보다 작아지지는 않는다. 모바일은 스테이지 가운데·원래 크기.
+ */
+const computeClosingPose = (layout: StageLayout): { x: number; y: number; scale: number } => {
+  const { scale, center, viewportWidth, viewportHeight } = layout;
+  if (layout.isMobile) return { x: center.x, y: center.y, scale };
+  const { centerXRatio, centerYRatio, heightRatio, edgeMarginPx } = CLOSING_PHONE;
+  const x = centerXRatio * viewportWidth;
+  const byHeight = (heightRatio * viewportHeight) / PHONE.height;
+  const byWidth = (viewportWidth - edgeMarginPx - x) / (PHONE.width / 2);
+  return { x, y: centerYRatio * viewportHeight, scale: Math.max(scale, Math.min(byHeight, byWidth)) };
 };
 
 /**
@@ -201,15 +235,17 @@ export const computeScreens = (frame: SceneFrame): ScreensScene => {
   const t2 = crossfadeAfter(frame, reportEnd, TIMELINE.recommend.tabSlideBand); // report -> recommend(3D 오버레이의 밀기와 같은 밴드)
   const t3 = crossfadeAfter(frame, recommendEnd); // recommend -> ar
   const t4 = crossfadeAfter(frame, arEnd, TIMELINE.share.fromArBand); // ar -> 기록 공유(3D 오버레이와 같은 밴드)
-  const t5 = crossfadeAfter(frame, shareEnd, TIMELINE.shareEndToHomeBand); // qrShare -> home(loop)
+  // qrShare -> closing 홈: share 고정 끝 기준(폰이 closing 자리로 가는 동안)
+  const t5 = crossfadeAfter(frame, shareEnd - frame.layout.viewportHeight, TIMELINE.share.toClosingHomeBand);
 
   const a: Record<PhoneAScreenKey, number> = {
-    home: (1 - t0) * (1 - t5) + t5,
+    home: 1 - t0,
     record: t0 * (1 - t1),
     report: t1 * (1 - t2),
     recommend: t2 * (1 - t3),
     ar: t3 * (1 - t4),
     qrShare: t4 * (1 - t5),
+    closingHome: t5,
   };
 
   const isPastArStart = frame.scrollY >= arSection.top;
