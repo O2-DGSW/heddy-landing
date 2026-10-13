@@ -2,7 +2,9 @@
 
 import { useRef, type ReactNode } from "react";
 
-import { PHONE } from "@/shared/config";
+import Image from "next/image";
+
+import { PHONE, PHONE_3D, SHARE_SCREEN } from "@/shared/config";
 import { useSceneFrame } from "@/shared/lib/scroll";
 import { PhoneFrame } from "@/shared/ui";
 
@@ -10,18 +12,11 @@ import { computePhones, computeScreens } from "../model/scene";
 import type { PhoneAScreenKey, PhoneBScreenKey, PhonePose } from "../model/scene";
 import { computeSplineHandoff } from "../model/scene3d";
 import { RecommendScreen } from "./RecommendScreen";
-import { ScreenOverlay } from "./ScreenOverlay";
+import { ScreenOverlay, ScreenOverlayB } from "./ScreenOverlay";
+import { ScanScreen, ShareScreen, SharedRecordScreen } from "./ShareScreens";
 import { SplineStage } from "./SplineStage";
 import { ArScreen } from "./ArScreen";
-import {
-  ArSnapshotScreen,
-  BScanScreen,
-  BWebviewScreen,
-  HomeScreen,
-  QrShareScreen,
-  RecordScreen,
-  DetailScreen,
-} from "./screens";
+import { ArSnapshotScreen, DetailScreen, HomeScreen, RecordScreen } from "./screens";
 
 /** Spline 씬 URL. 없으면 CSS 폰만 쓴다(`docs/plans/0003`) */
 const SPLINE_HERO_SCENE = process.env.NEXT_PUBLIC_SPLINE_HERO_SCENE;
@@ -32,13 +27,13 @@ const A_SCREENS: readonly { key: PhoneAScreenKey; node: ReactNode }[] = [
   { key: "report", node: <DetailScreen /> },
   { key: "recommend", node: <RecommendScreen /> },
   { key: "ar", node: <ArScreen /> },
-  { key: "qrShare", node: <QrShareScreen /> },
+  { key: "qrShare", node: <ShareScreen /> },
 ];
 
 const B_SCREENS: readonly { key: PhoneBScreenKey; node: ReactNode }[] = [
   { key: "ar", node: <ArSnapshotScreen /> },
-  { key: "scan", node: <BScanScreen /> },
-  { key: "webview", node: <BWebviewScreen /> },
+  { key: "scan", node: <ScanScreen /> },
+  { key: "webview", node: <SharedRecordScreen /> },
 ];
 
 /** pose를 폰 프레임 엘리먼트의 transform/opacity에 그대로 반영한다. spec §2: translate(x-150,y-307.5) rotate(r) scale(S) */
@@ -76,7 +71,12 @@ export const PhoneStage = () => {
     applyPose(phoneBRef.current, { ...b, opacity: b.opacity * cssOpacity });
 
     if (qrFlightRef.current) {
-      qrFlightRef.current.style.transform = `translate(${qrFlight.x}px, ${qrFlight.y}px) rotate(${qrFlight.rotate}deg) scale(${qrFlight.scale})`;
+      // 모달 속 QR(189 피그마 px)과 같은 크기에서 출발 — 피그마 px → 씬 단위 → 페이지 px
+      const size =
+        SHARE_SCREEN.qrModal.qrSize * (PHONE_3D.screen.width / SHARE_SCREEN.designWidth) * frame.layout.scale;
+      qrFlightRef.current.style.width = `${size}px`;
+      qrFlightRef.current.style.height = `${size}px`;
+      qrFlightRef.current.style.transform = `translate(${qrFlight.x - size / 2}px, ${qrFlight.y - size / 2}px) rotate(${qrFlight.rotate}deg) scale(${qrFlight.scale})`;
       qrFlightRef.current.style.opacity = String(qrFlight.opacity);
     }
 
@@ -109,6 +109,9 @@ export const PhoneStage = () => {
         {SPLINE_HERO_SCENE && (
           <ScreenOverlay getIsEnabled={() => !isSplineFailedRef.current && isSplineLoadedRef.current} />
         )}
+        {SPLINE_HERO_SCENE && (
+          <ScreenOverlayB getIsEnabled={() => !isSplineFailedRef.current && isSplineLoadedRef.current} />
+        )}
       </div>
       <PhoneFrame ref={phoneBRef}>
         {B_SCREENS.map(({ key, node }) => (
@@ -136,11 +139,16 @@ export const PhoneStage = () => {
           </div>
         ))}
       </PhoneFrame>
-      {/* QR 비행 오버레이: A→B 화면 사이를 포물선으로 이동 (§3, §5 share) */}
+      {/* QR 비행: A 모달 속 QR에서 B 스캔 틀로 포물선을 그리며 날아간다(§3, §5 share, `docs/plans/0009`) */}
       <div
         ref={qrFlightRef}
-        className="rounded-DEFAULT absolute left-0 top-0 h-10 w-10 border bg-white opacity-0"
-      />
+        className="absolute left-0 top-0 overflow-hidden rounded-[6%] bg-white opacity-0 shadow-[0_12px_30px_rgba(0,0,0,0.18)]"
+      >
+        {/* 안쪽 여백은 %가 아닌 inset으로 — padding %는 부모(뷰포트) 폭 기준이라 QR이 0으로 줄어든다 */}
+        <div className="absolute inset-[5%]">
+          <Image src="/screens/share/qr.png" alt="" fill loading="eager" sizes="240px" className="object-contain" />
+        </div>
+      </div>
     </div>
   );
 };

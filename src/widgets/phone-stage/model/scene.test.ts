@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { SECTION_HEIGHT_VH, SECTION_KEYS, type SectionKey } from "@/shared/config";
+import { PHONE_3D, SECTION_HEIGHT_VH, SECTION_KEYS, SHARE_SCREEN, TIMELINE, type SectionKey } from "@/shared/config";
 import { computeStageLayout, createFrame, stackSections, type SceneFrame } from "@/shared/lib/scroll";
 
 import { computePhones, computeScreens } from "./scene";
@@ -65,10 +65,38 @@ describe("computePhones", () => {
     expect(a.y).toBeCloseTo(layout.center.y);
   });
 
-  it("share 0.32에서 A.x = cx - 0.13W, B.x = cx + 0.13W다", () => {
-    const { a, b } = computePhones(frameAtSectionProgress("share", 0.32));
+  it("share sh 끝(0.52)에서 A.x = cx - 0.13W, B.x = cx + 0.13W다", () => {
+    const { a, b } = computePhones(frameAtSectionProgress("share", TIMELINE.shareXShift[1]));
     expect(a.x).toBeCloseTo(layout.center.x - 0.13 * W);
     expect(b.x).toBeCloseTo(layout.center.x + 0.13 * W);
+  });
+});
+
+describe("share: 폰 B 등장과 QR 비행(`docs/plans/0009`)", () => {
+  it("QR 모달이 뜬 뒤에야 B가 들어오기 시작한다", () => {
+    expect(TIMELINE.shareXShift[0]).toBeGreaterThanOrEqual(TIMELINE.share.qrModal[1]);
+    const { b } = computePhones(frameAtSectionProgress("share", TIMELINE.share.qrModal[1]));
+    expect(b.opacity).toBe(0);
+  });
+
+  it("QR은 A 화면 모달 속 QR 자리에서 출발해 B 스캔 틀 가운데에 도착한다", () => {
+    const k = PHONE_3D.screen.width / SHARE_SCREEN.designWidth;
+    const designHeight = (PHONE_3D.screen.height / PHONE_3D.screen.width) * SHARE_SCREEN.designWidth;
+    const S = layout.scale;
+    const start = computePhones(frameAtSectionProgress("share", TIMELINE.qrFlight[0] + 1e-4));
+    expect(start.qrFlight.x).toBeCloseTo(start.a.x, 0);
+    expect(start.qrFlight.y).toBeCloseTo(start.a.y + SHARE_SCREEN.qrModal.qrOffsetY * k * S, 0);
+    const end = computePhones(frameAtSectionProgress("share", TIMELINE.qrFlight[1] - 1e-4));
+    expect(end.qrFlight.x).toBeCloseTo(end.b.x, 0);
+    expect(end.qrFlight.y).toBeCloseTo(end.b.y + (SHARE_SCREEN.scanFrame.centerYRatio - 0.5) * designHeight * k * S, 0);
+  });
+
+  it("share 고정이 끝나면 B는 오른쪽으로 빠지고 A는 가운데로 돌아온다", () => {
+    const shareSection = sections.find((section) => section.key === "share");
+    if (!shareSection) throw new Error("share not found");
+    const { a, b } = computePhones(frameAtScrollY(shareSection.end - 1));
+    expect(a.x).toBeCloseTo(layout.center.x, 0);
+    expect(b.x).toBeGreaterThan(W);
   });
 });
 

@@ -5,7 +5,7 @@ import { useRef } from "react";
 import Image from "next/image";
 
 import { RECORD_CARDS } from "@/entities/record";
-import { COPY, DETAIL_SCREEN, PHONE, RECORD_STACK } from "@/shared/config";
+import { DETAIL_SCREEN, PHONE, RECORD_STACK } from "@/shared/config";
 import { useSceneFrame } from "@/shared/lib/scroll";
 
 import { computeDetailBars, computeDetailScroll } from "../model/detailScroll";
@@ -119,7 +119,14 @@ export const DetailScreen = ({
         className="absolute left-0 w-full will-change-transform"
         style={{ top: DETAIL_SCREEN.fixedTopPx * scale, height: DETAIL_SCREEN.bodyHeightPx * scale }}
       >
-        <Image src="/screens/detail/body.png" alt="다운펌 분석 결과" fill loading="eager" sizes="280px" className="object-cover" />
+        <Image
+          src="/screens/detail/body.png"
+          alt="다운펌 분석 결과"
+          fill
+          loading="eager"
+          sizes="280px"
+          className="object-cover"
+        />
         {/* 상태 지표 막대: 이미지 속 막대를 같은 자리에서 덮고, 섹션 카피 막대와 같이 점수만큼 채운다 */}
         {bars.centerY.map((centerY, i) => (
           <div
@@ -148,10 +155,27 @@ export const DetailScreen = ({
         ))}
       </div>
       <div className="absolute left-0 top-0 w-full" style={{ height: DETAIL_SCREEN.fixedTopPx * scale }}>
-        <Image src="/screens/detail/top.png" alt="" fill loading="eager" sizes="280px" className="object-cover" />
+        <Image
+          src="/screens/detail/top.png"
+          alt=""
+          fill
+          loading="eager"
+          sizes="280px"
+          className="object-cover"
+        />
       </div>
-      <div className="absolute bottom-0 left-0 w-full" style={{ height: DETAIL_SCREEN.fixedBottomPx * scale }}>
-        <Image src="/screens/detail/bottom.png" alt="" fill loading="eager" sizes="280px" className="object-cover" />
+      <div
+        className="absolute bottom-0 left-0 w-full"
+        style={{ height: DETAIL_SCREEN.fixedBottomPx * scale }}
+      >
+        <Image
+          src="/screens/detail/bottom.png"
+          alt=""
+          fill
+          loading="eager"
+          sizes="280px"
+          className="object-cover"
+        />
       </div>
     </div>
   );
@@ -161,46 +185,3 @@ export const DetailScreen = ({
 export const ArSnapshotScreen = () => (
   <Image src="/screens/ar.webp" alt="헤디 AR 스타일 체험 화면" fill sizes="280px" className="object-cover" />
 );
-
-/** QR 공유 화면: clip-path 모션은 TODO(docs/plans/0001) */
-export const QrShareScreen = () => {
-  const { qrShare } = COPY.phoneScreens;
-  return (
-    <div className="flex h-full flex-col gap-3 p-4">
-      <p className="text-14 font-medium">{qrShare.title}</p>
-      <p className="text-12">{qrShare.subtitle}</p>
-      <div className="mx-auto my-4 h-[140px] w-[140px] rounded-DEFAULT border" aria-label="QR" />
-      <p className="text-12">{qrShare.expiry}</p>
-      <p className="text-12">{qrShare.sharedRecordsCount}</p>
-      <p className="text-12">{qrShare.latestTreatment}</p>
-    </div>
-  );
-};
-
-/** 폰 B 스캔 화면 */
-export const BScanScreen = () => {
-  return (
-    <div className="flex h-full flex-col items-center justify-center gap-3 p-4">
-      <p className="text-14">{COPY.phoneScreens.bScan.prompt}</p>
-    </div>
-  );
-};
-
-/** 폰 B 웹뷰 화면 */
-export const BWebviewScreen = () => {
-  const { bWebview } = COPY.phoneScreens;
-  return (
-    <div className="flex h-full flex-col gap-2 p-4">
-      <p className="text-12">{bWebview.url}</p>
-      <p className="text-12">{bWebview.noAppNeeded}</p>
-      <p className="text-14 font-medium">{bWebview.ownerLabel}</p>
-      <p className="text-12">
-        {bWebview.recordCount} · {bWebview.dateRange}
-      </p>
-      <p className="text-12">{bWebview.latestTreatment}</p>
-      <p className="text-12">{bWebview.productUsed}</p>
-      <p className="text-12">{bWebview.developer}</p>
-      <p className="text-12">{bWebview.hairCondition}</p>
-    </div>
-  );
-};

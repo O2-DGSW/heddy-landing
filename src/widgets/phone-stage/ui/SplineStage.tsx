@@ -11,7 +11,7 @@ import { RECORD_STACK } from "@/shared/config";
 import { useSceneFrame, useSmoothSceneFrame } from "@/shared/lib/scroll";
 
 import { computeRecordStack, type RecordStackScene } from "../model/recordStack";
-import { computeSplineHandoff, computeSplineViewport } from "../model/scene3d";
+import { computeShareRigs, computeSplineHandoff, computeSplineViewport } from "../model/scene3d";
 
 const Spline = dynamic(() => import("@splinetool/react-spline"), { ssr: false });
 
@@ -138,6 +138,8 @@ export const SplineStage = ({ sceneUrl, onLoad, onFail }: SplineStageProps) => {
   const fadeRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
   const recordObjectsRef = useRef<RecordObjects | null>(null);
+  /** share에서 폰 B를 움직이는 묶음(Spline 씬 `ShareRigB`). 옛 export엔 없어서 null이면 B는 합쳐진 채로 둔다 */
+  const shareRigBRef = useRef<SPEObject | null>(null);
   const isFailedRef = useRef(false);
 
   // 서버 렌더 HTML에 <link>로 들어가서, JS가 끝나기 전부터 씬 파일(~1.3MB)을 받기 시작한다
@@ -163,6 +165,7 @@ export const SplineStage = ({ sceneUrl, onLoad, onFail }: SplineStageProps) => {
     supersample(app);
     appRef.current = app; // 기록 스택 오브젝트가 없는 옛 export면 record 구간은 합쳐진 정면 폰 그대로 둔다
     recordObjectsRef.current = findRecordObjects(app);
+    shareRigBRef.current = app.findObjectByName("ShareRigB") ?? null;
     // RecordLayer는 export에 들어가도록 씬에선 보이게 두므로(숨긴 오브젝트는 export에서 빠짐),
     // 스크롤이 없어도 첫 프레임을 받아 지금 위치에 맞게 숨긴다
     onLoad();
@@ -188,6 +191,18 @@ export const SplineStage = ({ sceneUrl, onLoad, onFail }: SplineStageProps) => {
     // 멈췄다 켜면 Spline Scroll 상태가 합쳐진 채로 굳어 역스크롤 때 다시 갈라지지 않는다.
     // (renderOnDemand라 화면 변화가 없으면 어차피 그리지 않는다)
     container.style.visibility = canvasOpacity === 0 ? "hidden" : "visible";
+
+    // share: 폰 A(RecordRig)는 왼쪽으로, 폰 B(ShareRigB)는 오른쪽에서 들어와 나란히 선다(`docs/plans/0009`)
+    const rigs = computeShareRigs(frame);
+    const recordRig = recordObjectsRef.current?.rig;
+    if (recordRig) setIfChanged(recordRig.position, "x", rigs.a.x);
+    const rigB = shareRigBRef.current;
+    if (rigB) {
+      setIfChanged(rigB.position, "x", rigs.b.x);
+      setIfChanged(rigB.position, "y", rigs.b.y);
+      setIfChanged(rigB.position, "z", rigs.b.z);
+      setIfChanged(rigB.rotation, "z", rigs.b.rotateZDeg * DEG);
+    }
   });
 
   // 기록 스택은 부드럽게 따라가는 스크롤로 움직인다 — 빠르게 내려도 카드가 건너뛰지 않는다.
