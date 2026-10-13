@@ -4,6 +4,7 @@ import { createContext, useEffect, useRef, type ReactNode } from "react";
 
 import { createFrame, type SceneFrame } from "./sceneFrame";
 import { computeStageLayout } from "./stageLayout";
+import { useSmoothWheelScroll } from "./useSmoothWheelScroll";
 import type { SectionFrame } from "./stageLayout";
 import type { SectionKey } from "@/shared/config";
 
@@ -24,6 +25,8 @@ export const ScrollSceneProvider = ({ children }: ScrollSceneProviderProps) => {
   const listenersRef = useRef(new Set<FrameListener>());
   const sectionsRef = useRef<SectionFrame[]>([]);
   const rafIdRef = useRef<number | null>(null);
+  // 휠 스크롤을 관성 스크롤로 — 프레임은 실제 스크롤 위치(scroll 이벤트)에서 그대로 나온다
+  useSmoothWheelScroll();
 
   useEffect(() => {
     const measure = () => {

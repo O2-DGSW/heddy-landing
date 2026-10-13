@@ -4,3 +4,5 @@ export * from "./ScrollSceneProvider";
 export * from "./useSceneFrame";
 export * from "./useSmoothSceneFrame";
 export * from "./reportBarProgress";
+export * from "./smoothScroll";
+export * from "./useSmoothWheelScroll";

@@ -224,20 +224,23 @@ export const TIMELINE = {
     screenScroll: [0.8, 0.97] as Range,
   },
   ar: {
-    /** pill 교차축/주축 모핑 3단계 */
-    pillMorphA: [0.02, 0.1] as Range,
-    pillMorphB: [0.1, 0.2] as Range,
-    pillMorphC: [0.2, 0.28] as Range,
+    /**
+     * pill → 다크 패널 확대 구간(ar 진행도). 원본은 3단계(a .02~.1 · b .1~.2 · c .2~.28)를 따로 이징해 단계마다
+     * 멈췄다 커졌다 — 한 곡선으로 잇고 구간을 줄였다(이슈 #43, 2026-10-13)
+     */
+    pillMorph: [0.02, 0.14] as Range,
+    /** 확대 진행도(0~1)에서 시작 · a · b · 전체 크기를 지나는 시점 — 크기는 로그 스케일 단조 3차 보간 */
+    pillKnots: [0, 0.33, 0.85, 1] as readonly number[],
     pillFadeIn: [0, 0.02] as Range,
-    /** 패널 문구("머릿속 상상을 지우고 / 이제는 눈앞의 결과로") in/out */
-    panelCopyIn: [0.28, 0.33] as Range,
+    /** 패널 문구("머릿속 상상을 지우고 / 이제는 눈앞의 결과로") in/out — 패널이 다 덮자마자 나온다 */
+    panelCopyIn: [0.15, 0.2] as Range,
     panelCopyOut: [0.4, 0.44] as Range,
     /** 카피("거울 앞에 앉기 전에, 먼저 비춰보세요") in */
     copyIn: [0.46, 0.54] as Range,
     /** 스타일 3종 전환 가중치 t2/t3 */
     styleTransition2: [0.62, 0.72] as Range,
     styleTransition3: [0.8, 0.9] as Range,
-    /** 이 값(c) 초과면 다크 패널이 화면을 덮은 것으로 보고 헤더를 숨긴다 */
+    /** 확대 진행도(pillMorph 안, 이징 전)가 이 값을 넘으면 다크 패널이 화면을 덮은 것으로 보고 헤더 로고를 숨긴다 */
     darkPanelHeaderHideThreshold: 0.95,
     /**
      * 스타일 전환 한 번(t = 0~1) 안의 단계(레퍼런스 영상 2, `docs/plans/0008`):
@@ -288,6 +291,19 @@ export const CLOSING_PHONE = {
   heightRatio: 0.8,
   /** 폰 오른쪽 끝과 뷰포트 오른쪽 사이 최소 여백(px) — 좁은 화면에선 이 안에 들어가게 줄인다 */
   edgeMarginPx: 32,
+} as const;
+
+/**
+ * 관성 스크롤(이슈 #43): 휠 한 번에 페이지가 뚝 점프하지 않고 목표 위치를 반감기로 따라간다.
+ * 터치는 기본 스크롤, reduced motion이면 끈다.
+ */
+export const SMOOTH_SCROLL = {
+  /** 남은 거리가 절반이 되는 시간(ms) — 클수록 미끄럽고 느리다 */
+  halfLifeMs: 100,
+  /** 남은 거리가 이 값(px) 아래면 목표에 붙이고 멈춘다 */
+  settlePx: 0.5,
+  /** 애니메이션 중 실제 스크롤이 마지막으로 쓴 위치와 이만큼(px) 넘게 다르면 다른 입력(키보드·스크롤바)으로 보고 멈춘다 */
+  externalJumpPx: 3,
 } as const;
 
 /** 헤더: 스크롤 양만큼 위로 밀려 올라가고(숨김), 위로 올리면 같은 양만큼 내려온다 */
@@ -342,6 +358,8 @@ export const AR_PANEL = {
     desktop: { crossOfWidth: 0.5, mainOfHeight: 0.72 },
     mobile: { crossOfHeight: 0.42, mainOfWidth: 0.86 },
   },
+  /** 모서리 반지름 상한(px) — 작을 땐 알약, 커지면 둥근 사각형이 되어 타원처럼 보이지 않는다(이슈 #43) */
+  maxRadius: 40,
   /** 분할 문구와 pill 가장자리 사이 간격(px) */
   splitGap: 20,
   /** 패널 문구·카피가 들어올 때 아래에서 올라오는 거리(px) */

@@ -35,3 +35,53 @@ export const damp = (current: number, target: number, dtMs: number, halfLifeMs: 
   if (halfLifeMs <= 0) return target;
   return target + (current - target) * Math.pow(0.5, dtMs / halfLifeMs);
 };
+
+/**
+ * 기준점(xs 오름차순, ys)을 지나는 단조 3차 보간(Fritsch–Carlson). 기준점에서 기울기가 이어지고
+ * 기준값 사이를 넘치지 않는다 — 여러 단계를 멈춤 없이 한 곡선으로 이을 때 쓴다. 구간 밖은 끝값.
+ */
+export const monotoneCubic = (xs: readonly number[], ys: readonly number[]): ((x: number) => number) => {
+  const n = xs.length;
+  const h = xs.slice(1).map((x, i) => x - xs[i]);
+  const delta = h.map((hi, i) => (ys[i + 1] - ys[i]) / hi);
+  const m = xs.map((_, i) => {
+    if (i === 0) return delta[0];
+    if (i === n - 1) return delta[n - 2];
+    return delta[i - 1] * delta[i] <= 0 ? 0 : (delta[i - 1] + delta[i]) / 2;
+  });
+  // 넘침 방지: 구간 기울기 대비 접선이 너무 크면 줄인다
+  delta.forEach((d, i) => {
+    if (d === 0) {
+      m[i] = 0;
+      m[i + 1] = 0;
+      return;
+    }
+    const a = m[i] / d;
+    const b = m[i + 1] / d;
+    const s = a * a + b * b;
+    if (s > 9) {
+      const tau = 3 / Math.sqrt(s);
+      m[i] = tau * a * d;
+      m[i + 1] = tau * b * d;
+    }
+  });
+
+  return (x: number): number => {
+    if (x <= xs[0]) return ys[0];
+    if (x >= xs[n - 1]) return ys[n - 1];
+    let i = 0;
+    while (i < n - 2 && x > xs[i + 1]) i += 1;
+    const t = (x - xs[i]) / h[i];
+    const t2 = t * t;
+    const t3 = t2 * t;
+    return (
+      (2 * t3 - 3 * t2 + 1) * ys[i] +
+      (t3 - 2 * t2 + t) * h[i] * m[i] +
+      (-2 * t3 + 3 * t2) * ys[i + 1] +
+      (t3 - t2) * h[i] * m[i + 1]
+    );
+  };
+};
+
+/** 사인 easeInOut — easeInOutCubic보다 시작·끝이 덜 느려 스크롤에 바로 반응한다 */
+export const easeInOutSine = (t: number): number => (1 - Math.cos(Math.PI * t)) / 2;
