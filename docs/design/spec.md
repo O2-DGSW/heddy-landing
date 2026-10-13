@@ -47,7 +47,7 @@ Claude Design `Heddy Landing v2.dc.html`의 마크업과 `update()` 로직에서
 
 섹션 end 이후 뷰포트 높이의 35~65% 구간에서 다음 화면으로.
 - ar 시작 전: 홈 → (archive 끝) 기록 → (record 끝) 리포트 → (report 끝) 추천
-- ar 시작 후: AR → (ar 끝) QR 공유 → (share 고정 끝 + 25~65%) closing 홈(원본 "share 끝 + 30~70%"는 페이지 끝을 넘어 닿지 않음, `docs/plans/0010`). closing 홈은 히어로 홈(실제 앱 스크린샷)과 다른 HTML 화면이다.
+- ar 시작 후: AR → (ar 끝) QR 공유 → (share 고정 끝 + 25~65%) closing 홈(원본 "share 끝 + 30~70%"는 페이지 끝을 넘어 닿지 않음, `docs/plans/0010`). closing 홈은 피그마 landing / home(1003:3048)을 3배로 내보낸 이미지로, 히어로 홈(실제 앱 스크린샷)과 다른 화면이다.
 - 폰 B: ar 전엔 AR 화면, 이후엔 스캔 → 웹뷰(R(p_share, 0.70~0.80))
 - 폰 A가 AR 화면이면 상태바 글자 흰색.
 

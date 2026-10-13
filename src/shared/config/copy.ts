@@ -60,9 +60,7 @@ export const COPY = {
   },
   phoneScreens: {
     home: {
-      statusTime: "9:41",
-      nextTreatmentLabel: "다음 시술까지",
-      nextTreatmentDday: "D-12",
+      nextTreatmentDday: "다음 시술까지 D-12",
       style: "레이어드 C컬펌",
       recommendedTiming: "10월 첫째 주 권장",
       lastColorTitle: "지난 컬러, 헤디가 기억해요",

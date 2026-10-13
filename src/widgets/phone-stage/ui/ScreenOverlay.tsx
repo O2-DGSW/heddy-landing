@@ -241,7 +241,7 @@ export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
           <ShareScreen width={screen.width} height={screen.height} />
         </div>
         <div ref={closingHomeRef} className="invisible absolute inset-0 opacity-0">
-          <ClosingHomeScreen width={screen.width} height={screen.height} />
+          <ClosingHomeScreen />
         </div>
         {/* 다이내믹 아일랜드: 3D 폰 화면의 구멍 자리를 오버레이가 덮으므로 다시 그린다 */}
         <div
