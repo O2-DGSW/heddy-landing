@@ -52,15 +52,20 @@ describe("computeSplineHandoff", () => {
     expect(cssOpacity).toBe(0);
   });
 
-  it("record(시술기록)부터 recommend(추천) 섹션 끝까지 3D 폰만 보인다(`docs/plans/0007`)", () => {
+  it("record(시술기록)부터 recommend(추천) 섹션 끝까지, 그리고 ar 재등장 뒤 ar 끝까지 3D 폰만 보인다(`docs/plans/0008`)", () => {
     for (const [width, height] of [
       [1440, 900],
       [1920, 1080],
       [1024, 700],
     ] as const) {
       const vp = frameForViewport(width, height);
-      for (const key of ["record", "report", "recommend"] as const) {
-        for (const p of [0, 0.5, 0.99]) {
+      for (const [key, ps] of [
+        ["record", [0, 0.5, 0.99]],
+        ["report", [0, 0.5, 0.99]],
+        ["recommend", [0, 0.5, 0.99]],
+        ["ar", [0.6, 0.8, 0.99]],
+      ] as const) {
+        for (const p of ps) {
           const { canvasOpacity, cssOpacity } = computeSplineHandoff(vp.at(vp.scrollAt(key, p)));
           expect(canvasOpacity).toBe(1);
           expect(cssOpacity).toBe(0);
@@ -69,22 +74,41 @@ describe("computeSplineHandoff", () => {
     }
   });
 
-  it("recommend가 끝나면 CSS 폰으로 넘어가고, ar 화면 전환(섹션 끝 + 0.35H)보다 먼저 끝난다", () => {
+  it("ar 다크 패널 구간(재등장 전)에는 3D·CSS 폰 둘 다 보이지 않는다", () => {
     const vp = frameForViewport(1440, 900);
-    const recommendEndAt = vp.scrollAt("recommend", 1);
-    const done = computeSplineHandoff(vp.at(recommendEndAt + PHONE_3D.handoffScrollPx));
+    const { canvasOpacity, cssOpacity } = computeSplineHandoff(vp.at(vp.scrollAt("ar", 0.3)));
+    expect(canvasOpacity).toBe(0);
+    expect(cssOpacity).toBe(0);
+  });
+
+  it("recommend 고정 끝 뒤 3D 폰은 페이지와 함께 위로 빠지고, ar에서 아래에서 올라오며 다시 나타난다", () => {
+    const vp = frameForViewport(1440, 900);
+    const leaving = computeSplineHandoff(vp.at(vp.scrollAt("recommend", 1) + 300));
+    expect(leaving.canvasOpacity).toBe(1);
+    expect(leaving.yOffset).toBeCloseTo(-300);
+    const back = computeSplineHandoff(vp.at(vp.scrollAt("ar", TIMELINE.arReappearY[1])));
+    expect(back.yOffset).toBeCloseTo(0);
+    expect(back.canvasOpacity).toBe(1);
+    const rising = computeSplineHandoff(vp.at(vp.scrollAt("ar", TIMELINE.arReappearY[0] + 0.02)));
+    expect(rising.yOffset).toBeGreaterThan(0);
+  });
+
+  it("ar가 끝나면 CSS 폰으로 넘어가고, qrShare 화면 전환(섹션 끝 + 0.35H)보다 먼저 끝난다", () => {
+    const vp = frameForViewport(1440, 900);
+    const arEndAt = vp.scrollAt("ar", 1);
+    const done = computeSplineHandoff(vp.at(arEndAt + PHONE_3D.handoffScrollPx));
     expect(done.canvasOpacity).toBe(0);
     expect(done.cssOpacity).toBe(1);
 
-    const recommend = sections.find((section) => section.key === "recommend");
-    if (!recommend) throw new Error("recommend not found");
-    const screenSwitchAt = recommend.end + TIMELINE.screenCrossfadeBand[0] * H;
-    expect(recommendEndAt + PHONE_3D.handoffScrollPx).toBeLessThan(screenSwitchAt);
+    const ar = sections.find((section) => section.key === "ar");
+    if (!ar) throw new Error("ar not found");
+    const screenSwitchAt = ar.end + TIMELINE.screenCrossfadeBand[0] * H;
+    expect(arEndAt + PHONE_3D.handoffScrollPx).toBeLessThan(screenSwitchAt);
   });
 
   it("넘기는 도중 두 opacity의 합은 항상 1이다", () => {
     const vp = frameForViewport(1440, 900);
-    const start = vp.scrollAt("recommend", 1);
+    const start = vp.scrollAt("ar", 1);
     const { canvasOpacity, cssOpacity } = computeSplineHandoff(vp.at(start + PHONE_3D.handoffScrollPx / 2));
     expect(canvasOpacity).toBeCloseTo(0.5);
     expect(canvasOpacity + cssOpacity).toBeCloseTo(1);
@@ -146,6 +170,18 @@ describe("computeScreenOverlay", () => {
     const atReport = computeScreenOverlay(vp.at(vp.scrollAt("report", 0.5)));
     expect(atReport.opacity).toBeCloseTo(1);
     expect(atReport.tabSwitch.slide).toBe(0);
+  });
+
+  it("ar 재등장 뒤엔 오버레이가 AR 화면을 보여 주고, 3D 폰과 같이 올라온다", () => {
+    const vp = frameForViewport(1440, 900);
+    const overlay = computeScreenOverlay(vp.at(vp.scrollAt("ar", 0.7)));
+    expect(overlay.isArScreen).toBe(true);
+    expect(overlay.opacity).toBeCloseTo(1);
+    const risingFrame = vp.at(vp.scrollAt("ar", TIMELINE.arReappearY[0] + 0.02));
+    const rising = computeScreenOverlay(risingFrame);
+    const { yOffset } = computeSplineHandoff(risingFrame);
+    expect(yOffset).toBeGreaterThan(0);
+    expect(rising.y).toBeCloseTo(risingFrame.layout.center.y + yOffset);
   });
 
   it("추천 섹션에선 오버레이가 계속 보이고 추천 화면으로 바뀌어 있다", () => {

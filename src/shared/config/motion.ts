@@ -240,6 +240,14 @@ export const TIMELINE = {
     styleTransition3: [0.8, 0.9] as Range,
     /** 이 값(c) 초과면 다크 패널이 화면을 덮은 것으로 보고 헤더를 숨긴다 */
     darkPanelHeaderHideThreshold: 0.95,
+    /**
+     * 스타일 전환 한 번(t = 0~1) 안의 단계(레퍼런스 영상 2, `docs/plans/0008`):
+     * 다음 썸네일에 터치 표시 → 캐러셀이 밀려 선택이 가운데로 → 캐릭터 이미지 크로스페이드(spec: R(t, .4~1)).
+     * 스타일 이름은 캐러셀이 반쯤 밀렸을 때 바뀐다.
+     */
+    styleTouch: [0, 0.32] as Range,
+    styleSlide: [0.18, 0.62] as Range,
+    styleImage: [0.4, 1] as Range,
   },
   share: {
     /** QR clip-path inset 진행 */
@@ -287,4 +295,55 @@ export const RECOMMEND_SCREEN = {
   pop: { dx: 330, dy: [-12, 8, 24], rotateDeg: [-4, 3, -3], scale: 1.06 },
   /** 탭바 속 "추천" 아이콘 중심(탭바 좌상단 기준 px) — 상세 → 추천 탭 전환 때 누르는 자리 */
   recommendTabCenter: { x: 279, y: 33.4 },
+} as const;
+
+/**
+ * AR 섹션 다크 패널(`docs/design/spec.md` §5 ar, `docs/plans/0008`). pill은 "거울 앞에 | 앉기 전에" 사이에서
+ * 교차축·주축이 a → b → c 단계로 커져 화면을 덮는다. 데스크톱은 세로 pill(교차축 = 폭), 모바일은 가로 pill.
+ */
+export const AR_PANEL = {
+  color: "#0D0D0D",
+  /** pill 시작 크기(교차축, 주축)와 a 단계 끝 크기(px) */
+  pillStart: { cross: 26, main: 58 },
+  pillA: { cross: 58, main: 236 },
+  /** b 단계 끝 크기 — 뷰포트 대비 비율. 데스크톱 교차축 0.5W·주축 0.72H(원본), 모바일은 가로 pill이라 축이 바뀜 */
+  pillB: { desktop: { crossOfWidth: 0.5, mainOfHeight: 0.72 }, mobile: { crossOfHeight: 0.42, mainOfWidth: 0.86 } },
+  /** 분할 문구와 pill 가장자리 사이 간격(px) */
+  splitGap: 20,
+  /** 패널 문구·카피가 들어올 때 아래에서 올라오는 거리(px) */
+  panelCopyRisePx: 24,
+  copyRisePx: 20,
+} as const;
+
+/**
+ * AR 화면 — 피그마 landing / S5-AR화면1·2·3을 HTML로 옮긴 치수(폭 402, 피그마 px, `docs/plans/0008`).
+ * 상태바(54)·홈 인디케이터(34)는 흰 바탕, 그 사이가 카메라(캐릭터) 화면이다.
+ */
+export const AR_SCREEN = {
+  designWidth: 402,
+  statusBar: 54,
+  homeIndicator: 34,
+  /** 캐릭터 이미지(402×874) 윗변 — 피그마에서 콘텐츠 영역보다 44 위에 놓여 있다 */
+  imageTop: 10,
+  /** 컨트롤 묶음(스타일 이름 줄 → 캐러셀 → 탭 이름) 윗변과 줄 간격 */
+  controlsTop: 603,
+  controlsGap: 40,
+  /** 캐러셀: 선택과의 거리 0·1·2에서 지름, 썸네일 사이 간격 */
+  carouselSizes: [80, 62, 50],
+  carouselGap: 25,
+  /** 선택 썸네일 테두리 두께(px) */
+  selectedBorder: 2.5,
+  /**
+   * 캐러셀 항목(원형으로 돈다). none = 스타일 없음 버튼, 나머지는 썸네일과 피그마 자르기
+   * (지름 대비: 사진 폭·높이, 왼쪽·위 위치). style = 캐릭터가 바뀌는 스타일 순서(0~2), 없으면 -1.
+   */
+  carousel: [
+    { key: "none", style: -1 },
+    { key: "full-bang", style: 0, crop: { w: 1.098, h: 1.958, left: -0.05, top: -0.19 } },
+    { key: "down-perm", style: 1, crop: { w: 1, h: 1.1964, left: 0, top: -0.0982 } },
+    { key: "part-dandy", style: 2, crop: { w: 2.839, h: 2.839, left: -0.935, top: 0.016 } },
+    { key: "extra", style: -1, crop: { w: 1, h: 1.74, left: 0, top: -0.1 } },
+  ],
+  /** 캐러셀에서 스타일 i가 있는 자리 — 스타일 0(일자 풀뱅)이 처음 선택 */
+  styleCarouselIndex: [1, 2, 3],
 } as const;
