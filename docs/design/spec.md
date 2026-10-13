@@ -37,9 +37,9 @@ Claude Design `Heddy Landing v2.dc.html`의 마크업과 `update()` 로직에서
   B 불투명도 = 1 − R(p_archive, 0.72~0.86). archive 끝 이후 B = 0.
 - **recommend 끝 ~ ar 시작**: A가 페이지와 함께 위로 빠짐 (yOffset = −(scrollY − recommend 고정 끝)). 3D 폰도 같은 식으로 빠지고, AR 재등장부터 ar 고정 끝까지 다시 3D 폰이다(2026-10-13, `docs/plans/0008`).
 - **ar**: A 재등장 yOffset = (1 − E(R(p_ar, 0.46~0.56))) × 90 × S, 불투명도 R(p_ar, 0.46~0.53).
-- **share**(ar.end 이후): sh = E(R(p_share, 0.10~0.32)), back = E(R(scrollY, share.end~closing.top))
+- **share**(ar.end 이후): sh = E(R(p_share, 0.38~0.52)) (원본 0.10~0.32, 2026-10-13 레퍼런스 영상 순서로 미룸, `docs/plans/0009`), back = E(R(scrollY, share 고정 끝~share.end)) (원본 share.end~closing.top은 길이 0)
   A.x = lerp(lerp(cx, cx−0.13W, sh), cx, back) (모바일 0.29W) · B.x = lerp(lerp(W+220S, cx+0.13W, sh), W+220S, back) (모바일 0.73W)
-  B 회전 lerp(lerp(10, 0, sh), 10, back), B는 sh>0 && back<1일 때만 보임. QR 비행 = R(p_share, 0.44~0.70).
+  B 회전 lerp(lerp(10, 0, sh), 10, back), B는 sh>0 && back<1일 때만 보임. QR 비행 = R(p_share, 0.56~0.70). 폰 두 대 모두 Spline 3D(A = RecordRig, B = ShareRigB).
 
 ## 4. 폰 화면 전환 (크로스페이드)
 
@@ -80,9 +80,12 @@ Claude Design `Heddy Landing v2.dc.html`의 마크업과 `update()` 로직에서
   다음 썸네일 터치 표시 R(t, 0~.32) → 캐러셀 밀기 E(R(t, .18~.62)) → 캐릭터 이미지 크로스페이드 E(R(t, .4~1)), 스타일 이름은 밀기 .4~.6에서 바뀜.
   이미지 가중치 [1−E(R(t2,.4~1)), E(R(t2,.4~1))(1−E(R(t3,.4~1))), E(R(t3,.4~1))]. 캐러셀 지름 80/62/50(가운데·한 칸·두 칸), 간격 25.
   다크 패널이 화면을 덮은 동안(c>0.95) 헤더 배경 투명 + 로고 숨김.
-- **share**: QR clip-path inset(0 0 (1−E(R(p,0~.16)))·100% 0), 비행 중엔 원래 QR 숨김.
-  QR 비행: A 화면 (y − 57.5S) → B 화면 (y − 17.5S), 포물선 높이 200·S·4f(1−f), 회전 −10·sin(πf), scale lerp(1, .45, f)·S, 끝 fade R(f, .82~1).
-  "기록을 전달했어요" R(p,.72~.80), 섹션 부제 R(p,.74~.88).
+- **share** (2026-10-13 레퍼런스 영상 1로 대체, `docs/plans/0009`. 원본 QR clip-path는 쓰지 않음):
+  A 화면(피그마 S4-공유화면): 토글 i(시술 내용·만족도·AR 후보) 탭 R(p, .03+.06i ~ .08+.06i), 손잡이는 탭 .35~.85.
+  버튼 드러남(본문 스크롤) R(p, .21~.26) → "공유 링크 생성" 탭 R(p, .27~.31) → 다운펌 상세(어두움)+QR 모달 R(p, .31~.36).
+  B 화면: 스캔(초록 모서리·스캔 선) → 공유된 시술기록 R(p, .71~.75), 체크 in R(p, .71~.76) out R(p, .84~.90).
+  QR 비행: A 모달 속 QR(화면 중심 위 32.5 피그마 px) → B 스캔 틀 가운데(화면 높이 44%), 포물선 높이 200·S·4f(1−f), 회전 −10·sin(πf), 크기 189 → 196 피그마 px, 끝 fade R(f, .82~1).
+  섹션 부제 R(p,.74~.88). ("기록을 전달했어요" 문구는 쓰지 않음)
 - **reduced motion**: 최종 상태로 두거나 opacity만.
 
 ## 6. 디자인 시스템 (heddy Design System)

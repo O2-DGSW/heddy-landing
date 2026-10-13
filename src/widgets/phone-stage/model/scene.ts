@@ -1,4 +1,4 @@
-import { PHONE, STAGE_LAYOUT, TIMELINE, type SectionKey } from "@/shared/config";
+import { PHONE, PHONE_3D, SHARE_SCREEN, STAGE_LAYOUT, TIMELINE, type SectionKey } from "@/shared/config";
 import { easeInOutCubic, lerp, progressIn, type Range } from "@/shared/lib/motion";
 import type { SceneFrame, SectionFrame } from "@/shared/lib/scroll";
 
@@ -117,7 +117,9 @@ export const computePhones = (frame: SceneFrame): PhonesScene => {
   if (isPastShareStart) {
     const pShare = frame.progress("share");
     const sh = easeInOutCubic(progressIn(pShare, TIMELINE.shareXShift));
-    const back = easeInOutCubic(progressIn(frame.scrollY, [shareSection.end, closingSection.top]));
+    // share 고정이 끝나면 B는 오른쪽으로 빠지고 A는 가운데로 돌아온다(원본은 share.end~closing.top, 길이 0이라 순간 이동)
+    const shareStickyEnd = shareSection.end - layout.viewportHeight;
+    const back = easeInOutCubic(progressIn(frame.scrollY, [shareStickyEnd, Math.max(shareSection.end, closingSection.top)]));
 
     const viewportWidth = layout.viewportWidth;
     const aTargetX = layout.isMobile ? viewportWidth * 0.29 : cx - 0.13 * viewportWidth;
@@ -138,19 +140,26 @@ export const computePhones = (frame: SceneFrame): PhonesScene => {
   return { a, b, qrFlight };
 };
 
-/** QR 비행: A 화면 위(y-57.5S)에서 B 화면 위(y-17.5S)로 포물선을 그리며 이동한다 (§3, §5 share) */
+/**
+ * QR 비행: A 화면 QR 모달 속 QR 자리에서 B 스캔 틀 가운데로 포물선을 그리며 이동한다(§3, §5 share,
+ * `docs/plans/0009`). 화면 속 위치는 피그마 px → 씬 단위(3D 폰 화면 폭 기준) → 페이지 px(S)로 옮긴다.
+ */
 const computeQrFlight = (frame: SceneFrame, a: PhonePose, b: PhonePose, scale: number): QrFlightPose => {
   const f = progressIn(frame.progress("share"), TIMELINE.qrFlight);
   const isVisible = f > 0 && f < 1;
 
-  const start = { x: a.x, y: a.y - 57.5 * scale };
-  const end = { x: b.x, y: b.y - 17.5 * scale };
+  const { designWidth, qrModal, scanFrame } = SHARE_SCREEN;
+  const designToPage = (PHONE_3D.screen.width / designWidth) * scale;
+  const designHeight = (PHONE_3D.screen.height / PHONE_3D.screen.width) * designWidth;
+  const start = { x: a.x, y: a.y + qrModal.qrOffsetY * designToPage };
+  const end = { x: b.x, y: b.y + (scanFrame.centerYRatio - 0.5) * designHeight * designToPage };
   const arcHeight = 200 * scale * 4 * f * (1 - f);
 
   const x = lerp(start.x, end.x, f);
   const y = lerp(start.y, end.y, f) - arcHeight;
   const rotate = -10 * Math.sin(Math.PI * f);
-  const flightScale = lerp(1, 0.45, f) * scale;
+  // 모달 속 QR 크기에서 스캔 틀 크기로
+  const flightScale = lerp(1, scanFrame.size / qrModal.qrSize, f);
   const endFade = 1 - progressIn(f, TIMELINE.qrFlightEndFade);
 
   return {
@@ -191,7 +200,7 @@ export const computeScreens = (frame: SceneFrame): ScreensScene => {
   const t1 = crossfadeAfter(frame, recordEnd, TIMELINE.report.fromRecordBand); // record -> report(상세)
   const t2 = crossfadeAfter(frame, reportEnd, TIMELINE.recommend.tabSlideBand); // report -> recommend(3D 오버레이의 밀기와 같은 밴드)
   const t3 = crossfadeAfter(frame, recommendEnd); // recommend -> ar
-  const t4 = crossfadeAfter(frame, arEnd); // ar -> qrShare
+  const t4 = crossfadeAfter(frame, arEnd, TIMELINE.share.fromArBand); // ar -> 기록 공유(3D 오버레이와 같은 밴드)
   const t5 = crossfadeAfter(frame, shareEnd, TIMELINE.shareEndToHomeBand); // qrShare -> home(loop)
 
   const a: Record<PhoneAScreenKey, number> = {

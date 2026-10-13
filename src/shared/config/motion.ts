@@ -62,8 +62,6 @@ export const PHONE_3D = {
    * PhoneA 900+778, PhoneB 993+685 → 둘 다 1678. Spline은 px 고정이라 뷰포트와 무관하다.
    */
   mergeEndScrollPx: 1678,
-  /** CSS 폰 A로 크로스페이드하는 스크롤 길이(px) */
-  handoffScrollPx: 140,
   /**
    * 합쳐진 PhoneA의 화면(ScreenA = RecordBase 윤곽, 씬 단위 = px). 리포트 구간은 이 위에 HTML 화면을
    * CSS 3D로 투영해 겹친다(`docs/plans/0005`). z는 폰 중심에서 화면 면까지(RecordLayer 0.08×222.84 + 0.3),
@@ -153,14 +151,17 @@ export const TIMELINE = {
   arReappearY: [0.46, 0.56] as Range,
   /** ar 진행도: 폰 A 재등장 opacity */
   arReappearOpacity: [0.46, 0.53] as Range,
-  /** share 진행도: 폰 A/B x 이동(sh) */
-  shareXShift: [0.1, 0.32] as Range,
-  /** share 진행도: QR 비행 */
-  qrFlight: [0.44, 0.7] as Range,
+  /**
+   * share 진행도: 폰 A/B x 이동(sh) — A가 공유 링크를 만든 뒤(QR 모달) B가 들어온다(`docs/plans/0009`,
+   * 원본 [0.1, 0.32]에서 레퍼런스 영상 순서에 맞춰 뒤로 미룸)
+   */
+  shareXShift: [0.38, 0.52] as Range,
+  /** share 진행도: QR 비행(원본 [0.44, 0.7]) */
+  qrFlight: [0.56, 0.7] as Range,
   /** QR 비행 f(0~1) 중 끝에서 페이드아웃되는 구간 */
   qrFlightEndFade: [0.82, 1] as Range,
-  /** share 진행도: 폰 B 스캔 화면 → 웹뷰 화면 */
-  bScanToWebview: [0.7, 0.8] as Range,
+  /** share 진행도: 폰 B 스캔 화면 → 공유된 시술기록 화면(원본 [0.7, 0.8]) */
+  bScanToWebview: [0.71, 0.75] as Range,
 
   // --- 폰 화면 크로스페이드 (§4) ---
   /** 섹션 end 이후 뷰포트 높이의 35~65% 구간에서 다음 화면으로 전환 */
@@ -250,10 +251,24 @@ export const TIMELINE = {
     styleImage: [0.4, 1] as Range,
   },
   share: {
-    /** QR clip-path inset 진행 */
-    qrClipIn: [0, 0.16] as Range,
-    /** "기록을 전달했어요" 문구 */
-    deliveredCopyIn: [0.72, 0.8] as Range,
+    /**
+     * AR → 기록 공유 화면 크로스페이드: ar 섹션 end 기준 뷰포트 높이 배수. share 섹션이 화면에 붙을 때
+     * (share 진행도 0) 이미 공유 화면이 다 보인다(`docs/plans/0009`).
+     */
+    fromArBand: [-0.5, -0.2] as Range,
+    /** share 진행도: 토글 i(시술 내용 · 만족도 · AR 후보)를 누르는 구간 = [start + i·stagger, … + duration] */
+    toggleTap: { start: 0.03, stagger: 0.06, duration: 0.05 },
+    /** 탭 진행도 중 토글 손잡이가 옮겨 가는 구간 */
+    toggleKnob: [0.35, 0.85] as Range,
+    /** share 진행도: 화면이 내려가 "취소 / 공유 링크 생성" 버튼이 드러나는 구간 */
+    buttonsReveal: [0.21, 0.26] as Range,
+    /** share 진행도: "공유 링크 생성"을 누르는 구간 */
+    linkTap: [0.27, 0.31] as Range,
+    /** share 진행도: 다운펌 상세(어두워짐) 위로 QR 모달이 뜨는 구간 */
+    qrModal: [0.31, 0.36] as Range,
+    /** share 진행도: 폰 B에 체크 표시가 떴다가 사라지는 구간 */
+    checkIn: [0.71, 0.76] as Range,
+    checkOut: [0.84, 0.9] as Range,
     /** 섹션 부제 */
     subtitleIn: [0.74, 0.88] as Range,
   },
@@ -307,7 +322,10 @@ export const AR_PANEL = {
   pillStart: { cross: 26, main: 58 },
   pillA: { cross: 58, main: 236 },
   /** b 단계 끝 크기 — 뷰포트 대비 비율. 데스크톱 교차축 0.5W·주축 0.72H(원본), 모바일은 가로 pill이라 축이 바뀜 */
-  pillB: { desktop: { crossOfWidth: 0.5, mainOfHeight: 0.72 }, mobile: { crossOfHeight: 0.42, mainOfWidth: 0.86 } },
+  pillB: {
+    desktop: { crossOfWidth: 0.5, mainOfHeight: 0.72 },
+    mobile: { crossOfHeight: 0.42, mainOfWidth: 0.86 },
+  },
   /** 분할 문구와 pill 가장자리 사이 간격(px) */
   splitGap: 20,
   /** 패널 문구·카피가 들어올 때 아래에서 올라오는 거리(px) */
@@ -346,4 +364,28 @@ export const AR_SCREEN = {
   ],
   /** 캐러셀에서 스타일 i가 있는 자리 — 스타일 0(일자 풀뱅)이 처음 선택 */
   styleCarouselIndex: [1, 2, 3],
+} as const;
+
+/**
+ * 공유 화면들 — 피그마 landing / S4-공유화면 · S4-공유QR화면 · S3-시술기록 공유를 HTML로 옮긴 치수
+ * (폭 402, 피그마 px, `docs/plans/0009`).
+ */
+export const SHARE_SCREEN = {
+  designWidth: 402,
+  statusBar: 54,
+  /** 상단 고정(상태바 + 제목 줄)과 하단 탭바 높이 */
+  fixedTop: 112,
+  tabBar: 106,
+  /** 공유 항목 줄: 첫 줄 중심 y(본문 기준)와 줄 높이, 토글 중심 x */
+  rows: { firstCenterY: 88.9, pitch: 53, toggleCenterX: 353.5 },
+  /** 켜는 토글(줄 인덱스) — 사진은 꺼 둔 채로, 나머지 셋을 차례로 켠다(피그마 S4 최종 상태) */
+  toggledRows: [1, 2, 3],
+  /** 버튼 줄: 본문 기준 윗변, 높이, "공유 링크 생성" 버튼 중심 x */
+  buttons: { top: 665, height: 42, linkCenterX: 293 },
+  /** 버튼이 드러난 뒤 탭바 위 여백 */
+  buttonsMargin: 16,
+  /** QR 모달(290×408, 화면 가운데)과 그 안 QR(189) 중심 — 모달 중심 기준 */
+  qrModal: { width: 290, height: 408, qrSize: 189, qrOffsetY: -32.5 },
+  /** 폰 B 스캔 화면 틀: 크기와 중심 y(화면 높이 비율) */
+  scanFrame: { size: 196, centerYRatio: 0.44 },
 } as const;

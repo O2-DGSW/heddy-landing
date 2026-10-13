@@ -11,7 +11,12 @@ import { RECORD_STACK } from "@/shared/config";
 import { useSceneFrame, useSmoothSceneFrame } from "@/shared/lib/scroll";
 
 import { computeRecordStack, type RecordStackScene } from "../model/recordStack";
-import { computeSplineHandoff, computeSplineViewport } from "../model/scene3d";
+import {
+  computeShareRigs,
+  computeSplineHandoff,
+  computeSplineViewport,
+  fitShareRigB,
+} from "../model/scene3d";
 
 const Spline = dynamic(() => import("@splinetool/react-spline"), { ssr: false });
 
@@ -30,6 +35,20 @@ const MIN_PIXEL_RATIO = 2;
 type SplineInternals = {
   _renderer?: { getPixelRatio: () => number; setPixelRatio: (ratio: number) => void };
   _resize?: (force?: boolean) => void;
+  /** 렌더 루프가 프레임마다 부르는 함수. 바뀐 게 없으면 그리지 않는다 */
+  render?: (time: number) => void;
+};
+
+/**
+ * 방금 쓴 오브젝트 값을 이 프레임에 바로 그린다. Spline 렌더 루프(rAF)는 스크롤 프레임보다 먼저 돌아서,
+ * 그대로 두면 캔버스가 DOM 화면 오버레이보다 한 프레임 늦어 빠르게 움직일 때 화면이 폰에서 미끄러진다.
+ * 시각은 이 프레임 rAF 시각을 써서 루프와 dt가 어긋나지 않게 한다. 그린 뒤엔 루프가 같은 장면을 다시 그리지 않는다.
+ */
+const renderNow = (app: Application): void => {
+  const { render } = app as unknown as SplineInternals;
+  if (typeof render !== "function") return;
+  const time = document.timeline.currentTime;
+  render(typeof time === "number" ? time : performance.now());
 };
 
 const supersample = (app: Application): void => {
@@ -69,6 +88,21 @@ const findRecordObjects = (app: Application): RecordObjects | null => {
   );
   if (!rig || !layer || !homeScreen || !veil || cards.some((card) => !card)) return null;
   return { rig, layer, homeScreen, veil, cards: cards as SPEObject[] };
+};
+
+/** share 섹션에서 코드가 움직이는 씬 오브젝트(`docs/plans/0009`) */
+type ShareObjects = {
+  rigB: SPEObject;
+  phoneA: SPEObject;
+  phoneB: SPEObject;
+};
+
+const findShareObjects = (app: Application): ShareObjects | null => {
+  const rigB = app.findObjectByName("ShareRigB");
+  const phoneA = app.findObjectByName("PhoneA");
+  const phoneB = app.findObjectByName("PhoneB");
+  if (!rigB || !phoneA || !phoneB) return null;
+  return { rigB, phoneA, phoneB };
 };
 
 /** 값이 바뀔 때만 쓴다 — 같은 값을 써도 Spline이 다시 그리므로 */
@@ -138,6 +172,8 @@ export const SplineStage = ({ sceneUrl, onLoad, onFail }: SplineStageProps) => {
   const fadeRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
   const recordObjectsRef = useRef<RecordObjects | null>(null);
+  /** share에서 폰 B를 움직이는 묶음(Spline 씬 `ShareRigB`)과 크기 기준이 되는 폰 두 대. 옛 export엔 묶음이 없어 null이면 B는 합쳐진 채로 둔다 */
+  const shareObjectsRef = useRef<ShareObjects | null>(null);
   const isFailedRef = useRef(false);
 
   // 서버 렌더 HTML에 <link>로 들어가서, JS가 끝나기 전부터 씬 파일(~1.3MB)을 받기 시작한다
@@ -163,6 +199,7 @@ export const SplineStage = ({ sceneUrl, onLoad, onFail }: SplineStageProps) => {
     supersample(app);
     appRef.current = app; // 기록 스택 오브젝트가 없는 옛 export면 record 구간은 합쳐진 정면 폰 그대로 둔다
     recordObjectsRef.current = findRecordObjects(app);
+    shareObjectsRef.current = findShareObjects(app);
     // RecordLayer는 export에 들어가도록 씬에선 보이게 두므로(숨긴 오브젝트는 export에서 빠짐),
     // 스크롤이 없어도 첫 프레임을 받아 지금 위치에 맞게 숨긴다
     onLoad();
@@ -188,6 +225,28 @@ export const SplineStage = ({ sceneUrl, onLoad, onFail }: SplineStageProps) => {
     // 멈췄다 켜면 Spline Scroll 상태가 합쳐진 채로 굳어 역스크롤 때 다시 갈라지지 않는다.
     // (renderOnDemand라 화면 변화가 없으면 어차피 그리지 않는다)
     container.style.visibility = canvasOpacity === 0 ? "hidden" : "visible";
+
+    // share: 폰 A(RecordRig)는 왼쪽으로, 폰 B(ShareRigB)는 오른쪽에서 들어와 나란히 선다(`docs/plans/0009`)
+    const rigs = computeShareRigs(frame);
+    const recordRig = recordObjectsRef.current?.rig;
+    if (recordRig) setIfChanged(recordRig.position, "x", rigs.a.x);
+    const share = shareObjectsRef.current;
+    if (share) {
+      const { rigB, phoneA, phoneB } = share;
+      const rig = fitShareRigB(
+        rigs.b,
+        { x: phoneB.position.x, y: phoneB.position.y, z: phoneB.position.z, scale: phoneB.scale.x },
+        phoneA.scale.x,
+      );
+      setIfChanged(rigB.position, "x", rig.x);
+      setIfChanged(rigB.position, "y", rig.y);
+      setIfChanged(rigB.position, "z", rig.z);
+      setIfChanged(rigB.rotation, "z", rig.rotateZDeg * DEG);
+      setIfChanged(rigB.scale, "x", rig.scale);
+      setIfChanged(rigB.scale, "y", rig.scale);
+      setIfChanged(rigB.scale, "z", rig.scale);
+    }
+    if (appRef.current && canvasOpacity > 0) renderNow(appRef.current);
   });
 
   // 기록 스택은 부드럽게 따라가는 스크롤로 움직인다 — 빠르게 내려도 카드가 건너뛰지 않는다.
@@ -195,6 +254,7 @@ export const SplineStage = ({ sceneUrl, onLoad, onFail }: SplineStageProps) => {
   useSmoothSceneFrame((frame) => {
     if (!recordObjectsRef.current || isFailedRef.current) return;
     applyRecordStack(recordObjectsRef.current, computeRecordStack(frame, RECORD_CARDS.length));
+    if (appRef.current) renderNow(appRef.current);
   }, RECORD_STACK.smoothHalfLifeMs);
 
   return (

@@ -3,7 +3,15 @@ import { describe, expect, it } from "vitest";
 import { PHONE, PHONE_3D, SECTION_HEIGHT_VH, SECTION_KEYS, TIMELINE, type SectionKey } from "@/shared/config";
 import { computeStageLayout, createFrame, stackSections, type SceneFrame } from "@/shared/lib/scroll";
 
-import { computeScreenOverlay, computeSplineHandoff, computeSplineViewport } from "./scene3d";
+import { computePhones } from "./scene";
+import {
+  computeScreenOverlay,
+  computeScreenOverlayB,
+  computeShareRigs,
+  computeSplineHandoff,
+  computeSplineViewport,
+  fitShareRigB,
+} from "./scene3d";
 
 const W = 1440;
 const H = 900;
@@ -52,7 +60,7 @@ describe("computeSplineHandoff", () => {
     expect(cssOpacity).toBe(0);
   });
 
-  it("record(시술기록)부터 recommend(추천) 섹션 끝까지, 그리고 ar 재등장 뒤 ar 끝까지 3D 폰만 보인다(`docs/plans/0008`)", () => {
+  it("record부터 recommend 끝까지, 그리고 ar 재등장 뒤 페이지 끝까지 3D 폰만 보인다(`docs/plans/0008`, `0009`)", () => {
     for (const [width, height] of [
       [1440, 900],
       [1920, 1080],
@@ -64,6 +72,8 @@ describe("computeSplineHandoff", () => {
         ["report", [0, 0.5, 0.99]],
         ["recommend", [0, 0.5, 0.99]],
         ["ar", [0.6, 0.8, 0.99]],
+        ["share", [0, 0.5, 0.99]],
+        ["closing", [0.5]],
       ] as const) {
         for (const p of ps) {
           const { canvasOpacity, cssOpacity } = computeSplineHandoff(vp.at(vp.scrollAt(key, p)));
@@ -93,32 +103,118 @@ describe("computeSplineHandoff", () => {
     expect(rising.yOffset).toBeGreaterThan(0);
   });
 
-  it("ar가 끝나면 CSS 폰으로 넘어가고, qrShare 화면 전환(섹션 끝 + 0.35H)보다 먼저 끝난다", () => {
-    const vp = frameForViewport(1440, 900);
-    const arEndAt = vp.scrollAt("ar", 1);
-    const done = computeSplineHandoff(vp.at(arEndAt + PHONE_3D.handoffScrollPx));
-    expect(done.canvasOpacity).toBe(0);
-    expect(done.cssOpacity).toBe(1);
-
-    const ar = sections.find((section) => section.key === "ar");
-    if (!ar) throw new Error("ar not found");
-    const screenSwitchAt = ar.end + TIMELINE.screenCrossfadeBand[0] * H;
-    expect(arEndAt + PHONE_3D.handoffScrollPx).toBeLessThan(screenSwitchAt);
-  });
-
-  it("넘기는 도중 두 opacity의 합은 항상 1이다", () => {
-    const vp = frameForViewport(1440, 900);
-    const start = vp.scrollAt("ar", 1);
-    const { canvasOpacity, cssOpacity } = computeSplineHandoff(vp.at(start + PHONE_3D.handoffScrollPx / 2));
-    expect(canvasOpacity).toBeCloseTo(0.5);
-    expect(canvasOpacity + cssOpacity).toBeCloseTo(1);
-  });
-
   it("reduced motion이면 3D를 쓰지 않고 CSS 폰만 보인다(화면 오버레이도 없음)", () => {
     expect(computeScreenOverlay(createFrame(0, layout, sections, true)).opacity).toBe(0);
     const { canvasOpacity, cssOpacity } = computeSplineHandoff(createFrame(0, layout, sections, true));
     expect(canvasOpacity).toBe(0);
     expect(cssOpacity).toBe(1);
+  });
+});
+
+describe("computeShareRigs (share: 폰 두 대 3D 배치, `docs/plans/0009`)", () => {
+  const share = sections.find((section) => section.key === "share");
+  if (!share) throw new Error("share not found");
+  const atShare = (p: number) => frameAtScrollY(share.top + p * (share.height - H));
+  const S = layout.scale;
+
+  it("share 전에는 두 묶음 다 제자리(히어로 합체 그대로)", () => {
+    const rigs = computeShareRigs(frameAtScrollY(0));
+    expect(rigs.a.x).toBe(0);
+    expect(rigs.b).toEqual({ x: 0, y: 0, rotateZDeg: 0, isVisible: false });
+  });
+
+  it("CSS 폰과 같은 자리: A는 cx − 0.13W, B는 cx + 0.13W(씬 단위 = px / S)", () => {
+    const frame = atShare(TIMELINE.shareXShift[1]);
+    const { a, b } = computePhones(frame);
+    const rigs = computeShareRigs(frame);
+    expect(rigs.a.x).toBeCloseTo((a.x - layout.center.x) / S);
+    expect(rigs.b.x).toBeCloseTo((b.x - layout.center.x) / S);
+    expect(rigs.b.rotateZDeg).toBeCloseTo(0);
+    expect(rigs.b.isVisible).toBe(true);
+  });
+
+  it("B가 오른쪽 밖으로 다 빠지면 숨긴다 — 끝까지 내려도 퇴장이 1px 덜 끝나 그림자가 가장자리에 남지 않게", () => {
+    const frame = frameAtScrollY(share.end - 1);
+    expect(computePhones(frame).b.opacity).toBe(1);
+    expect(computeShareRigs(frame).b.isVisible).toBe(false);
+  });
+
+  it("들어올 때는 화면 밖에서부터 보인다(그림자가 먼저 들어온다)", () => {
+    expect(computeShareRigs(atShare(TIMELINE.shareXShift[0] + 0.001)).b.isVisible).toBe(true);
+  });
+
+  it("B가 들어오는 중엔 기울어 있다(CSS 회전과 반대 부호 = 씬 z축 반시계)", () => {
+    const frame = atShare(TIMELINE.shareXShift[0] + 0.03);
+    const { b } = computePhones(frame);
+    expect(computeShareRigs(frame).b.rotateZDeg).toBeCloseTo(-b.rotate);
+    expect(b.rotate).toBeGreaterThan(0);
+  });
+
+  it("B 화면 오버레이는 B 묶음과 같은 씬 위치·기울기로 투영되고, B가 보일 때만 보인다", () => {
+    const frame = atShare(0.6);
+    const overlay = computeScreenOverlayB(frame);
+    const rigs = computeShareRigs(frame);
+    expect(overlay.sceneX).toBeCloseTo(rigs.b.x);
+    expect(overlay.rotateZDeg).toBeCloseTo(-rigs.b.rotateZDeg);
+    expect(overlay.opacity).toBe(1);
+    expect(computeScreenOverlayB(atShare(0.2)).opacity).toBe(0);
+  });
+
+  it("A 화면 오버레이도 A 묶음을 따라 옮겨 간다", () => {
+    const frame = atShare(0.6);
+    expect(computeScreenOverlay(frame).sceneX).toBeCloseTo(computeShareRigs(frame).a.x);
+  });
+});
+
+describe("fitShareRigB (Spline이 쥔 PhoneB 자세를 묶음으로 되돌린다)", () => {
+  /** 히어로 합체 끝 PhoneB "Gone" 상태: A 뒤 z −40, 크기 1%(Spline Scroll 이벤트가 계속 다시 쓴다) */
+  const GONE = { x: 0, y: 0, z: -40, scale: 2.2284 };
+  const PHONE_SCALE = 222.84;
+
+  /** 묶음 변환을 PhoneB 로컬 위치에 적용한 월드 위치·크기 */
+  const toWorld = (rig: ReturnType<typeof fitShareRigB>, local: typeof GONE) => {
+    const t = rig.rotateZDeg * (Math.PI / 180);
+    const lx = local.x * rig.scale;
+    const ly = local.y * rig.scale;
+    return {
+      x: rig.x + lx * Math.cos(t) - ly * Math.sin(t),
+      y: rig.y + lx * Math.sin(t) + ly * Math.cos(t),
+      z: rig.z + local.z * rig.scale,
+      scale: local.scale * rig.scale,
+    };
+  };
+
+  it("B가 안 보이면 묶음은 제자리 — 히어로 합체는 씬 그대로", () => {
+    const rig = fitShareRigB({ x: 0, y: 0, rotateZDeg: 0, isVisible: false }, GONE, PHONE_SCALE);
+    expect(rig).toEqual({ x: 0, y: 0, z: 0, rotateZDeg: 0, scale: 1 });
+  });
+
+  it("B가 보이면 PhoneB가 A와 같은 크기로, A와 같은 면(z 0)의 목표 자리에 선다", () => {
+    const target = { x: 213, y: -12, rotateZDeg: 6, isVisible: true };
+    const world = toWorld(fitShareRigB(target, GONE, PHONE_SCALE), GONE);
+    expect(world.x).toBeCloseTo(213);
+    expect(world.y).toBeCloseTo(-12);
+    expect(world.z).toBeCloseTo(0);
+    expect(world.scale).toBeCloseTo(PHONE_SCALE);
+  });
+
+  it("PhoneB가 로컬에서 비켜 있어도(회전 포함) 목표 자리에 맞춘다", () => {
+    const local = { x: 3, y: -2, z: -40, scale: 2.2284 };
+    const target = { x: -50, y: 30, rotateZDeg: -10, isVisible: true };
+    const world = toWorld(fitShareRigB(target, local, PHONE_SCALE), local);
+    expect(world.x).toBeCloseTo(-50);
+    expect(world.y).toBeCloseTo(30);
+    expect(world.z).toBeCloseTo(0);
+  });
+
+  it("PhoneB 크기가 0이어도 무한대로 튀지 않는다", () => {
+    const rig = fitShareRigB(
+      { x: 1, y: 1, rotateZDeg: 0, isVisible: true },
+      { ...GONE, scale: 0 },
+      PHONE_SCALE,
+    );
+    expect(Number.isFinite(rig.scale)).toBe(true);
+    expect(Number.isFinite(rig.z)).toBe(true);
   });
 });
 

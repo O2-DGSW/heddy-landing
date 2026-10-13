@@ -10,9 +10,16 @@ import { lerp } from "@/shared/lib/motion";
 import { useSceneFrame } from "@/shared/lib/scroll";
 
 import { computeRecommendCards } from "../model/recommendScene";
+import { computeShareB } from "../model/shareScene";
 import { computeSettledRecordCards, topCardIndex } from "../model/recordStack";
-import { computeScreenOverlay } from "../model/scene3d";
+import {
+  computeScreenOverlay,
+  computeScreenOverlayB,
+  type ScreenOverlayB as ScreenOverlayBScene,
+} from "../model/scene3d";
 import { ArScreen } from "./ArScreen";
+import { ScanScreen, ShareScreen, SharedRecordScreen } from "./ShareScreens";
+import { HomeScreen } from "./screens";
 import { RecommendCard, RecommendScreen, RecommendTabBar } from "./RecommendScreen";
 import { DetailScreen } from "./screens";
 
@@ -31,6 +38,13 @@ const TAP_POINT = (() => {
   const top = settled[topCardIndex(settled)];
   return { x: top.x, y: top.y };
 })();
+
+/**
+ * 씬 카메라와 같은 투영: 캔버스 중심(카메라 축)으로 옮기고 1 씬 단위 = S px로 줄인 뒤, 원근 안에서 폰 묶음
+ * 위치(sceneX/Y, y 위로)·화면 면 회전·뒤로 눕힘(rotateX)·화면 면 높이(translateZ)를 적용한다.
+ */
+const overlayTransform = (o: ScreenOverlayBScene): string =>
+  `translate(${o.x}px, ${o.y}px) scale(${o.scale}) perspective(${o.perspective}px) translate3d(${o.sceneX}px, ${-o.sceneY}px, 0) rotateZ(${o.rotateZDeg}deg) rotateX(${o.rotateXDeg}deg) translateZ(${o.translateZ}px)`;
 
 interface ScreenOverlayProps {
   /** Spline이 로드돼 3D 폰이 보이는 중인지 — 아니면 오버레이를 숨긴다 */
@@ -56,6 +70,8 @@ export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
   const recommendTabBarRef = useRef<HTMLDivElement>(null);
   const tabRippleRef = useRef<HTMLDivElement>(null);
   const arRef = useRef<HTMLDivElement>(null);
+  const shareRef = useRef<HTMLDivElement>(null);
+  const homeRef = useRef<HTMLDivElement>(null);
   const popCardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const { screen, island } = PHONE_3D;
   const designScale = screen.width / RECOMMEND_SCREEN.designWidth;
@@ -66,7 +82,7 @@ export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
     if (!root) return;
     const overlay = computeScreenOverlay(frame);
     const isShown = getIsEnabled() && overlay.opacity > 0;
-    root.style.transform = `translate(${overlay.x}px, ${overlay.y}px) scale(${overlay.scale}) perspective(${overlay.perspective}px) rotateX(${overlay.rotateXDeg}deg) translateZ(${overlay.translateZ}px)`;
+    root.style.transform = overlayTransform(overlay);
     // 캔버스와 같이 사라지는 페이드는 PhoneStage가 둘을 묶어서 한다 — 여기선 켜고 끄기만
     root.style.opacity = isShown ? "1" : "0";
     root.style.visibility = isShown ? "visible" : "hidden";
@@ -105,6 +121,15 @@ export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
 
     // AR 섹션: 폰이 화면 밖으로 빠졌다 돌아오는 사이에 AR 화면으로 바뀐다(`docs/plans/0008`)
     if (arRef.current) arRef.current.style.visibility = overlay.isArScreen ? "visible" : "hidden";
+    // share: AR → 기록 공유 화면, share가 끝나면 → 홈 화면(`docs/plans/0009`)
+    if (shareRef.current) {
+      shareRef.current.style.opacity = String(overlay.shareIn);
+      shareRef.current.style.visibility = overlay.shareIn > 0 ? "visible" : "hidden";
+    }
+    if (homeRef.current) {
+      homeRef.current.style.opacity = String(overlay.homeIn);
+      homeRef.current.style.visibility = overlay.homeIn > 0 ? "visible" : "hidden";
+    }
 
     computeRecommendCards(frame).forEach((pose, index) => {
       const card = popCardRefs.current[index];
@@ -211,6 +236,13 @@ export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
         <div ref={arRef} className="invisible absolute inset-0">
           <ArScreen width={screen.width} height={screen.height} />
         </div>
+        {/* 기록 공유 화면(토글 → QR 모달), share가 끝나면 홈 화면 */}
+        <div ref={shareRef} className="invisible absolute inset-0 opacity-0">
+          <ShareScreen width={screen.width} height={screen.height} />
+        </div>
+        <div ref={homeRef} className="invisible absolute inset-0 opacity-0">
+          <HomeScreen />
+        </div>
         {/* 다이내믹 아일랜드: 3D 폰 화면의 구멍 자리를 오버레이가 덮으므로 다시 그린다 */}
         <div
           className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black"
@@ -247,6 +279,55 @@ export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
             />
           </div>
         ))}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * 폰 B 화면 오버레이(`docs/plans/0009`): share에서 B 묶음(ShareRigB)과 같은 씬 위치·기울기로 스캔 화면 →
+ * 공유된 시술기록을 투영한다. B가 보일 때만 보인다.
+ */
+export const ScreenOverlayB = ({ getIsEnabled }: ScreenOverlayProps) => {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const webviewRef = useRef<HTMLDivElement>(null);
+  const { screen, island } = PHONE_3D;
+
+  useSceneFrame((frame) => {
+    const root = rootRef.current;
+    if (!root) return;
+    const overlay = computeScreenOverlayB(frame);
+    const isShown = getIsEnabled() && overlay.opacity > 0;
+    root.style.transform = overlayTransform(overlay);
+    root.style.opacity = isShown ? "1" : "0";
+    root.style.visibility = isShown ? "visible" : "hidden";
+    if (webviewRef.current) {
+      const { webview } = computeShareB(frame);
+      webviewRef.current.style.opacity = String(webview);
+      webviewRef.current.style.visibility = webview > 0 ? "visible" : "hidden";
+    }
+  });
+
+  return (
+    <div ref={rootRef} className="invisible absolute left-0 top-0 h-0 w-0 origin-top-left">
+      <div
+        className="absolute overflow-hidden"
+        style={{
+          left: -screen.width / 2,
+          top: -screen.height / 2,
+          width: screen.width,
+          height: screen.height,
+          borderRadius: `${screen.radiusX}px / ${screen.radiusY}px`,
+        }}
+      >
+        <ScanScreen width={screen.width} height={screen.height} />
+        <div ref={webviewRef} className="invisible absolute inset-0 opacity-0">
+          <SharedRecordScreen width={screen.width} height={screen.height} />
+        </div>
+        <div
+          className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black"
+          style={{ top: island.centerY, width: island.width, height: island.height }}
+        />
       </div>
     </div>
   );

@@ -41,3 +41,13 @@
   --text-12--line-height: 130%;
   --text-12--letter-spacing: -0.02em;
 }
+
+/* 폰 B 스캔 화면의 스캔 선(`widgets/phone-stage` ScanScreen, `docs/plans/0009`) */
+@keyframes scan-line {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(150px);
+  }
+}
