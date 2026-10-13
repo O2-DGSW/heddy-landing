@@ -157,8 +157,8 @@ export const DetailScreen = ({
   );
 };
 
-/** AR 화면 — 실제 앱 AR 체험 화면 캡처. pill 분할/다크 패널 전환 모션은 TODO(docs/plans/0001) */
-export const ArScreen = () => (
+/** 폰 B의 AR 화면 — 실제 앱 AR 체험 화면 캡처(히어로 CSS 폰 대체용). 폰 A의 AR 화면은 `ArScreen`(HTML) */
+export const ArSnapshotScreen = () => (
   <Image src="/screens/ar.webp" alt="헤디 AR 스타일 체험 화면" fill sizes="280px" className="object-cover" />
 );
 

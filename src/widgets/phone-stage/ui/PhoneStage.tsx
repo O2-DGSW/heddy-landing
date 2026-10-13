@@ -12,8 +12,9 @@ import { computeSplineHandoff } from "../model/scene3d";
 import { RecommendScreen } from "./RecommendScreen";
 import { ScreenOverlay } from "./ScreenOverlay";
 import { SplineStage } from "./SplineStage";
+import { ArScreen } from "./ArScreen";
 import {
-  ArScreen,
+  ArSnapshotScreen,
   BScanScreen,
   BWebviewScreen,
   HomeScreen,
@@ -35,7 +36,7 @@ const A_SCREENS: readonly { key: PhoneAScreenKey; node: ReactNode }[] = [
 ];
 
 const B_SCREENS: readonly { key: PhoneBScreenKey; node: ReactNode }[] = [
-  { key: "ar", node: <ArScreen /> },
+  { key: "ar", node: <ArSnapshotScreen /> },
   { key: "scan", node: <BScanScreen /> },
   { key: "webview", node: <BWebviewScreen /> },
 ];

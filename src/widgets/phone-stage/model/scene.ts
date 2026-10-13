@@ -96,7 +96,14 @@ export const computePhones = (frame: SceneFrame): PhonesScene => {
   const isPastArStart = frame.scrollY >= arSection.top;
   const isPastShareStart = frame.scrollY >= shareSection.top;
 
-  // ar: 폰 A 재등장. TODO(docs/plans/0001): recommend 끝~ar 시작 사이의 스크롤 이탈 연출은 후속 작업.
+  // recommend 고정 끝 ~ ar 시작: A가 페이지와 함께 위로 빠진다(spec §3, `docs/plans/0008`)
+  const recommendStickyEnd = getSection(frame, "recommend").end - layout.viewportHeight;
+  if (frame.scrollY > recommendStickyEnd && !isPastArStart) {
+    a = { x: cx, y: cy - (frame.scrollY - recommendStickyEnd), rotate: 0, scale, opacity: 1 };
+    b = { ...b, opacity: 0 };
+  }
+
+  // ar: 폰 A 재등장(아래에서 올라오며 나타남)
   if (isPastArStart) {
     const pAr = frame.progress("ar");
     const arReappear = easeInOutCubic(progressIn(pAr, TIMELINE.arReappearY));

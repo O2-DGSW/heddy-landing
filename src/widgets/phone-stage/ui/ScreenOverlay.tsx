@@ -12,6 +12,7 @@ import { useSceneFrame } from "@/shared/lib/scroll";
 import { computeRecommendCards } from "../model/recommendScene";
 import { computeSettledRecordCards, topCardIndex } from "../model/recordStack";
 import { computeScreenOverlay } from "../model/scene3d";
+import { ArScreen } from "./ArScreen";
 import { RecommendCard, RecommendScreen, RecommendTabBar } from "./RecommendScreen";
 import { DetailScreen } from "./screens";
 
@@ -41,7 +42,8 @@ interface ScreenOverlayProps {
  * 상세 화면이 오른쪽에서 밀려 들어오고(상태바·탭바는 고정), 뒤 리스트는 살짝 어두워진다.
  * 추천 섹션 전에는 하단 "추천" 탭을 누르면(물결·탭 색 이동) 추천 화면이 오른쪽에서 밀려 들어오고(상태바·탭바
  * 고정, 상세 화면은 왼쪽으로 나감), 추천 섹션에선 추천 카드 3장이 화면 밖(잘리지 않는 레이어)으로
- * 떠올랐다가 돌아간다(`docs/plans/0007`). 프레임마다 ref로만 쓴다.
+ * 떠올랐다가 돌아간다(`docs/plans/0007`). AR 섹션에선 AR 화면(스타일 전환)을 보여 준다(`docs/plans/0008`).
+ * 프레임마다 ref로만 쓴다.
  */
 export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -53,6 +55,7 @@ export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
   const recommendRef = useRef<HTMLDivElement>(null);
   const recommendTabBarRef = useRef<HTMLDivElement>(null);
   const tabRippleRef = useRef<HTMLDivElement>(null);
+  const arRef = useRef<HTMLDivElement>(null);
   const popCardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const { screen, island } = PHONE_3D;
   const designScale = screen.width / RECOMMEND_SCREEN.designWidth;
@@ -99,6 +102,9 @@ export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
       tabRippleRef.current.style.opacity =
         tabSwitch.ripple > 0 ? String(0.12 * (1 - tabSwitch.ripple) + 0.06 * tabSwitch.press) : "0";
     }
+
+    // AR 섹션: 폰이 화면 밖으로 빠졌다 돌아오는 사이에 AR 화면으로 바뀐다(`docs/plans/0008`)
+    if (arRef.current) arRef.current.style.visibility = overlay.isArScreen ? "visible" : "hidden";
 
     computeRecommendCards(frame).forEach((pose, index) => {
       const card = popCardRefs.current[index];
@@ -200,6 +206,10 @@ export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
               height: TAB_RIPPLE_SIZE,
             }}
           />
+        </div>
+        {/* AR 화면: 위의 화면들을 모두 덮는다(상태바·홈 인디케이터 포함) */}
+        <div ref={arRef} className="invisible absolute inset-0">
+          <ArScreen width={screen.width} height={screen.height} />
         </div>
         {/* 다이내믹 아일랜드: 3D 폰 화면의 구멍 자리를 오버레이가 덮으므로 다시 그린다 */}
         <div

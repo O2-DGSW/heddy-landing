@@ -176,8 +176,9 @@ export const SplineStage = ({ sceneUrl, onLoad, onFail }: SplineStageProps) => {
 
     // 크기는 로드 전부터 잡아야 한다 — 0×0 컨테이너에서는 Spline이 캔버스를 만들지 않는다
     const rect = computeSplineViewport(frame.layout);
-    const { canvasOpacity } = computeSplineHandoff(frame);
-    container.style.transform = `translate(${rect.left}px, ${rect.top}px)`;
+    const { canvasOpacity, yOffset } = computeSplineHandoff(frame);
+    // 추천 끝에서 페이지와 함께 위로 빠지고, AR에서 아래에서 올라온다(`docs/plans/0008`)
+    container.style.transform = `translate(${rect.left}px, ${rect.top + yOffset}px)`;
     container.style.width = `${rect.width}px`;
     container.style.height = `${rect.height}px`;
     // 페이드는 PhoneStage가 캔버스·화면 오버레이를 묶어서 한다(따로 반투명하면 오버레이 아래가 비친다)

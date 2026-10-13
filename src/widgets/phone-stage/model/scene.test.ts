@@ -46,6 +46,15 @@ describe("computePhones", () => {
     expect(b.opacity).toBeCloseTo(0);
   });
 
+  it("recommend 고정이 끝나면 A가 페이지와 함께 위로 빠지고, ar 시작 때는 화면 밖(한 화면 위)이다", () => {
+    const recommend = sections.find((section) => section.key === "recommend");
+    if (!recommend) throw new Error("recommend not found");
+    const stickyEnd = recommend.end - H;
+    expect(computePhones(frameAtScrollY(stickyEnd)).a.y).toBeCloseTo(layout.center.y);
+    expect(computePhones(frameAtScrollY(stickyEnd + 300)).a.y).toBeCloseTo(layout.center.y - 300);
+    expect(computePhones(frameAtScrollY(recommend.end - 1)).a.y).toBeCloseTo(layout.center.y - H + 1);
+  });
+
   it("ar 0.3에서 A 불투명도가 0이다", () => {
     const { a } = computePhones(frameAtSectionProgress("ar", 0.3));
     expect(a.opacity).toBeCloseTo(0);
