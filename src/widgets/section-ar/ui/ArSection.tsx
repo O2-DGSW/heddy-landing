@@ -69,7 +69,7 @@ export const ArSection = () => {
             ref={(node) => {
               splitRefs.current[i] = node;
             }}
-            className="text-16 absolute left-1/2 top-1/2 whitespace-nowrap font-semibold text-neutral-900 lg:text-20"
+            className="text-20 absolute left-1/2 top-1/2 whitespace-nowrap font-bold text-neutral-900 lg:text-32"
           >
             {line}
           </span>
@@ -78,7 +78,7 @@ export const ArSection = () => {
         {/* 패널 문구: 다크 패널 가운데 */}
         <p
           ref={panelCopyRef}
-          className="text-18 absolute left-1/2 top-1/2 whitespace-nowrap text-center font-semibold text-white opacity-0 lg:text-24"
+          className="text-28 absolute left-1/2 top-1/2 whitespace-nowrap text-center font-bold text-white opacity-0 lg:text-36"
         >
           {ar.panelCopy.map((line) => (
             <span key={line} className="block">
