@@ -6,7 +6,7 @@ import { preconnect, preload } from "react-dom";
 import dynamic from "next/dynamic";
 import type { Application, SPEObject } from "@splinetool/runtime";
 
-import { RECORD_CARDS } from "@/entities/record";
+import { RECORD_CARD_IMAGE_COUNT, RECORD_CARDS, recordCardNo } from "@/entities/record";
 import { RECORD_STACK } from "@/shared/config";
 import { useSceneFrame, useSmoothSceneFrame } from "@/shared/lib/scroll";
 
@@ -83,10 +83,15 @@ const findRecordObjects = (app: Application): RecordObjects | null => {
   const layer = app.findObjectByName("RecordLayer");
   const homeScreen = app.findObjectByName("ScreenA");
   const veil = app.findObjectByName("Veil");
-  const cards = RECORD_CARDS.map((_, index) =>
-    app.findObjectByName(`Card${String(index + 1).padStart(2, "0")}`),
-  );
+  const cards = RECORD_CARDS.map((card) => app.findObjectByName(`Card${recordCardNo(card.cardNo)}`));
   if (!rig || !layer || !homeScreen || !veil || cards.some((card) => !card)) return null;
+  // 스택에 쓰지 않는 카드(2025년, 이슈 #42)는 export엔 보이게 남아 있으므로 여기서 숨긴다
+  const usedNos = new Set(RECORD_CARDS.map((card) => card.cardNo));
+  for (let no = 1; no <= RECORD_CARD_IMAGE_COUNT; no += 1) {
+    if (usedNos.has(no)) continue;
+    const unused = app.findObjectByName(`Card${recordCardNo(no)}`);
+    if (unused) unused.visible = false;
+  }
   return { rig, layer, homeScreen, veil, cards: cards as SPEObject[] };
 };
 

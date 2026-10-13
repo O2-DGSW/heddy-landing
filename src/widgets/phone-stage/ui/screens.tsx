@@ -4,7 +4,7 @@ import { useRef } from "react";
 
 import Image from "next/image";
 
-import { RECORD_CARDS } from "@/entities/record";
+import { RECORD_CARDS, recordCardNo } from "@/entities/record";
 import { DETAIL_SCREEN, PHONE, RECORD_STACK } from "@/shared/config";
 import { useSceneFrame } from "@/shared/lib/scroll";
 
@@ -52,7 +52,7 @@ export const RecordScreen = () => {
             }}
           >
             <Image
-              src={`/screens/record/card-${String(index + 1).padStart(2, "0")}.png`}
+              src={`/screens/record/card-${recordCardNo(RECORD_CARDS[index].cardNo)}.png`}
               alt={`${RECORD_CARDS[index].date} ${RECORD_CARDS[index].title}`}
               fill
               sizes="250px"
