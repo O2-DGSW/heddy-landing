@@ -14,7 +14,7 @@ Claude Design `Heddy Landing v2.dc.html`의 마크업과 `update()` 로직에서
 | recommend | s6 | 320 | 검색이 아니라, / 기록에서 시작하는 추천 (220 → 320, 카드 팝아웃을 읽을 수 있게, 2026-10-12) |
 | ar | s7 | 600 | 분할 문구 "거울 앞에 \| 앉기 전에" → 패널 문구 "머릿속 상상을 지우고 / 이제는 눈앞의 결과로" → 카피 "거울 앞에 앉기 전에, / 먼저 비춰보세요" |
 | share | s8 | 320 | 미용실에서 / 설명 없이 — 기록이 나를 대신해 설명합니다 |
-| closing | s9 | 100 | 다음 시술 전에, / 헤디에 기록부터 + Google Play / App Store 버튼 · © 2026 Heddy |
+| closing | s9 | 100 | 다음 시술 전에, / 헤디에 기록부터 + 카드형 스토어 버튼(다운로드 · App Store / 원스토어, 원본 Google Play는 실제 스토어가 아니라 쓰지 않음) · © 2026 Heddy (2026-10-13, `docs/plans/0010`) |
 
 - 높이 = `100 + (base - 100) × scrollLength` (scrollLength 기본 1). 섹션 진행도 p = (scrollY − top) / (top + height − 뷰포트높이 − top), 0~1로 자름.
 - 원본 s2는 삭제됨.
@@ -40,12 +40,14 @@ Claude Design `Heddy Landing v2.dc.html`의 마크업과 `update()` 로직에서
 - **share**(ar.end 이후): sh = E(R(p_share, 0.38~0.52)) (원본 0.10~0.32, 2026-10-13 레퍼런스 영상 순서로 미룸, `docs/plans/0009`), back = E(R(scrollY, share 고정 끝~share.end)) (원본 share.end~closing.top은 길이 0)
   A.x = lerp(lerp(cx, cx−0.13W, sh), cx, back) (모바일 0.29W) · B.x = lerp(lerp(W+220S, cx+0.13W, sh), W+220S, back) (모바일 0.73W)
   B 회전 lerp(lerp(10, 0, sh), 10, back), B는 sh>0 && back<1일 때만 보임. QR 비행 = R(p_share, 0.56~0.70). 폰 두 대 모두 Spline 3D(A = RecordRig, B = ShareRigB).
+- **closing**(2026-10-13, `docs/plans/0010`): back 동안 A가 share 자리에서 closing 자리로 간다 — 데스크톱 (0.78W, 0.5H), 폰 높이 0.8H(오른쪽 여백 32px 안으로 줄임, S 미만으로는 안 줄임). 모바일은 (cx, cy)·S 그대로.
+  3D는 RecordRig 배율 = A.scale / S, 화면 오버레이도 같은 배율, 그림자 바닥(ShadowCatcher)도 같은 배율만큼 내린다.
 
 ## 4. 폰 화면 전환 (크로스페이드)
 
 섹션 end 이후 뷰포트 높이의 35~65% 구간에서 다음 화면으로.
 - ar 시작 전: 홈 → (archive 끝) 기록 → (record 끝) 리포트 → (report 끝) 추천
-- ar 시작 후: AR → (ar 끝) QR 공유 → (share 끝 + 30~70%) 홈
+- ar 시작 후: AR → (ar 끝) QR 공유 → (share 고정 끝 + 25~65%) closing 홈(원본 "share 끝 + 30~70%"는 페이지 끝을 넘어 닿지 않음, `docs/plans/0010`). closing 홈은 히어로 홈(실제 앱 스크린샷)과 다른 HTML 화면이다.
 - 폰 B: ar 전엔 AR 화면, 이후엔 스캔 → 웹뷰(R(p_share, 0.70~0.80))
 - 폰 A가 AR 화면이면 상태바 글자 흰색.
 

@@ -1,5 +1,5 @@
 ---
-status: 진행 # 계획 | 진행 | 완료 | 보류
+status: 완료 # 계획 | 진행 | 완료 | 보류
 owner: jang-gangmin
 created: 2026-10-13
 ---
@@ -50,28 +50,34 @@ created: 2026-10-13
 
 ## 할 일
 
-- [ ] `CLOSING_PHONE` 수치, `TIMELINE.share.toClosingHomeBand`
-- [ ] 명세 테스트
+- [x] `CLOSING_PHONE` 수치, `TIMELINE.share.toClosingHomeBand`
+- [x] 명세 테스트
   - `scene`: closing 자세, 화면 전환
   - `scene3d`: 묶음 배율, 오버레이 배율
-- [ ] phone-stage
+- [x] phone-stage
   - A 자세
   - RecordRig 배율과 그림자 바닥
   - 오버레이 배율
   - `ClosingHomeScreen`
-- [ ] `ClosingSection` + 카드형 `StoreButtons`
-- [ ] spec 갱신, 브라우저 확인, `pnpm verify`
+- [x] `ClosingSection` + 카드형 `StoreButtons`
+- [x] spec 갱신, 브라우저 확인, `pnpm verify`
 
 ## 완료 기준 (돌려서 확인할 수 있게)
 
-- [ ] `pnpm test -- scene`, `pnpm test -- scene3d` 통과
-- [ ] 브라우저에서 다음을 확인한다.
+- [x] `pnpm test -- scene`, `pnpm test -- scene3d` 통과
+- [x] 브라우저에서 다음을 확인한다.
   - share 끝에서 B가 빠지고, A가 오른쪽으로 가며 커진다.
   - 화면이 홈(D-12)으로 바뀐다.
   - 카피와 카드형 버튼이 왼쪽에 있다.
   - 폰이 그림자 바닥을 뚫지 않는다.
-- [ ] `pnpm verify` 통과
+- [x] `pnpm verify` 통과
 
 ## 변경 기록
 
 - 2026-10-13: 작성. 레퍼런스 이미지를 분석하고, 스토어 버튼과 3D 폰 방식은 사용자에게 물어 정했다.
+- 2026-10-13: 구현. 앱 브라우저(1512×827, 375×812)에서 확인했다.
+  - share 끝에서 B가 빠지고, A가 오른쪽으로 가며 커진다.
+  - 화면이 기록 공유에서 closing 홈으로 바뀐다.
+  - 카피와 카드형 버튼이 왼쪽에 있다.
+  - 모바일에선 버튼을 줄여 한 줄에 둔다.
+  - 그림자는 이미지보다 진하고 아래쪽이 화면 밖으로 조금 잘린다.
