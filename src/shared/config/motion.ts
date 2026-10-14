@@ -43,8 +43,7 @@ export const STAGE_LAYOUT = {
     scaleCap: 0.52,
     scaleHeightRatio: 0.39,
     /**
-     * 히어로 3D 폰 두 대(V자, 씬 폭 ≈ 924)가 화면 폭 안에 들어오게 — 924 / 0.96(이슈 #50, 원본 620은 큰 폰에서 잘림).
-     * 히어로가 지난 뒤엔 `MOBILE_ZOOM`으로 폰을 키운다
+     * 히어로 3D 폰 두 대(V자, 씬 폭 ≈ 924)가 화면 폭 안에 들어오게 — 924 / 0.96(이슈 #50, 원본 620은 큰 폰에서 잘림)
      */
     scaleWidthDivisor: 960,
     centerXRatio: 0.5,
@@ -359,21 +358,6 @@ export const SCROLL_STOP = {
   quietMs: 180,
   /** 계속 굴려도 갇히지 않게, 흡수한 휠이 뷰포트 높이의 이 비율을 넘으면 풀린다 */
   maxAbsorbOfViewport: 0.9,
-} as const;
-
-/**
- * 모바일 폰 확대(이슈 #50): 모바일은 히어로 V자 두 대가 화면 폭에 들어가야 해서 기본 크기(S)가 작다.
- * 합체가 끝나 폰이 한 대가 되면 남는 공간을 채울 만큼 키우고(묶음 배율), 공유에서 두 대가 나란히 서면
- * 화면 폭에 들어가게 줄였다가, 마지막 섹션에서 다시 키운다. 데스크톱은 쓰지 않는다.
- */
-export const MOBILE_ZOOM = {
-  /** 한 대일 때 폰 높이·폭 상한(뷰포트 대비) */
-  phoneHeightOfViewport: 0.56,
-  phoneWidthOfViewport: 0.62,
-  /** 공유에서 두 대가 나란히 설 때 폰 한 대 폭(뷰포트 대비) */
-  sharePhoneWidthOfViewport: 0.44,
-  /** archive 진행도: B가 사라진 뒤 폰이 커지는 구간 */
-  zoomInArchive: [0.86, 1] as Range,
 } as const;
 
 /** 모바일 주소창 대응(이슈 #50): 터치 기기에서 이 정도(px) 높이 변화는 주소창이 접히고 펴진 것으로 보고 무시한다 */

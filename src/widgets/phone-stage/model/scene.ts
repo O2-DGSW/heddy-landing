@@ -1,6 +1,5 @@
 import {
   CLOSING_PHONE,
-  MOBILE_ZOOM,
   PHONE,
   PHONE_3D,
   SHARE_SCREEN,
@@ -128,7 +127,7 @@ export const computePhones = (frame: SceneFrame): PhonesScene => {
     const { sh, back } = computeShareProgress(frame);
 
     const viewportWidth = layout.viewportWidth;
-    // 모바일은 두 대가 화면 폭에 나란히(각 0.44W, `MOBILE_ZOOM`) — 원본 0.29W는 확대한 폰이 가운데서 겹침
+    // 모바일은 두 대가 화면 폭에 나란히 — 원본 0.29W는 가운데서 겹침
     const aTargetX = layout.isMobile ? viewportWidth * 0.27 : cx - 0.13 * viewportWidth;
     const bRestX = viewportWidth + 220 * scale;
     const bTargetX = layout.isMobile ? viewportWidth * 0.73 : cx + 0.13 * viewportWidth;
@@ -154,13 +153,6 @@ export const computePhones = (frame: SceneFrame): PhonesScene => {
     b = { x: bX, y: cy, rotate: bRotate, scale, opacity: isBVisible ? 1 : 0 };
   }
 
-  // 모바일: 히어로가 지나면 폰을 키운다(이슈 #50)
-  if (layout.isMobile) {
-    const zoom = computeMobileZoom(frame);
-    a = { ...a, scale: scale * zoom.a };
-    b = { ...b, scale: scale * zoom.b };
-  }
-
   const qrFlight = computeQrFlight(frame, a, b, scale);
 
   return { a, b, qrFlight };
@@ -177,30 +169,6 @@ const computeShareProgress = (frame: SceneFrame): { sh: number; back: number } =
     progressIn(frame.scrollY, [shareStickyEnd, Math.max(shareSection.end, closingSection.top)]),
   );
   return { sh, back };
-};
-
-/**
- * 모바일 폰 확대 배율(기본 크기 S 대비, 이슈 #50). 히어로·합체 중엔 1(V자 두 대가 화면 폭에 들어가는 크기),
- * B가 사라지면 남는 공간을 채울 만큼(`MOBILE_ZOOM`) 커지고, 공유에서 두 대가 나란히 서면 화면 폭에 맞게
- * 줄였다가, 마지막 섹션에서 다시 커진다. b는 공유 폰 B 배율.
- */
-const computeMobileZoom = (frame: SceneFrame): { a: number; b: number } => {
-  const { scale, viewportWidth: W, viewportHeight: H } = frame.layout;
-  const { phoneHeightOfViewport, phoneWidthOfViewport, sharePhoneWidthOfViewport, zoomInArchive } =
-    MOBILE_ZOOM;
-  const single = Math.max(
-    1,
-    Math.min(
-      (phoneHeightOfViewport * H) / (PHONE.height * scale),
-      (phoneWidthOfViewport * W) / (PHONE.width * scale),
-    ),
-  );
-  const pair = Math.min(single, (sharePhoneWidthOfViewport * W) / (PHONE.width * scale));
-  const zoomIn = easeInOutCubic(progressIn(frame.progress("archive"), zoomInArchive));
-  const isPastShareStart = frame.scrollY >= getSection(frame, "share").top;
-  if (!isPastShareStart) return { a: lerp(1, single, zoomIn), b: 1 };
-  const { sh, back } = computeShareProgress(frame);
-  return { a: lerp(lerp(single, pair, sh), single, back), b: pair };
 };
 
 /**

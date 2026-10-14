@@ -162,7 +162,7 @@ describe("closing: 폰 A가 오른쪽에 크게 선다(`docs/plans/0010`)", () =
     expect(a.scale).toBeGreaterThanOrEqual(wideLayout.scale);
   });
 
-  it("모바일은 가운데로 돌아오고, 기본 크기보다 크게 선다(모바일 확대, 이슈 #50)", () => {
+  it("모바일은 가운데로 돌아온다", () => {
     const w = 390;
     const h = 844;
     const mobileSections = stackSections({}, h);
@@ -172,7 +172,6 @@ describe("closing: 폰 A가 오른쪽에 크게 선다(`docs/plans/0010`)", () =
     const { a } = computePhones(createFrame(mobileShare.end, mobileLayout, mobileSections, false));
     expect(a.x).toBeCloseTo(mobileLayout.center.x);
     expect(a.y).toBeCloseTo(mobileLayout.center.y);
-    expect(a.scale).toBeGreaterThan(mobileLayout.scale);
   });
 });
 

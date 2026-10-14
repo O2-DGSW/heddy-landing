@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { MOBILE_ZOOM, PHONE, PHONE_3D, TIMELINE } from "@/shared/config";
+import { PHONE, PHONE_3D, TIMELINE } from "@/shared/config";
 import { computeStageLayout, createFrame, stackSections, type SceneFrame } from "@/shared/lib/scroll";
 
 import { computePhones } from "./scene";
@@ -43,33 +43,12 @@ const heroSceneWidth = () => {
 };
 
 describe.each(DEVICES)("모바일 %i×%i (이슈 #50)", (width, height) => {
-  const { layout, at, section, atProgress } = setup(width, height);
+  const { layout, atProgress } = setup(width, height);
   const S = layout.scale;
 
   it("히어로 V자 두 대가 화면 폭 안에 들어온다", () => {
     expect(layout.isMobile).toBe(true);
     expect(heroSceneWidth() * S).toBeLessThanOrEqual(width);
-  });
-
-  it("히어로·합체 중엔 기본 크기, B가 사라진 뒤엔 남는 공간을 채울 만큼 커진다(높이 56%·폭 62% 이내)", () => {
-    expect(computePhones(at(0)).a.scale).toBeCloseTo(S);
-    expect(computePhones(atProgress("archive", MOBILE_ZOOM.zoomInArchive[0])).a.scale).toBeCloseTo(S);
-    const { a } = computePhones(atProgress("record", 0.5));
-    expect(a.scale).toBeGreaterThan(S * 1.2);
-    expect(a.scale * PHONE.height).toBeLessThanOrEqual(MOBILE_ZOOM.phoneHeightOfViewport * height + 0.5);
-    expect(a.scale * PHONE.width).toBeLessThanOrEqual(MOBILE_ZOOM.phoneWidthOfViewport * width + 0.5);
-    // 둘 중 하나는 꽉 찬다
-    const fillsHeight = Math.abs(a.scale * PHONE.height - MOBILE_ZOOM.phoneHeightOfViewport * height) < 1;
-    const fillsWidth = Math.abs(a.scale * PHONE.width - MOBILE_ZOOM.phoneWidthOfViewport * width) < 1;
-    expect(fillsHeight || fillsWidth).toBe(true);
-  });
-
-  it("커진 폰은 위 카피 영역(10svh + 카피) 아래, 화면 안에 있다", () => {
-    const { a } = computePhones(atProgress("report", 0.5));
-    const top = a.y - (PHONE.height / 2) * a.scale;
-    const bottom = a.y + (PHONE.height / 2) * a.scale;
-    expect(top).toBeGreaterThan(0.3 * height);
-    expect(bottom).toBeLessThanOrEqual(height);
   });
 
   it("공유에서 두 대가 화면 폭 안에 나란히, 겹치지 않고 선다", () => {
@@ -80,12 +59,6 @@ describe.each(DEVICES)("모바일 %i×%i (이슈 #50)", (width, height) => {
     expect(b.x + half(b)).toBeLessThanOrEqual(width);
     expect(a.x + half(a)).toBeLessThanOrEqual(b.x - half(b) + 1);
     expect(a.scale).toBeCloseTo(b.scale);
-  });
-
-  it("마지막 섹션에선 다시 한 대가 크게 선다", () => {
-    const { a } = computePhones(at(section("share").end));
-    expect(a.scale).toBeCloseTo(computePhones(atProgress("record", 0.5)).a.scale);
-    expect(a.x).toBeCloseTo(layout.center.x);
   });
 
   it("3D 묶음·화면 오버레이 배율이 CSS 폰 배율(A·B)과 같다", () => {
