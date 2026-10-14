@@ -49,7 +49,7 @@ export const RecordSection = () => {
       footer={
         <p
           ref={dateBoxRef}
-          className="relative mt-10 overflow-hidden text-[clamp(56px,7vw,104px)] font-bold leading-[1.15] tracking-[-0.04em] tabular-nums"
+          className="relative mt-3 overflow-hidden text-[40px] lg:mt-10 lg:text-[clamp(56px,7vw,104px)] font-bold leading-[1.15] tracking-[-0.04em] tabular-nums"
         >
           {/* 자리 잡기용(보이지 않음) — 날짜 폭이 바뀌어도 레이아웃이 흔들리지 않게 */}
           <span className="invisible">0000.00</span>

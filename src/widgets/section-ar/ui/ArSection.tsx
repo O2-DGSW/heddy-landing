@@ -53,7 +53,7 @@ export const ArSection = () => {
 
   return (
     <section data-section="ar" style={{ height: `${SECTION_HEIGHT_VH.ar}vh` }} className="relative">
-      <div className="sticky top-0 h-screen overflow-hidden">
+      <div className="sticky top-0 h-svh overflow-hidden">
         {/* pill → 다크 패널 */}
         <div
           ref={pillRef}
@@ -88,7 +88,7 @@ export const ArSection = () => {
         </p>
 
         {/* 카피: 다른 섹션과 같은 자리(좌측, 모바일은 위) */}
-        <div className="absolute inset-0 flex flex-col items-start justify-start pt-[14vh] lg:flex-row lg:items-center lg:pt-0">
+        <div className="absolute inset-0 flex flex-col items-start justify-start pt-[10svh] lg:flex-row lg:items-center lg:pt-0">
           <div ref={copyRef} className="max-w-[85vw] px-6 opacity-0 lg:max-w-[40vw] lg:px-16">
             <h2 className="text-28 font-semibold text-white lg:text-36">
               {ar.copy.map((line) => (
