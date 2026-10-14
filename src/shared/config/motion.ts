@@ -260,19 +260,23 @@ export const TIMELINE = {
     panelCopyOut: [0.4, 0.44] as Range,
     /** 카피("거울 앞에 앉기 전에, 먼저 비춰보세요") in */
     copyIn: [0.46, 0.54] as Range,
-    /** 스타일 3종 전환 가중치 t2/t3 */
-    styleTransition2: [0.62, 0.72] as Range,
-    styleTransition3: [0.8, 0.9] as Range,
+    /**
+     * 스타일 전환 지점(ar 진행도): 스크롤이 이 값을 넘으면 다음 스타일로 바뀐다. 원본은 스크롤로 전환을 문질러
+     * (t2 = R(p, .62~.72), t3 = R(p, .80~.90)) 머리 두 개가 겹친 중간 장면에 멈출 수 있었다 — 팀 피드백으로
+     * 각 구간 가운데를 근사값으로 잡고, 넘으면 전환 한 번이 시간(styleDurationMs)으로 재생된다(2026-10-14)
+     */
+    styleSteps: [0.67, 0.85] as readonly [number, number],
+    styleDurationMs: 900,
     /** 확대 진행도(pillMorph 안, 이징 전)가 이 값을 넘으면 다크 패널이 화면을 덮은 것으로 보고 헤더 로고를 숨긴다 */
     darkPanelHeaderHideThreshold: 0.95,
     /**
      * 스타일 전환 한 번(t = 0~1) 안의 단계(레퍼런스 영상 2, `docs/plans/0008`):
-     * 다음 썸네일에 터치 표시 → 캐러셀이 밀려 선택이 가운데로 → 캐릭터 이미지 크로스페이드(spec: R(t, .4~1)).
-     * 스타일 이름은 캐러셀이 반쯤 밀렸을 때 바뀐다.
+     * 다음 썸네일에 터치 표시 → 캐러셀이 밀려 선택이 가운데로 → 캐릭터 이미지 교체. 스타일 이름은 캐러셀이
+     * 반쯤 밀렸을 때 바뀐다. 이미지는 원본 R(t, .4~1)로 길게 겹쳤는데, 겹친 머리가 보이지 않게 짧게 바꾼다.
      */
     styleTouch: [0, 0.32] as Range,
     styleSlide: [0.18, 0.62] as Range,
-    styleImage: [0.4, 1] as Range,
+    styleImage: [0.5, 0.62] as Range,
   },
   share: {
     /**
