@@ -23,6 +23,10 @@ describe("MOBILE_SECTIONS (모바일 쌓기 구성, 이슈 #52)", () => {
     expect(hero?.visual).toMatchObject({ kind: "pair", isTilted: true });
   });
 
+  it("추천은 토스식 카드 캐러셀(추천 결과 Top 3)로 보여 준다", () => {
+    expect(MOBILE_SECTIONS.find((section) => section.key === "recommend")?.visual.kind).toBe("carousel");
+  });
+
   it("공유는 폰 두 대(보내는 QR · 받은 기록)를 나란히 보여 준다", () => {
     const share = MOBILE_SECTIONS.find((section) => section.key === "share");
     expect(share?.visual.kind).toBe("pair");

@@ -4,6 +4,8 @@ import type { SectionKey } from "@/shared/config";
 export type MobileVisual =
   /** 폰 한 대 + 화면 이미지 */
   | { kind: "screen"; src: string; alt: string }
+  /** 추천 결과 Top 3 카드가 옆으로 넘어가는 캐러셀(토스 상품 카드 참고) */
+  | { kind: "carousel" }
   /** 폰 두 대 나란히. isTilted면 V자로 기울인다(히어로, 데스크톱 히어로 V자와 같은 느낌) */
   | {
       kind: "pair";
@@ -46,11 +48,7 @@ export const MOBILE_SECTIONS: readonly MobileSection[] = [
     tone: "light",
     visual: { kind: "screen", src: "/screens/mobile/report.webp", alt: "다운펌 분석 리포트 화면" },
   },
-  {
-    key: "recommend",
-    tone: "light",
-    visual: { kind: "screen", src: "/screens/mobile/recommend.webp", alt: "스타일 추천 화면" },
-  },
+  { key: "recommend", tone: "light", visual: { kind: "carousel" } },
   { key: "ar", tone: "dark", visual: { kind: "screen", src: "/screens/mobile/ar.webp", alt: "AR 스타일 체험 화면" } },
   {
     key: "share",
