@@ -124,14 +124,18 @@ describe("closing: 폰 A가 오른쪽에 크게 선다(`docs/plans/0010`)", () =
     expect(b.x).toBeGreaterThan(W);
   });
 
-  it("closing 아래 푸터가 올라오면 폰도 페이지와 함께 위로 빠진다", () => {
+  it("closing 아래 푸터가 올라오면 폰이 잘리지 않게 푸터 위 남은 공간에 맞춰 자연스럽게 작아진다(팀 피드백)", () => {
     const closing = sections.find((section) => section.key === "closing");
     if (!closing) throw new Error("closing not found");
     const atTop = computePhones(frameAtScrollY(closing.top)).a;
-    const scrolled = computePhones(frameAtScrollY(closing.top + 120)).a;
-    expect(scrolled.y).toBeCloseTo(atTop.y - 120);
+    const footer = 160;
+    const scrolled = computePhones(frameAtScrollY(closing.top + footer)).a;
+    const halfHeight = (PHONE.height / 2) * scrolled.scale;
+    expect(scrolled.y - halfHeight).toBeGreaterThanOrEqual(0);
+    expect(scrolled.y + halfHeight).toBeLessThanOrEqual(H - footer);
+    expect(scrolled.scale * PHONE.height).toBeCloseTo(CLOSING_PHONE.heightRatio * (H - footer));
+    expect(scrolled.scale).toBeLessThan(atTop.scale);
     expect(scrolled.x).toBeCloseTo(atTop.x);
-    expect(scrolled.scale).toBeCloseTo(atTop.scale);
   });
 
   it("좁은 화면에선 폰 오른쪽 끝이 여백 안에 들어오게 줄인다", () => {

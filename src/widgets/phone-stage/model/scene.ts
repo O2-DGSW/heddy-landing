@@ -138,14 +138,17 @@ export const computePhones = (frame: SceneFrame): PhonesScene => {
     const bX = lerp(lerp(bRestX, bTargetX, sh), bRestX, back);
     const bRotate = lerp(lerp(10, 0, sh), 10, back);
     const isBVisible = sh > 0 && back < 1;
-    // closing 아래 푸터가 올라오는 만큼 폰도 페이지와 함께 위로 빠진다
+    // closing 아래 푸터가 올라오면 폰이 위로 잘려 나가지 않게, 푸터 위 남은 높이에 맞춰 같은 비율로 줄인다(팀 피드백)
     const footerScroll = Math.max(0, frame.scrollY - closingSection.top);
+    const fit = layout.isMobile
+      ? 1
+      : Math.max(0, layout.viewportHeight - footerScroll) / layout.viewportHeight;
 
     a = {
       x: aX,
-      y: lerp(cy, closing.y, back) - footerScroll,
+      y: layout.isMobile ? lerp(cy, closing.y, back) - footerScroll : lerp(cy, closing.y, back) * fit,
       rotate: 0,
-      scale: lerp(scale, closing.scale, back),
+      scale: lerp(scale, closing.scale, back) * fit,
       opacity: 1,
     };
     b = { x: bX, y: cy, rotate: bRotate, scale, opacity: isBVisible ? 1 : 0 };
@@ -183,10 +186,14 @@ const computeShareProgress = (frame: SceneFrame): { sh: number; back: number } =
  */
 const computeMobileZoom = (frame: SceneFrame): { a: number; b: number } => {
   const { scale, viewportWidth: W, viewportHeight: H } = frame.layout;
-  const { phoneHeightOfViewport, phoneWidthOfViewport, sharePhoneWidthOfViewport, zoomInArchive } = MOBILE_ZOOM;
+  const { phoneHeightOfViewport, phoneWidthOfViewport, sharePhoneWidthOfViewport, zoomInArchive } =
+    MOBILE_ZOOM;
   const single = Math.max(
     1,
-    Math.min((phoneHeightOfViewport * H) / (PHONE.height * scale), (phoneWidthOfViewport * W) / (PHONE.width * scale)),
+    Math.min(
+      (phoneHeightOfViewport * H) / (PHONE.height * scale),
+      (phoneWidthOfViewport * W) / (PHONE.width * scale),
+    ),
   );
   const pair = Math.min(single, (sharePhoneWidthOfViewport * W) / (PHONE.width * scale));
   const zoomIn = easeInOutCubic(progressIn(frame.progress("archive"), zoomInArchive));
