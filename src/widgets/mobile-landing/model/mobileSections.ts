@@ -2,12 +2,15 @@ import type { SectionKey } from "@/shared/config";
 
 /** 섹션이 보여 줄 화면 — 모두 정지 이미지라 스크롤마다 계산하지 않는다 */
 export type MobileVisual =
-  /** 히어로 3D 첫 화면 이미지(폰 두 대) — 데스크톱 히어로 포스터와 같은 파일 */
-  | { kind: "hero" }
   /** 폰 한 대 + 화면 이미지 */
   | { kind: "screen"; src: string; alt: string }
-  /** 폰 두 대 나란히 */
-  | { kind: "pair"; left: { src: string; alt: string }; right: { src: string; alt: string } };
+  /** 폰 두 대 나란히. isTilted면 V자로 기울인다(히어로, 데스크톱 히어로 V자와 같은 느낌) */
+  | {
+      kind: "pair";
+      left: { src: string; alt: string };
+      right: { src: string; alt: string };
+      isTilted?: boolean;
+    };
 
 export type MobileSection = {
   key: SectionKey;
@@ -17,10 +20,20 @@ export type MobileSection = {
 
 /**
  * 모바일 랜딩 구성(이슈 #52) — toss.im 모바일처럼 섹션을 위에서 아래로 쌓는다. 순서·문구는 데스크톱과 같고
- * (`SECTION_KEYS`, `COPY.sections`), 각 섹션은 회색 카드 안 폰 화면 하나를 보여 준다. 화면은 피그마 정지 이미지.
+ * (`SECTION_KEYS`, `COPY.sections`), 각 섹션은 회색 카드 안 평면 폰 목업(`phone-frame.svg`)에 화면을 끼워 보여 준다.
+ * 화면은 피그마 정지 이미지. 3D(Spline)는 모바일에서 쓰지 않는다.
  */
 export const MOBILE_SECTIONS: readonly MobileSection[] = [
-  { key: "hero", tone: "light", visual: { kind: "hero" } },
+  {
+    key: "hero",
+    tone: "light",
+    visual: {
+      kind: "pair",
+      left: { src: "/screens/home.png", alt: "헤디 홈 화면" },
+      right: { src: "/screens/mobile/ar.webp", alt: "AR 스타일 체험 화면" },
+      isTilted: true,
+    },
+  },
   { key: "archive", tone: "light", visual: { kind: "screen", src: "/screens/home.png", alt: "헤디 홈 화면" } },
   {
     key: "record",

@@ -18,6 +18,11 @@ describe("MOBILE_SECTIONS (모바일 쌓기 구성, 이슈 #52)", () => {
     expect(MOBILE_SECTIONS.filter((section) => section.tone === "dark")).toHaveLength(1);
   });
 
+  it("히어로는 평면 목업 두 대를 V자로 기울여 보여 준다(Spline 이미지 아님)", () => {
+    const hero = MOBILE_SECTIONS.find((section) => section.key === "hero");
+    expect(hero?.visual).toMatchObject({ kind: "pair", isTilted: true });
+  });
+
   it("공유는 폰 두 대(보내는 QR · 받은 기록)를 나란히 보여 준다", () => {
     const share = MOBILE_SECTIONS.find((section) => section.key === "share");
     expect(share?.visual.kind).toBe("pair");
