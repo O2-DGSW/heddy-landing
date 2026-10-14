@@ -75,6 +75,15 @@ export const PHONE_3D = {
    * 기록 화면(RecordIsland)과 상세 화면 오버레이는 화면을 덮으므로 같은 자리에 다시 그린다.
    */
   island: { centerY: 22.6, width: 87.1, height: 25.1 },
+  /**
+   * 히어로 포스터(이슈 #46): Spline이 그리기 전 서버 HTML에서 바로 보이는 히어로 첫 화면 이미지
+   * (`public/screens/hero/poster.webp`, 캔버스 3030×1894 렌더에서 폰·그림자만 잘라냄). 값은 캔버스 대비 비율.
+   */
+  poster: { left: 0.267, top: 0.3321, width: 0.4099, height: 0.5533 },
+  /** 포스터는 히어로 자세가 그대로인 동안만 맞다 — Spline Scroll 이벤트(합체)가 시작되는 스크롤 위치(PhoneA 900) */
+  posterMaxScrollPx: 900,
+  /** 3D 캔버스가 다 나타난 뒤(페이드 500ms) 포스터를 숨기기까지(ms) */
+  posterHideDelayMs: 600,
 } as const;
 
 /**

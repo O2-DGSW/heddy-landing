@@ -11,6 +11,7 @@ import {
   computeSplineHandoff,
   computeSplineViewport,
   fitShareRigB,
+  heroPosterCss,
 } from "./scene3d";
 
 const W = 1440;
@@ -50,6 +51,38 @@ describe("computeSplineViewport", () => {
     const { fovDeg, distance } = PHONE_3D.camera;
     const visibleHeight = 2 * distance * Math.tan(((fovDeg / 2) * Math.PI) / 180);
     expect((PHONE.height / visibleHeight) * rect.height).toBeCloseTo(PHONE.height * layout.scale);
+  });
+});
+
+describe("heroPosterCss (히어로 포스터, 이슈 #46)", () => {
+  /** 생성된 CSS 길이식(calc · min · px · vw · vh · dvh)을 뷰포트 크기로 계산한다 */
+  const evalCss = (expr: string, width: number, height: number): number => {
+    const js = expr
+      .replace(/calc\(/g, "(")
+      .replace(/min\(/g, "Math.min(")
+      .replace(/(-?[\d.]+)px/g, "($1)")
+      .replace(/(-?[\d.]+)vw/g, `($1*${width}/100)`)
+      .replace(/(-?[\d.]+)d?vh/g, `($1*${height}/100)`);
+    return Function(`return ${js};`)() as number;
+  };
+
+  it.each([
+    [1440, 900],
+    [1512, 827],
+    [1024, 700],
+    [1100, 1200],
+    [1600, 1100],
+    [390, 844],
+    [768, 1024],
+  ])("%i×%i: 포스터는 JS 없이 CSS만으로 3D 캔버스 안 같은 자리에 놓인다", (width, height) => {
+    const vpLayout = computeStageLayout(width, height);
+    const canvas = computeSplineViewport(vpLayout);
+    const { poster } = PHONE_3D;
+    const css = heroPosterCss(vpLayout.isMobile);
+    expect(evalCss(css.left, width, height)).toBeCloseTo(canvas.left + poster.left * canvas.width, 1);
+    expect(evalCss(css.top, width, height)).toBeCloseTo(canvas.top + poster.top * canvas.height, 1);
+    expect(evalCss(css.width, width, height)).toBeCloseTo(poster.width * canvas.width, 1);
+    expect(evalCss(css.height, width, height)).toBeCloseTo(poster.height * canvas.height, 1);
   });
 });
 
