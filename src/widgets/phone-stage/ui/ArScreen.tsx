@@ -52,7 +52,12 @@ export const ArScreen = ({ width = PHONE.screenWidth, height = PHONE.screenHeigh
   const designHeight = height / scale;
 
   /** 표시 중인 스타일(0~2) · 목표 · 전환 재생 rAF — 스크롤은 목표만 정하고, 전환은 시간으로 재생한다 */
-  const clockRef = useRef({ shown: 0, target: 0, lastTime: null as number | null, rafId: null as number | null });
+  const clockRef = useRef({
+    shown: 0,
+    target: 0,
+    lastTime: null as number | null,
+    rafId: null as number | null,
+  });
 
   const render = (style: ArStyle) => {
     style.imageWeights.forEach((weight, i) => {

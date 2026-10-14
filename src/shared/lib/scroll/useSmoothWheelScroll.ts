@@ -25,7 +25,13 @@ const state = {
   /** 멈춤 지점(px, 오름차순) — 처음 쓸 때·리사이즈 때 [data-section]에서 잰다 */
   stops: null as number[] | null,
   /** 걸려 있는 멈춤 지점과 방향(1 아래, -1 위), 닿은 시각, 마지막 휠 시각, 흡수한 휠 양 */
-  hold: null as { stop: number; dir: number; arrivedAt: number | null; lastWheelAt: number; absorbedPx: number } | null,
+  hold: null as {
+    stop: number;
+    dir: number;
+    arrivedAt: number | null;
+    lastWheelAt: number;
+    absorbedPx: number;
+  } | null,
 };
 
 const measureStops = (): number[] => {

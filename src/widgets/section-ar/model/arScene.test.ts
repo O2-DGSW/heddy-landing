@@ -18,7 +18,10 @@ const atP = (p: number, isReducedMotion = false, frameLayout = layout): SceneFra
 const { pillMorph, panelCopyIn, panelCopyOut, copyIn } = TIMELINE.ar;
 
 /** 확대 구간을 촘촘히 훑은 진행도 */
-const morphSamples = Array.from({ length: 401 }, (_, i) => pillMorph[0] + (i / 400) * (pillMorph[1] - pillMorph[0]));
+const morphSamples = Array.from(
+  { length: 401 },
+  (_, i) => pillMorph[0] + (i / 400) * (pillMorph[1] - pillMorph[0]),
+);
 
 /** pill이 정해진 크기를 지나는 지점: 한 축이 그 값에 가장 가까울 때 다른 축 값 */
 const sizeWhere = (frameAt: (p: number) => SceneFrame, axis: "width" | "height", value: number) => {

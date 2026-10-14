@@ -71,5 +71,7 @@ export type StopHold = {
 export const isStopReleased = (hold: StopHold, viewportHeight: number): boolean => {
   if (hold.arrivedAt == null) return false;
   if (hold.absorbedPx > SCROLL_STOP.maxAbsorbOfViewport * viewportHeight) return true;
-  return hold.now - hold.arrivedAt >= SCROLL_STOP.minHoldMs && hold.now - hold.lastWheelAt >= SCROLL_STOP.quietMs;
+  return (
+    hold.now - hold.arrivedAt >= SCROLL_STOP.minHoldMs && hold.now - hold.lastWheelAt >= SCROLL_STOP.quietMs
+  );
 };
