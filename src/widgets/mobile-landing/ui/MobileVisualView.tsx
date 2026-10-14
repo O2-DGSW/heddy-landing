@@ -4,6 +4,7 @@ import Image from "next/image";
 
 import type { MobileVisual } from "../model/mobileSections";
 import { phoneRisePercent } from "../model/phoneRise";
+import { RecommendCarousel } from "./RecommendCarousel";
 
 const PHONE_RISE_PERCENT = phoneRisePercent();
 
@@ -48,6 +49,8 @@ interface MobileVisualViewProps {
  * 윗부분만 보인다. 히어로는 카드 없이 목업 두 대를 V자로 기울인다.
  */
 export const MobileVisualView = ({ visual, tone }: MobileVisualViewProps) => {
+  if (visual.kind === "carousel") return <RecommendCarousel />;
+
   if (visual.kind === "pair" && visual.isTilted) {
     return (
       <div className="relative flex aspect-[1/0.92] items-end justify-center">
