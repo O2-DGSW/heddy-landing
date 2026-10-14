@@ -37,8 +37,8 @@ describe("computeArScene: pill → 다크 패널", () => {
     expect(computeArScene(atP(TIMELINE.ar.pillFadeIn[1])).pill.opacity).toBe(1);
   });
 
-  it("빨리 커진다: 원본(ar 진행도 0.28)보다 한참 앞인 0.14에 화면 전체(W × H)를 각진 모서리로 덮는다", () => {
-    expect(pillMorph[1]).toBeLessThanOrEqual(0.14);
+  it("빨리 커진다: 원본(ar 진행도 0.28)보다 한참 앞인 0.08에 화면 전체(W × H)를 각진 모서리로 덮는다(팀 피드백 2026-10-14)", () => {
+    expect(pillMorph[1]).toBeLessThanOrEqual(0.08);
     const { pill, panel } = computeArScene(atP(pillMorph[1]));
     expect(pill.width).toBeCloseTo(W);
     expect(pill.height).toBeCloseTo(H);
