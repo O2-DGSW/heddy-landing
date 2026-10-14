@@ -29,6 +29,11 @@ const RIPPLE_SIZE = 64;
 const CARD_RADIUS = 12;
 /** "추천" 탭 물결 지름(피그마 px) */
 const TAB_RIPPLE_SIZE = 56;
+/**
+ * 화면 가장자리 링(씬 px): 3D 화면(스쿼클)과 오버레이(타원 모서리)의 곡선이 조금 달라 모서리·아랫변에 3D 화면
+ * 바탕(흰색·초록)이 1px쯤 비쳤다(팀 피드백 "목업 테두리"). 베젤 안쪽과 같은 검정으로 둘러 덮는다.
+ */
+const SCREEN_EDGE_RING = "0 0 0 2px #000";
 /** 폰 밖으로 떠오른 추천 카드 그림자(피그마 px) — 떠오른 정도만큼 진해진다 */
 const POP_SHADOW = { y: 18, blur: 40, alpha: 0.18 };
 
@@ -151,6 +156,7 @@ export const ScreenOverlay = ({ getIsEnabled }: ScreenOverlayProps) => {
           width: screen.width,
           height: screen.height,
           borderRadius: `${screen.radiusX}px / ${screen.radiusY}px`,
+          boxShadow: SCREEN_EDGE_RING,
         }}
       >
         <div
@@ -318,6 +324,7 @@ export const ScreenOverlayB = ({ getIsEnabled }: ScreenOverlayProps) => {
           width: screen.width,
           height: screen.height,
           borderRadius: `${screen.radiusX}px / ${screen.radiusY}px`,
+          boxShadow: SCREEN_EDGE_RING,
         }}
       >
         <ScanScreen width={screen.width} height={screen.height} />

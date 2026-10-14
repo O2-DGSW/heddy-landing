@@ -1,13 +1,20 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import Image from "next/image";
 
 import { AR_SCREEN, COPY, PHONE } from "@/shared/config";
-import { useSceneFrame } from "@/shared/lib/scroll";
+import { useSceneFrame, type SceneFrame } from "@/shared/lib/scroll";
 
-import { carouselSlot, computeArStyle, wrapCarouselOffset } from "../model/arScreen";
+import {
+  arStyleTarget,
+  carouselSlot,
+  computeArStyleAt,
+  stepStyleClock,
+  wrapCarouselOffset,
+  type ArStyle,
+} from "../model/arScreen";
 
 const { ar } = COPY.phoneScreens;
 const ASSET = "/screens/ar";
@@ -31,8 +38,9 @@ interface ArScreenProps {
 
 /**
  * AR 화면 — 피그마 landing / S5-AR화면1·2·3을 HTML로 옮겼다(`docs/plans/0008`). 피그마 px(폭 402)로 짜고
- * 화면 폭에 맞춰 통째로 줄인다. 스크롤에 따라 다음 썸네일에 터치 표시 → 캐러셀이 밀려 선택이 가운데로 →
- * 캐릭터 머리와 스타일 이름이 바뀐다(일자 풀뱅 → 다운펌 → 가르마 댄디컷). 프레임마다 ref로만 쓴다.
+ * 화면 폭에 맞춰 통째로 줄인다. 스크롤이 전환 지점을 넘으면 다음 썸네일에 터치 표시 → 캐러셀이 밀려 선택이
+ * 가운데로 → 캐릭터 머리와 스타일 이름이 바뀌는 전환이 시간으로 재생된다(일자 풀뱅 → 다운펌 → 가르마 댄디컷,
+ * 팀 피드백 2026-10-14). 프레임마다 ref로만 쓴다.
  */
 export const ArScreen = ({ width = PHONE.screenWidth, height = PHONE.screenHeight }: ArScreenProps) => {
   const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -43,8 +51,15 @@ export const ArScreen = ({ width = PHONE.screenWidth, height = PHONE.screenHeigh
   const scale = width / designWidth;
   const designHeight = height / scale;
 
-  useSceneFrame((frame) => {
-    const style = computeArStyle(frame);
+  /** 표시 중인 스타일(0~2) · 목표 · 전환 재생 rAF — 스크롤은 목표만 정하고, 전환은 시간으로 재생한다 */
+  const clockRef = useRef({
+    shown: 0,
+    target: 0,
+    lastTime: null as number | null,
+    rafId: null as number | null,
+  });
+
+  const render = (style: ArStyle) => {
     style.imageWeights.forEach((weight, i) => {
       const node = imageRefs.current[i];
       if (node) node.style.opacity = String(weight);
@@ -70,7 +85,37 @@ export const ArScreen = ({ width = PHONE.screenWidth, height = PHONE.screenHeigh
       touch.style.transform = `translateX(${slot.x}px) scale(${slot.size / ITEM_BASE})`;
       touch.style.opacity = String(style.touch.opacity);
     }
+  };
+
+  const tick = (time: number) => {
+    const clock = clockRef.current;
+    clock.rafId = null;
+    const dt = clock.lastTime == null ? 16 : Math.min(time - clock.lastTime, 64);
+    clock.lastTime = time;
+    clock.shown = stepStyleClock(clock.shown, clock.target, dt);
+    render(computeArStyleAt(clock.shown));
+    if (clock.shown === clock.target) clock.lastTime = null;
+    else clock.rafId = requestAnimationFrame(tick);
+  };
+
+  useSceneFrame((frame: SceneFrame) => {
+    const clock = clockRef.current;
+    clock.target = arStyleTarget(frame);
+    if (frame.isReducedMotion) {
+      clock.shown = clock.target;
+      render(computeArStyleAt(clock.shown));
+      return;
+    }
+    if (clock.shown !== clock.target && clock.rafId == null) clock.rafId = requestAnimationFrame(tick);
   });
+
+  useEffect(() => {
+    const clock = clockRef.current;
+    return () => {
+      if (clock.rafId != null) cancelAnimationFrame(clock.rafId);
+      clock.rafId = null;
+    };
+  }, []);
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-white">

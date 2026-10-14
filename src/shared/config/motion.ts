@@ -1,5 +1,7 @@
 import type { Range } from "@/shared/lib/motion";
 
+import type { SectionKey } from "./sections";
+
 /** 폰 목업 치수 (`docs/design/spec.md` §2) */
 export const PHONE = {
   width: 300,
@@ -22,15 +24,18 @@ export const STAGE_LAYOUT = {
   desktop: {
     /** 이 너비(px) 이상이면 데스크톱 레이아웃 */
     breakpoint: 1024,
-    /** 폰 크기 상한·뷰포트 높이 비율 — 원본(1 / 0.78)이 커서 사용자 요청으로 줄임(2026-10-01) */
-    scaleCap: 0.8,
-    scaleHeightRatio: 0.5,
+    /**
+     * 폰 크기 상한·뷰포트 높이 비율 — 원본(1 / 0.78)이 커서 줄였다가(2026-10-01, 0.8 / 0.5),
+     * 팀 피드백 "목업을 더 크게"로 다시 키움(2026-10-14)
+     */
+    scaleCap: 1,
+    scaleHeightRatio: 0.62,
     scaleWidthDivisor: 1400,
-    /** 폰 가로 중심 — 카피 오른쪽 빈 영역의 가운데(원본 0.7, 2026-10-01 조정) */
-    centerXRatio: 0.65,
+    /** 폰 가로 중심 — 카피 오른쪽 빈 영역의 가운데(원본 0.7 → 0.65, 팀 피드백으로 카피와 함께 오른쪽으로 0.68) */
+    centerXRatio: 0.68,
     centerYOffset: 20,
-    /** 좌측 카피 최대 너비(vw) */
-    copyMaxWidthVw: 40,
+    /** 좌측 카피 최대 너비(vw) — `SectionShell`의 lg:max-w와 같다 */
+    copyMaxWidthVw: 46,
     /** hero→archive 수렴 시 폰 A/B가 벌어지는 거리(px, 스케일 전) */
     convergeDx: 105,
   },
@@ -245,30 +250,35 @@ export const TIMELINE = {
   ar: {
     /**
      * pill → 다크 패널 확대 구간(ar 진행도). 원본은 3단계(a .02~.1 · b .1~.2 · c .2~.28)를 따로 이징해 단계마다
-     * 멈췄다 커졌다 — 한 곡선으로 잇고 구간을 줄였다(이슈 #43, 2026-10-13)
+     * 멈췄다 커졌다 — 한 곡선으로 잇고 구간을 줄였다(이슈 #43, 2026-10-13). 팀 피드백 "더 빠르게"로
+     * 0.14 → 0.08(스크롤 약 반 화면, 2026-10-14)
      */
-    pillMorph: [0.02, 0.14] as Range,
+    pillMorph: [0.02, 0.08] as Range,
     /** 확대 진행도(0~1)에서 시작 · a · b · 전체 크기를 지나는 시점 — 크기는 로그 스케일 단조 3차 보간 */
     pillKnots: [0, 0.33, 0.85, 1] as readonly number[],
     pillFadeIn: [0, 0.02] as Range,
     /** 패널 문구("머릿속 상상을 지우고 / 이제는 눈앞의 결과로") in/out — 패널이 다 덮자마자 나온다 */
-    panelCopyIn: [0.15, 0.2] as Range,
+    panelCopyIn: [0.09, 0.14] as Range,
     panelCopyOut: [0.4, 0.44] as Range,
     /** 카피("거울 앞에 앉기 전에, 먼저 비춰보세요") in */
     copyIn: [0.46, 0.54] as Range,
-    /** 스타일 3종 전환 가중치 t2/t3 */
-    styleTransition2: [0.62, 0.72] as Range,
-    styleTransition3: [0.8, 0.9] as Range,
+    /**
+     * 스타일 전환 지점(ar 진행도): 스크롤이 이 값을 넘으면 다음 스타일로 바뀐다. 원본은 스크롤로 전환을 문질러
+     * (t2 = R(p, .62~.72), t3 = R(p, .80~.90)) 머리 두 개가 겹친 중간 장면에 멈출 수 있었다 — 팀 피드백으로
+     * 각 구간 가운데를 근사값으로 잡고, 넘으면 전환 한 번이 시간(styleDurationMs)으로 재생된다(2026-10-14)
+     */
+    styleSteps: [0.67, 0.85] as readonly [number, number],
+    styleDurationMs: 900,
     /** 확대 진행도(pillMorph 안, 이징 전)가 이 값을 넘으면 다크 패널이 화면을 덮은 것으로 보고 헤더 로고를 숨긴다 */
     darkPanelHeaderHideThreshold: 0.95,
     /**
      * 스타일 전환 한 번(t = 0~1) 안의 단계(레퍼런스 영상 2, `docs/plans/0008`):
-     * 다음 썸네일에 터치 표시 → 캐러셀이 밀려 선택이 가운데로 → 캐릭터 이미지 크로스페이드(spec: R(t, .4~1)).
-     * 스타일 이름은 캐러셀이 반쯤 밀렸을 때 바뀐다.
+     * 다음 썸네일에 터치 표시 → 캐러셀이 밀려 선택이 가운데로 → 캐릭터 이미지 교체. 스타일 이름은 캐러셀이
+     * 반쯤 밀렸을 때 바뀐다. 이미지는 원본 R(t, .4~1)로 길게 겹쳤는데, 겹친 머리가 보이지 않게 짧게 바꾼다.
      */
     styleTouch: [0, 0.32] as Range,
     styleSlide: [0.18, 0.62] as Range,
-    styleImage: [0.4, 1] as Range,
+    styleImage: [0.5, 0.62] as Range,
   },
   share: {
     /**
@@ -323,6 +333,32 @@ export const SMOOTH_SCROLL = {
   settlePx: 0.5,
   /** 애니메이션 중 실제 스크롤이 마지막으로 쓴 위치와 이만큼(px) 넘게 다르면 다른 입력(키보드·스크롤바)으로 보고 멈춘다 */
   externalJumpPx: 3,
+} as const;
+
+/**
+ * 스크롤 멈춤(팀 피드백 2026-10-14 "섹션마다 스크롤이 잠깐 막혔다 풀리는 느낌"): 관성 휠 스크롤이 멈춤 지점을
+ * 지나려 하면 그 자리에 세우고, 잠깐 머문 뒤 휠이 멈췄다 다시 들어오면 풀어 준다. 키보드·스크롤바·터치는
+ * 막지 않는다. 지점은 [섹션, 진행도] — 섹션 카피가 다 나온 자리와 AR 스타일이 바뀌는 자리.
+ */
+export const SCROLL_STOP = {
+  points: [
+    ["archive", 0],
+    ["record", 0],
+    ["report", 0],
+    ["recommend", 0],
+    ["ar", 0.14],
+    ["ar", 0.56],
+    ["ar", TIMELINE.ar.styleSteps[0]],
+    ["ar", TIMELINE.ar.styleSteps[1]],
+    ["share", 0],
+    ["closing", 0],
+  ] as ReadonlyArray<readonly [SectionKey, number]>,
+  /** 멈춤 지점에 닿은 뒤 최소로 머무는 시간(ms) */
+  minHoldMs: 350,
+  /** 휠이 이만큼(ms) 조용해야 다음 휠에서 풀린다 — 트랙패드 관성이 그대로 지나가지 않게 */
+  quietMs: 180,
+  /** 계속 굴려도 갇히지 않게, 흡수한 휠이 뷰포트 높이의 이 비율을 넘으면 풀린다 */
+  maxAbsorbOfViewport: 0.9,
 } as const;
 
 /**

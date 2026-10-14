@@ -11,11 +11,12 @@ export const COPY = {
   sections: {
     hero: {
       title: ["내 머리의 기록이,", "다음 스타일의 기준이 되다"],
-      body: ["펌·컬러·시술 사진을 한 곳에 기록하고,", "AI 분석과 AR 프리뷰로 다음 스타일을 미리 확인하세요."],
+      /** 팀 피드백(2026-10-14)으로 서비스 소개 한 줄로 바꿈 */
+      body: ["개인 헤어 시술기록 기반 AI 맞춤형 스타일 추천 서비스"],
     },
     archive: {
       title: ["흩어진 기록이,", "한 화면으로"],
-      body: ["갤러리, 메모, 카톡에 흩어져 있던 시술 기록을", "헤디 하나에 모았어요."],
+      body: ["갤러리, 메모, 카톡에 흩어져 있던 시술 기록을", "Heddy 하나에 모았어요."],
     },
     record: {
       eyebrow: "01 — 시술기록 저장",
@@ -23,7 +24,8 @@ export const COPY = {
       body: ["사진 몇 장이면 기록이 끝납니다.", "스크롤을 내릴수록 기록이 시간순으로 쌓여요."],
     },
     report: {
-      title: ["12번의 기록이,", "나를 설명합니다"],
+      /** 지표는 앱에 구현된 기능(사진 분석 상태 지표) — 다른 섹션처럼 "A이, B로" 꼴로 맞춤(팀 피드백 2026-10-14) */
+      title: ["12번의 기록이,", "한눈에 보는 지표로"],
       /**
        * 막대 행: 폰 상세 화면(다운펌 분석완료)의 "상태 지표" 4개와 같은 문구(2026-10-10, 사용자 요청).
        * 막대 길이는 `TIMELINE.report.barValues`(점수 비례).
@@ -48,16 +50,16 @@ export const COPY = {
       body: "기록이 나를 대신해 설명합니다",
     },
     closing: {
-      title: ["다음 시술 전에,", "헤디에 기록부터"],
+      title: ["다음 시술 전에,", "Heddy에 기록부터"],
     },
   },
-  /** 푸터(`docs/plans/0010`) — 운영 주체·문의 메일은 heddy-app 이용약관 "문의처"와 같다 */
+  /** 푸터(`docs/plans/0010`) — 운영 주체는 heddy-app 이용약관 "문의처"와 같다. 문의 메일은 도메인 메일(2026-10-14) */
   footer: {
     copyright: "© 2026 Heddy",
     operatorLabel: "운영",
     operator: "O2",
     contactLabel: "문의",
-    contactEmail: "teamo2.10th@gmail.com",
+    contactEmail: "heddy@heddy.site",
   },
   storeButtons: {
     /** 카드형 버튼(closing) 스토어명 위 작은 글자 */
@@ -180,5 +182,5 @@ export const COPY = {
  * (`docs/plans/0002-os-download-qr.md`).
  */
 export const DOWNLOAD_COPY = {
-  comingSoon: "헤디는 출시 준비 중이에요",
+  comingSoon: "Heddy는 출시 준비 중이에요",
 } as const;

@@ -10,7 +10,7 @@ export const Footer = () => {
   const { footer } = COPY;
   return (
     <footer className="relative z-50 border-t border-[#E8E8E9] bg-white">
-      <div className="flex flex-col gap-6 px-6 py-10 lg:flex-row lg:items-end lg:justify-between lg:px-16">
+      <div className="flex flex-col gap-6 px-6 py-10 lg:flex-row lg:items-end lg:justify-between lg:px-gutter">
         <div className="flex flex-col gap-3">
           <Image src="/brand/logo-wordmark.png" alt="Heddy" width={83} height={28} />
           <p className="text-12 text-[#76787A]">{footer.copyright}</p>

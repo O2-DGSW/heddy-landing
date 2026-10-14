@@ -27,13 +27,9 @@ export const SectionShell = ({
   children,
 }: SectionShellProps) => {
   return (
-    <section
-      data-section={section}
-      style={{ height: `${heightVh}vh` }}
-      className="relative"
-    >
+    <section data-section={section} style={{ height: `${heightVh}vh` }} className="relative">
       <div className="sticky top-0 flex h-svh flex-col items-start justify-start pt-[10svh] lg:flex-row lg:items-center lg:justify-start lg:pt-0">
-        <div className="max-w-[85vw] px-6 lg:max-w-[40vw] lg:px-16">
+        <div className="max-w-[85vw] px-6 lg:max-w-[46vw] lg:px-gutter">
           {eyebrow ? <p className="text-14 font-medium">{eyebrow}</p> : null}
           <h2 className="text-28 font-semibold lg:text-36">
             {title.map((line) => (

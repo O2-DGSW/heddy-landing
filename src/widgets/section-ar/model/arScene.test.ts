@@ -18,7 +18,10 @@ const atP = (p: number, isReducedMotion = false, frameLayout = layout): SceneFra
 const { pillMorph, panelCopyIn, panelCopyOut, copyIn } = TIMELINE.ar;
 
 /** 확대 구간을 촘촘히 훑은 진행도 */
-const morphSamples = Array.from({ length: 401 }, (_, i) => pillMorph[0] + (i / 400) * (pillMorph[1] - pillMorph[0]));
+const morphSamples = Array.from(
+  { length: 401 },
+  (_, i) => pillMorph[0] + (i / 400) * (pillMorph[1] - pillMorph[0]),
+);
 
 /** pill이 정해진 크기를 지나는 지점: 한 축이 그 값에 가장 가까울 때 다른 축 값 */
 const sizeWhere = (frameAt: (p: number) => SceneFrame, axis: "width" | "height", value: number) => {
@@ -37,8 +40,8 @@ describe("computeArScene: pill → 다크 패널", () => {
     expect(computeArScene(atP(TIMELINE.ar.pillFadeIn[1])).pill.opacity).toBe(1);
   });
 
-  it("빨리 커진다: 원본(ar 진행도 0.28)보다 한참 앞인 0.14에 화면 전체(W × H)를 각진 모서리로 덮는다", () => {
-    expect(pillMorph[1]).toBeLessThanOrEqual(0.14);
+  it("빨리 커진다: 원본(ar 진행도 0.28)보다 한참 앞인 0.08에 화면 전체(W × H)를 각진 모서리로 덮는다(팀 피드백 2026-10-14)", () => {
+    expect(pillMorph[1]).toBeLessThanOrEqual(0.08);
     const { pill, panel } = computeArScene(atP(pillMorph[1]));
     expect(pill.width).toBeCloseTo(W);
     expect(pill.height).toBeCloseTo(H);

@@ -31,7 +31,7 @@ export const MOBILE_SECTIONS: readonly MobileSection[] = [
     tone: "light",
     visual: {
       kind: "pair",
-      left: { src: "/screens/home.png", alt: "헤디 홈 화면" },
+      left: { src: "/screens/home.png", alt: "Heddy 홈 화면" },
       right: { src: "/screens/mobile/ar.webp", alt: "AR 스타일 체험 화면" },
       isTilted: true,
     },
@@ -39,13 +39,13 @@ export const MOBILE_SECTIONS: readonly MobileSection[] = [
   {
     key: "archive",
     tone: "light",
-    visual: { kind: "screen", src: "/screens/home.png", alt: "헤디 홈 화면" },
+    visual: { kind: "screen", src: "/screens/home.png", alt: "Heddy 홈 화면" },
   },
   {
     key: "record",
     tone: "light",
     // 데스크톱 기록 화면과 같은 배치(카드 6장이 쌓인 상태)로 합성한 이미지
-    visual: { kind: "screen", src: "/screens/mobile/record.webp", alt: "헤디 시술기록 화면" },
+    visual: { kind: "screen", src: "/screens/mobile/record.webp", alt: "Heddy 시술기록 화면" },
   },
   {
     key: "report",
@@ -70,6 +70,6 @@ export const MOBILE_SECTIONS: readonly MobileSection[] = [
   {
     key: "closing",
     tone: "light",
-    visual: { kind: "screen", src: "/screens/closing/home.webp", alt: "헤디 홈 화면" },
+    visual: { kind: "screen", src: "/screens/closing/home.webp", alt: "Heddy 홈 화면" },
   },
 ];

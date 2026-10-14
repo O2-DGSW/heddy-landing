@@ -10,6 +10,9 @@
   --color-phone-screen: rgb(var(--phone-screen));
   --radius-DEFAULT: var(--radius-default);
 
+  /* 데스크톱 좌우 여백(`px-gutter`) — 헤더 로고·다운로드 버튼, 섹션 카피, 푸터가 같은 선에 선다(팀 피드백) */
+  --spacing-gutter: max(4rem, 9vw);
+
   --font-sans: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;
 
   /* 폰트 크기 (spec §6: 36/32/28/24/20/18/16/14/12, 행간 130%, 자간 -2%) */

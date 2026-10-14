@@ -26,27 +26,30 @@ const stepsOf = (t: number) => ({
 const labelSwap = (slide: number): number => progressIn(slide, [0.4, 0.6]);
 
 /**
- * AR 화면 스타일 3단 전환(레퍼런스 영상 2, `docs/plans/0008`): 다음 썸네일에 터치 표시 →
- * 캐러셀이 밀려 선택이 가운데로 → 캐릭터 이미지 크로스페이드. 일자 풀뱅 → 다운펌 → 가르마 댄디컷.
- * t2 = R(p, .62~.72), t3 = R(p, .80~.90) (`docs/design/spec.md` §5 ar).
+ * 스크롤 위치로 고른 목표 스타일(0 · 1 · 2). 전환 지점(`TIMELINE.ar.styleSteps`)을 넘으면 다음 스타일이다 —
+ * 전환 자체는 스크롤로 문지르지 않고 `stepStyleClock`이 시간으로 재생한다(팀 피드백 2026-10-14).
  */
-export const computeArStyle = (frame: SceneFrame): ArStyle => {
-  const [first, second, third] = AR_SCREEN.styleCarouselIndex;
+export const arStyleTarget = (frame: SceneFrame): number => {
   const p = frame.progress("ar");
-  const t2 = progressIn(p, TIMELINE.ar.styleTransition2);
-  const t3 = progressIn(p, TIMELINE.ar.styleTransition3);
+  const [second, third] = TIMELINE.ar.styleSteps;
+  return (p >= second ? 1 : 0) + (p >= third ? 1 : 0);
+};
 
-  if (frame.isReducedMotion) {
-    const step = (t2 >= 0.5 ? 1 : 0) + (t3 >= 0.5 ? 1 : 0);
-    const weights: Triple = [step === 0 ? 1 : 0, step === 1 ? 1 : 0, step === 2 ? 1 : 0];
-    return {
-      imageWeights: weights,
-      labelWeights: weights,
-      carouselPos: first + step,
-      touch: { opacity: 0, carouselIndex: second },
-    };
-  }
+/** 표시 중인 스타일 s를 목표 쪽으로 dtMs만큼 옮긴다 — 전환 한 번(1)에 `styleDurationMs`, 넘치지 않는다 */
+export const stepStyleClock = (current: number, target: number, dtMs: number): number => {
+  const step = dtMs / TIMELINE.ar.styleDurationMs;
+  return current < target ? Math.min(current + step, target) : Math.max(current - step, target);
+};
 
+/**
+ * AR 화면 스타일 3단 전환(레퍼런스 영상 2, `docs/plans/0008`): 다음 썸네일에 터치 표시 →
+ * 캐러셀이 밀려 선택이 가운데로 → 캐릭터 이미지 교체. 일자 풀뱅 → 다운펌 → 가르마 댄디컷.
+ * s(0~2)는 시간으로 재생되는 표시 위치 — s = 1이면 다운펌, 2면 가르마 댄디컷.
+ */
+export const computeArStyleAt = (s: number): ArStyle => {
+  const [first, second, third] = AR_SCREEN.styleCarouselIndex;
+  const t2 = clamp(s);
+  const t3 = clamp(s - 1);
   const a = stepsOf(t2);
   const b = stepsOf(t3);
   const isSecond = t2 >= 1;

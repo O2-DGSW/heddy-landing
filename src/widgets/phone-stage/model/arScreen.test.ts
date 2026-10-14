@@ -3,7 +3,13 @@ import { describe, expect, it } from "vitest";
 import { AR_SCREEN, TIMELINE } from "@/shared/config";
 import { computeStageLayout, createFrame, stackSections, type SceneFrame } from "@/shared/lib/scroll";
 
-import { carouselSlot, computeArStyle, wrapCarouselOffset } from "./arScreen";
+import {
+  arStyleTarget,
+  carouselSlot,
+  computeArStyleAt,
+  stepStyleClock,
+  wrapCarouselOffset,
+} from "./arScreen";
 
 const H = 900;
 const sections = stackSections({}, H);
@@ -13,15 +19,36 @@ if (!ar) throw new Error("section not found");
 const atP = (p: number, isReducedMotion = false): SceneFrame =>
   createFrame(ar.top + p * (ar.height - H), layout, sections, isReducedMotion);
 
-const { styleTransition2: t2, styleTransition3: t3, styleTouch, styleSlide, styleImage } = TIMELINE.ar;
-/** 전환 구간 [a, b] 안의 t 지점 */
-const inBand = ([a, b]: readonly [number, number], t: number) => a + (b - a) * t;
+const { styleSteps, styleDurationMs, styleTouch, styleSlide, styleImage } = TIMELINE.ar;
 const sum = (values: readonly number[]) => values.reduce((acc, v) => acc + v, 0);
 const [first, second, third] = AR_SCREEN.styleCarouselIndex;
 
-describe("computeArStyle (스타일 3단 전환)", () => {
+describe("arStyleTarget (스크롤 근사값으로 고른 스타일, 팀 피드백 2026-10-14)", () => {
+  it("스크롤이 전환 지점을 넘으면 다음 스타일을 목표로 한다(중간값 없이 0 · 1 · 2)", () => {
+    expect(arStyleTarget(atP(0.5))).toBe(0);
+    expect(arStyleTarget(atP(styleSteps[0] - 0.001))).toBe(0);
+    expect(arStyleTarget(atP(styleSteps[0]))).toBe(1);
+    expect(arStyleTarget(atP(styleSteps[1] - 0.001))).toBe(1);
+    expect(arStyleTarget(atP(styleSteps[1]))).toBe(2);
+    expect(arStyleTarget(atP(1))).toBe(2);
+  });
+});
+
+describe("stepStyleClock (전환은 스크롤이 아니라 시간으로 재생)", () => {
+  it("목표 쪽으로 한 번 전환(1)을 styleDurationMs에 걸쳐 일정하게 간다", () => {
+    expect(stepStyleClock(0, 1, styleDurationMs / 2)).toBeCloseTo(0.5);
+    expect(stepStyleClock(0.5, 1, styleDurationMs / 2)).toBe(1);
+  });
+
+  it("목표를 넘지 않고, 위로 스크롤하면 거꾸로 돌아간다", () => {
+    expect(stepStyleClock(0.9, 1, styleDurationMs)).toBe(1);
+    expect(stepStyleClock(2, 1, styleDurationMs / 4)).toBeCloseTo(1.75);
+  });
+});
+
+describe("computeArStyleAt (스타일 3단 전환, s = 0~2)", () => {
   it("처음엔 일자 풀뱅: 캐릭터·이름·캐러셀 선택이 모두 스타일 0", () => {
-    const style = computeArStyle(atP(0.5));
+    const style = computeArStyleAt(0);
     expect(style.imageWeights).toEqual([1, 0, 0]);
     expect(style.labelWeights).toEqual([1, 0, 0]);
     expect(style.carouselPos).toBe(first);
@@ -29,42 +56,38 @@ describe("computeArStyle (스타일 3단 전환)", () => {
   });
 
   it("전환 처음엔 다음 썸네일(다운펌)에 터치 표시가 나타난다", () => {
-    const style = computeArStyle(atP(inBand(t2, (styleTouch[0] + styleTouch[1]) / 2)));
+    const style = computeArStyleAt((styleTouch[0] + styleTouch[1]) / 2);
     expect(style.touch.opacity).toBeGreaterThan(0.9);
     expect(style.touch.carouselIndex).toBe(second);
   });
 
   it("그다음 캐러셀이 밀려 다운펌이 가운데로 오고, 이름은 반쯤 밀렸을 때 바뀐다", () => {
-    const mid = computeArStyle(atP(inBand(t2, (styleSlide[0] + styleSlide[1]) / 2)));
+    const mid = computeArStyleAt((styleSlide[0] + styleSlide[1]) / 2);
     expect(mid.carouselPos).toBeGreaterThan(first);
     expect(mid.carouselPos).toBeLessThan(second);
-    const done = computeArStyle(atP(inBand(t2, styleSlide[1])));
+    const done = computeArStyleAt(styleSlide[1]);
     expect(done.carouselPos).toBeCloseTo(second);
     expect(done.labelWeights[1]).toBeCloseTo(1);
   });
 
-  it("캐릭터 이미지는 캐러셀이 밀리기 시작한 뒤 크로스페이드한다(합은 늘 1)", () => {
-    expect(computeArStyle(atP(inBand(t2, styleImage[0]))).imageWeights[0]).toBeCloseTo(1);
-    const mid = computeArStyle(atP(inBand(t2, (styleImage[0] + styleImage[1]) / 2)));
-    expect(mid.imageWeights[0]).toBeGreaterThan(0);
-    expect(mid.imageWeights[1]).toBeGreaterThan(0);
-    for (let p = 0.5; p <= 1; p += 0.01) expect(sum(computeArStyle(atP(p)).imageWeights)).toBeCloseTo(1);
+  it("두 머리가 겹쳐 보이는 중간 장면은 전환 한 번의 15% 이하로 짧다(합은 늘 1)", () => {
+    let overlapped = 0;
+    const samples = 1000;
+    for (let i = 0; i <= samples; i += 1) {
+      const [w0, w1] = computeArStyleAt(i / samples).imageWeights;
+      if (w0 > 0.05 && w1 > 0.05) overlapped += 1;
+    }
+    expect(overlapped / samples).toBeLessThanOrEqual(0.15);
+    expect(styleImage[0]).toBeGreaterThanOrEqual(styleSlide[0]);
+    for (let s = 0; s <= 2; s += 0.01) expect(sum(computeArStyleAt(s).imageWeights)).toBeCloseTo(1);
   });
 
   it("두 번째 전환이 끝나면 가르마 댄디컷", () => {
-    const style = computeArStyle(atP(t3[1]));
+    const style = computeArStyleAt(2);
     expect(style.imageWeights).toEqual([0, 0, 1]);
     expect(style.labelWeights[2]).toBeCloseTo(1);
     expect(style.carouselPos).toBeCloseTo(third);
-  });
-
-  it("reduced motion이면 터치·밀기 없이 구간 가운데서 바로 바뀐다", () => {
-    const before = computeArStyle(atP(inBand(t2, 0.4), true));
-    expect(before.carouselPos).toBe(first);
-    expect(before.touch.opacity).toBe(0);
-    const after = computeArStyle(atP(inBand(t2, 0.6), true));
-    expect(after.carouselPos).toBe(second);
-    expect(after.imageWeights).toEqual([0, 1, 0]);
+    expect(computeArStyleAt(1.5).touch.carouselIndex).toBe(third);
   });
 });
 

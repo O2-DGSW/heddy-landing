@@ -1,8 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { SMOOTH_SCROLL } from "@/shared/config";
+import { SCROLL_STOP, SMOOTH_SCROLL } from "@/shared/config";
 
-import { addScrollTarget, stepSmoothScroll, wheelDeltaPx } from "./smoothScroll";
+import {
+  addScrollTarget,
+  firstStopCrossed,
+  isStopReleased,
+  scrollStopsPx,
+  stepSmoothScroll,
+  wheelDeltaPx,
+} from "./smoothScroll";
 
 describe("wheelDeltaPx", () => {
   it("픽셀 단위는 그대로, 줄 단위는 16px, 페이지 단위는 뷰포트 높이로 바꾼다", () => {
@@ -36,5 +43,61 @@ describe("stepSmoothScroll", () => {
   it("거의 다 왔으면 목표에 붙이고 멈춘다", () => {
     const step = stepSmoothScroll(199.8, 200, 16);
     expect(step).toEqual({ current: 200, isDone: true });
+  });
+});
+
+describe("firstStopCrossed (스크롤 멈춤 지점, 팀 피드백 2026-10-14)", () => {
+  const stops = [1000, 2000, 3000];
+
+  it("내려갈 때 지나는 첫 멈춤 지점을 준다(출발 지점은 빼고 도착 지점은 넣는다)", () => {
+    expect(firstStopCrossed(900, 2500, stops)).toBe(1000);
+    expect(firstStopCrossed(1000, 1500, stops)).toBeNull();
+    expect(firstStopCrossed(1500, 2000, stops)).toBe(2000);
+  });
+
+  it("올라갈 때도 지나는 첫 멈춤 지점(가장 가까운 위쪽)을 준다", () => {
+    expect(firstStopCrossed(2500, 900, stops)).toBe(2000);
+    expect(firstStopCrossed(2000, 1500, stops)).toBeNull();
+  });
+});
+
+describe("scrollStopsPx", () => {
+  it("섹션 진행도로 적은 멈춤 지점을 페이지 px로 바꾸고, 숨은 섹션(높이 0)은 뺀다", () => {
+    const sections = [
+      { key: "hero", top: 0, height: 900, end: 900 },
+      { key: "archive", top: 900, height: 1980, end: 2880 },
+      { key: "record", top: 2880, height: 0, end: 2880 },
+    ] as const;
+    const stops = scrollStopsPx(
+      [
+        ["archive", 0],
+        ["archive", 0.5],
+        ["record", 0],
+      ],
+      sections,
+      900,
+    );
+    expect(stops).toEqual([900, 900 + 0.5 * (1980 - 900)]);
+  });
+});
+
+describe("isStopReleased (멈춘 뒤 풀리는 조건)", () => {
+  const { minHoldMs, quietMs } = SCROLL_STOP;
+
+  it("멈춤 지점에 닿기 전엔 풀리지 않는다", () => {
+    expect(isStopReleased({ now: 5000, arrivedAt: null, lastWheelAt: 0, absorbedPx: 0 }, 900)).toBe(false);
+  });
+
+  it("닿고 나서 잠깐(minHoldMs) 머물고, 휠이 멈춘 뒤(quietMs) 다음 휠에서 풀린다", () => {
+    const base = { arrivedAt: 1000, lastWheelAt: 1000, absorbedPx: 0 };
+    expect(isStopReleased({ ...base, now: 1000 + minHoldMs - 1 }, 900)).toBe(false);
+    expect(isStopReleased({ ...base, now: 1000 + Math.max(minHoldMs, quietMs) }, 900)).toBe(true);
+    // 트랙패드 관성처럼 휠이 계속 들어오면 붙잡아 둔다
+    expect(isStopReleased({ ...base, lastWheelAt: 2000, now: 2010 }, 900)).toBe(false);
+  });
+
+  it("계속 굴려도 갇히지 않게, 흡수한 휠이 뷰포트 비율을 넘으면 풀린다", () => {
+    const absorbedPx = SCROLL_STOP.maxAbsorbOfViewport * 900 + 1;
+    expect(isStopReleased({ now: 2010, arrivedAt: 1000, lastWheelAt: 2000, absorbedPx }, 900)).toBe(true);
   });
 });
