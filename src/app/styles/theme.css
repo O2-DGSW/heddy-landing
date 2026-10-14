@@ -10,7 +10,7 @@
   --color-phone-screen: rgb(var(--phone-screen));
   --radius-DEFAULT: var(--radius-default);
 
-  --font-sans: "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;
 
   /* 폰트 크기 (spec §6: 36/32/28/24/20/18/16/14/12, 행간 130%, 자간 -2%) */
   --text-36: 36px;
