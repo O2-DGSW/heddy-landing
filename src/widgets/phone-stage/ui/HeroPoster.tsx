@@ -2,7 +2,7 @@ import type { Ref } from "react";
 
 import Image from "next/image";
 
-import { STAGE_LAYOUT } from "@/shared/config";
+import { PHONE_3D, STAGE_LAYOUT } from "@/shared/config";
 
 import { heroPosterCss } from "../model/scene3d";
 
@@ -27,11 +27,11 @@ export const HeroPoster = ({ ref }: HeroPosterProps) => (
   <div ref={ref} className="hero-poster absolute" aria-hidden="true">
     <style>{POSTER_CSS}</style>
     <Image
-      src="/screens/hero/poster.webp"
+      src={PHONE_3D.posterImage.src}
       alt=""
       fill
       priority
-      sizes="(min-width: 1024px) 740px, 420px"
+      sizes={PHONE_3D.posterImage.sizes}
       className="object-contain"
     />
   </div>
