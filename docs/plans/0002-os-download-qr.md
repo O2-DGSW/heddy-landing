@@ -28,6 +28,27 @@ QR = https://<도메인>/download?src=<유입경로>      ← QR에 박히는 �
 - 원스토어는 공식 단축 URL `https://onesto.re/<PID>`를 쓴다(원스토어 앱이 있으면 앱, 없으면 원스토어 모바일 웹이 열려서 예외 처리 불필요). 안드로이드는 제조사와 상관없이 원스토어로 보낸다.
 - 절대 바꾸면 안 되는 것: **도메인**, **`/download` 경로**. 이 둘은 QR에 박힌다.
 
+## 변경: 명함 QR은 랜딩으로 (2026-10-14, 이슈 #48)
+
+사이트 헤더 QR(`https://heddy.site/download?src=header`)을 명함 뒷면에 인쇄했다. 명함으로 들어온 사람에겐 서비스 소개(랜딩)를 먼저 보여 준다. 인쇄된 주소(도메인 · `/download` · `src=header`)는 그대로 두고 **store 값으로 목적지를 나눈다**:
+
+```
+/download?src=…                    (store 없음 = 명함 QR, 인쇄됨) → 307 → /  (랜딩페이지)
+/download?src=…&store=auto         (사이트 안 QR · 휴대폰 헤더 버튼) → 아이폰 App Store / 안드로이드 원스토어 / PC는 QR 페이지
+/download?src=…&store=appstore|onestore   (스토어 버튼)        → 그 스토어 (그대로)
+```
+
+- 사이트 안 QR은 이제 `store=auto`가 붙은 새 주소를 담는다(`DownloadQr`, `downloadUrl(src, "auto")`).
+- 판정은 `features/download-app/lib/resolveDownloadEntry.ts`(`isLandingEntry`) + 명세 테스트. 인쇄된 주소 모양도 테스트로 고정했다.
+- 앞으로 **store 없는 `/download`는 명함 QR 전용**이다. 새 QR·링크를 만들 때는 반드시 `store`를 붙인다.
+- 확인(프로덕션 빌드, 환경변수에 예시 스토어 주소):
+
+| 요청 | 아이폰 | 안드로이드 | PC |
+|---|---|---|---|
+| `/download?src=header` | 307 → `/` | 307 → `/` | 307 → `/` |
+| `/download?src=header&store=auto` | 307 → App Store | 307 → 원스토어 | 200 QR 페이지 |
+| `store=appstore` / `onestore` | 지정 스토어 | 지정 스토어 | 지정 스토어 |
+
 ## 할 일
 
 - [x] `src/shared/config/store.ts` (그리고 `shared/config/index.ts`에서 export)
