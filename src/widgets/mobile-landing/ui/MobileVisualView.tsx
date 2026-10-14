@@ -1,6 +1,11 @@
+import type { CSSProperties } from "react";
+
 import Image from "next/image";
 
 import type { MobileVisual } from "../model/mobileSections";
+import { phoneRisePercent } from "../model/phoneRise";
+
+const PHONE_RISE_PERCENT = phoneRisePercent();
 
 /**
  * 평면 폰 목업(직접 그린 SVG, 상표 요소 없음). 446×906 안에 화면 402×874가 (22, 16)에서 반지름 55로 뚫려 있다
@@ -52,7 +57,8 @@ export const MobileVisualView = ({ visual, tone }: MobileVisualViewProps) => {
     );
   }
 
-  const cardClassName = `relative aspect-[1/1.08] overflow-hidden rounded-[28px] ${
+  // overflow-clip: hidden은 스크롤 컨테이너가 되어 안쪽 스크롤 연동 애니메이션(view())의 기준이 카드로 잡힌다
+  const cardClassName = `relative aspect-[1/1.08] overflow-clip rounded-[28px] ${
     tone === "dark" ? "bg-[#1A1A1A]" : "bg-[#F4F4F5]"
   }`;
 
@@ -65,9 +71,12 @@ export const MobileVisualView = ({ visual, tone }: MobileVisualViewProps) => {
     );
   }
 
+  // 카드 아래로 잘린 목업이 스크롤하면 올라와 아랫부분까지 보인다(`MOBILE_CARD`와 같은 비율)
   return (
     <div className={`${cardClassName} pt-[9%]`}>
-      <PhoneMockup src={visual.src} alt={visual.alt} className="mx-auto w-[64%]" />
+      <div className="scroll-rise" style={{ "--rise": `${PHONE_RISE_PERCENT}%` } as CSSProperties}>
+        <PhoneMockup src={visual.src} alt={visual.alt} className="mx-auto w-[64%]" />
+      </div>
     </div>
   );
 };
