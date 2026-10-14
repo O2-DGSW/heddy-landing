@@ -3,6 +3,7 @@
 import { createContext, useEffect, useRef, type ReactNode } from "react";
 
 import { createFrame, type SceneFrame } from "./sceneFrame";
+import { stableViewportSize, type ViewportSize } from "./stableViewport";
 import { computeStageLayout } from "./stageLayout";
 import { useSmoothWheelScroll } from "./useSmoothWheelScroll";
 import type { SectionFrame } from "./stageLayout";
@@ -43,9 +44,14 @@ export const ScrollSceneProvider = ({ children }: ScrollSceneProviderProps) => {
       });
     };
 
+    // 모바일 주소창이 접히고 펴져도 폰 크기·자리가 출렁이지 않게 높이를 붙잡아 둔다(이슈 #50)
+    let viewport: ViewportSize | null = null;
+    const isTouch = window.matchMedia("(pointer: coarse)").matches;
+
     const emit = () => {
       rafIdRef.current = null;
-      const layout = computeStageLayout(window.innerWidth, window.innerHeight);
+      viewport = stableViewportSize(viewport, { width: window.innerWidth, height: window.innerHeight }, isTouch);
+      const layout = computeStageLayout(viewport.width, viewport.height);
       const isReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const frame = createFrame(window.scrollY, layout, sectionsRef.current, isReducedMotion);
       listenersRef.current.forEach((listener) => listener(frame));

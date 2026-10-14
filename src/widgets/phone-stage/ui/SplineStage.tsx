@@ -26,10 +26,10 @@ const LOAD_TIMEOUT_MS = 10_000;
 const DEG = Math.PI / 180;
 
 /**
- * 일반 모니터(DPR 1)에서도 최소 2배로 그린 뒤 브라우저가 줄이게 한다. 히어로처럼 폰이 작게 보이면
- * 화면 텍스처가 밉맵 축소로 뭉개지는데, 2배로 그리면 한 단계 선명한 밉맵을 쓴다.
+ * 캔버스는 항상 2배로 그린다. 일반 모니터(DPR 1)는 2배로 올려 화면 텍스처가 밉맵 축소로 뭉개지지 않게 하고,
+ * 3배 화면 폰(DPR 3)은 2배로 낮춰 GPU·배터리 부담을 줄인다(이슈 #50 — 눈으로 차이가 거의 없다).
  */
-const MIN_PIXEL_RATIO = 2;
+const PIXEL_RATIO = 2;
 
 /** 공개 API에 없는 런타임 내부 — 버전이 바뀌어 없으면 기본 해상도로 둔다 */
 type SplineInternals = {
@@ -55,8 +55,8 @@ const supersample = (app: Application): void => {
   const internals = app as unknown as SplineInternals;
   const renderer = internals._renderer;
   if (!renderer || typeof internals._resize !== "function") return;
-  if (renderer.getPixelRatio() >= MIN_PIXEL_RATIO) return;
-  renderer.setPixelRatio(MIN_PIXEL_RATIO);
+  if (renderer.getPixelRatio() === PIXEL_RATIO) return;
+  renderer.setPixelRatio(PIXEL_RATIO);
   internals._resize(true);
 };
 

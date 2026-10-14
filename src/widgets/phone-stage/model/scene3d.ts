@@ -28,7 +28,8 @@ export const computeSplineViewport = (layout: StageLayout): SplineViewport => {
   const { fovDeg, distance } = PHONE_3D.camera;
   const visibleHeight = 2 * distance * Math.tan(((fovDeg / 2) * Math.PI) / 180);
   const height = visibleHeight * layout.scale;
-  const width = height * CANVAS_ASPECT;
+  // 모바일은 화면 폭만 그린다(이슈 #50) — 세로 시야각이 고정이라 폭을 줄여도 같은 자리·같은 크기로 그려진다
+  const width = layout.isMobile ? layout.viewportWidth : height * CANVAS_ASPECT;
   return {
     left: layout.center.x - width / 2,
     top: layout.center.y - height / 2,
@@ -45,14 +46,14 @@ const num = (value: number): string => String(Math.round(value * 1e4) / 1e4);
 /**
  * 히어로 포스터 자리(이슈 #46)를 CSS 길이식으로 낸다 — `computeStageLayout` · `computeSplineViewport`와 같은 식을
  * `min()` · vw · vh로 옮겨, JS가 돌기 전(서버 HTML 첫 페인트)부터 3D 캔버스와 같은 자리에 포스터가 놓인다.
- * 데스크톱은 vh(= innerHeight), 모바일은 dvh(주소창 높이 변화 반영).
+ * 데스크톱은 vh(= innerHeight), 모바일은 svh — 주소창이 보이는 작은 뷰포트(레이아웃이 붙잡는 높이와 같다, 이슈 #50).
  */
 export const heroPosterCss = (isMobile: boolean): CssRect => {
   const { fovDeg, distance } = PHONE_3D.camera;
   const canvasHeight = 2 * distance * Math.tan(((fovDeg / 2) * Math.PI) / 180);
   const canvasWidth = canvasHeight * CANVAS_ASPECT;
   const { poster } = PHONE_3D;
-  const vh = isMobile ? "dvh" : "vh";
+  const vh = isMobile ? "svh" : "vh";
   const stage = isMobile ? STAGE_LAYOUT.mobile : STAGE_LAYOUT.desktop;
   /** k × S(폰 스케일) — S = min(상한, H·비율/615, W/나눗수)를 CSS 길이로 */
   const scaled = (k: number): string =>
@@ -95,13 +96,14 @@ export const computeSplineHandoff = (frame: SceneFrame): SplineHandoff => {
 };
 
 export type ShareRigs = {
-  /** RecordRig(폰 A) 가로 이동(씬 단위)·배율(closing에서 커짐, `docs/plans/0010`) */
+  /** RecordRig(폰 A) 가로 이동(씬 단위)·배율(closing에서 커짐 `docs/plans/0010`, 모바일 확대 이슈 #50) */
   a: { x: number; scale: number };
   /** 폰 B가 설 자리: A와 같은 면(z 0) 위 위치·z축 회전(도, 씬 기준 반시계) */
   b: ShareTargetB;
 };
 
-export type ShareTargetB = { x: number; y: number; rotateZDeg: number; isVisible: boolean };
+/** scale: 폰 B 배율(기본 크기 S 대비 — 모바일 공유에서 두 대를 화면 폭에 맞춤) */
+export type ShareTargetB = { x: number; y: number; rotateZDeg: number; scale: number; isVisible: boolean };
 
 /**
  * share 섹션 폰 두 대 3D 배치(`docs/plans/0009`): CSS 폰 A/B와 같은 자리(`computePhones`)를 씬 단위
@@ -111,10 +113,11 @@ export type ShareTargetB = { x: number; y: number; rotateZDeg: number; isVisible
 export const computeShareRigs = (frame: SceneFrame): ShareRigs => {
   const { a, b } = computePhones(frame);
   const share = frame.sections.find((section) => section.key === "share");
-  if (!share || frame.scrollY < share.top) {
-    return { a: { x: 0, scale: 1 }, b: { x: 0, y: 0, rotateZDeg: 0, isVisible: false } };
-  }
   const { scale, center, viewportWidth, viewportHeight } = frame.layout;
+  if (!share || frame.scrollY < share.top) {
+    // 가로 자리는 히어로 합체(씬 Scroll 이벤트)가 맡고, 배율만 CSS 폰을 따른다(모바일 확대)
+    return { a: { x: 0, scale: a.scale / scale }, b: { x: 0, y: 0, rotateZDeg: 0, scale: 1, isVisible: false } };
+  }
   // 퇴장 끝(share.end)은 레이아웃 반올림으로 최대 스크롤보다 1px 뒤일 수 있다 — 다 빠진 B는 숨겨 그림자를 없앤다.
   // 들어올 때는 밖에서부터 보여 그림자가 먼저 들어온다
   const isLeaving = frame.scrollY > share.end - viewportHeight;
@@ -127,9 +130,10 @@ export const computeShareRigs = (frame: SceneFrame): ShareRigs => {
           x: (b.x - center.x) / scale,
           y: -(b.y - center.y) / scale,
           rotateZDeg: -b.rotate,
+          scale: b.scale / scale,
           isVisible: true,
         }
-      : { x: 0, y: 0, rotateZDeg: 0, isVisible: false },
+      : { x: 0, y: 0, rotateZDeg: 0, scale: 1, isVisible: false },
   };
 };
 
@@ -146,7 +150,7 @@ const MIN_PHONE_SCALE = 1e-3;
  */
 export const fitShareRigB = (target: ShareTargetB, local: PhoneLocal, phoneScale: number): RigTransform => {
   if (!target.isVisible) return { x: 0, y: 0, z: 0, rotateZDeg: 0, scale: 1 };
-  const scale = phoneScale / Math.max(local.scale, MIN_PHONE_SCALE);
+  const scale = (phoneScale * target.scale) / Math.max(local.scale, MIN_PHONE_SCALE);
   const t = target.rotateZDeg * (Math.PI / 180);
   const lx = local.x * scale;
   const ly = local.y * scale;
@@ -254,7 +258,7 @@ export const computeScreenOverlayB = (frame: SceneFrame): ScreenOverlayB => {
     sceneY: b.y,
     rotateZDeg: -b.rotateZDeg,
     scale: layout.scale,
-    phoneScale: 1,
+    phoneScale: b.scale,
     perspective: PHONE_3D.camera.distance,
     rotateXDeg: PHONE_3D.screen.tiltDeg,
     translateZ: PHONE_3D.screen.z,

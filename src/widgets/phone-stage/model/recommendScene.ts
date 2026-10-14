@@ -1,6 +1,8 @@
-import { RECOMMEND_SCREEN, TIMELINE } from "@/shared/config";
+import { PHONE_3D, RECOMMEND_SCREEN, TIMELINE } from "@/shared/config";
 import { easeInOutCubic, progressIn } from "@/shared/lib/motion";
 import type { SceneFrame } from "@/shared/lib/scroll";
+
+import { computePhones } from "./scene";
 
 type ScreenSize = { width: number; height: number };
 
@@ -67,9 +69,25 @@ export type RecommendCardPose = {
  * 추천 카드 3장이 폰 밖으로 떠올랐다가 돌아오는 자세(레퍼런스 영상, `docs/plans/0007`).
  * 1 → 2 → 3 순서로 떠오르고, 머문 뒤 함께(살짝 엇갈려) 제자리로 돌아간다.
  */
+/**
+ * 떠오른 카드가 옆으로 나가는 거리(피그마 px). 데스크톱은 피그마 그대로, 모바일은 폰을 키워 화면이 좁으니
+ * 카드 오른쪽 끝이 화면 안에 남을 만큼만 나간다(이슈 #50).
+ */
+const popDistance = (frame: SceneFrame): number => {
+  const { pop, card, designWidth, popMobileEdgeMarginPx } = RECOMMEND_SCREEN;
+  if (!frame.layout.isMobile) return pop.dx;
+  const { a } = computePhones(frame);
+  const designToPage = (PHONE_3D.screen.width / designWidth) * a.scale;
+  // 화면 오른쪽 끝(여백 안쪽)의 피그마 x 좌표(폰 화면 왼쪽 기준)
+  const viewportRight = (frame.layout.viewportWidth - popMobileEdgeMarginPx - a.x) / designToPage + designWidth / 2;
+  const cardRight = card.x + card.width / 2 + (card.width / 2) * pop.scale;
+  return Math.max(0, Math.min(pop.dx, viewportRight - cardRight));
+};
+
 export const computeRecommendCards = (frame: SceneFrame): RecommendCardPose[] => {
   const { pop } = RECOMMEND_SCREEN;
   const p = frame.progress("recommend");
+  const dx = popDistance(frame);
   return pop.dy.map((dy, index) => {
     const out = frame.isReducedMotion ? 0 : progressIn(p, staggerRange(TIMELINE.recommend.cardPop, index));
     const back = frame.isReducedMotion
@@ -78,7 +96,7 @@ export const computeRecommendCards = (frame: SceneFrame): RecommendCardPose[] =>
     const amount = easeInOutCubic(out) * (1 - easeInOutCubic(back));
     return {
       amount,
-      x: pop.dx * amount,
+      x: dx * amount,
       y: dy * amount,
       rotateDeg: pop.rotateDeg[index] * amount,
       scale: 1 + (pop.scale - 1) * amount,

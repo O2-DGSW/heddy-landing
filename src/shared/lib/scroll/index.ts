@@ -7,3 +7,4 @@ export * from "./reportBarProgress";
 export * from "./smoothScroll";
 export * from "./useSmoothWheelScroll";
 export * from "./useFirstInteraction";
+export * from "./stableViewport";

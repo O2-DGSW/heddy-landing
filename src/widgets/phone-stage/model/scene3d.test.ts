@@ -62,7 +62,7 @@ describe("heroPosterCss (히어로 포스터, 이슈 #46)", () => {
       .replace(/min\(/g, "Math.min(")
       .replace(/(-?[\d.]+)px/g, "($1)")
       .replace(/(-?[\d.]+)vw/g, `($1*${width}/100)`)
-      .replace(/(-?[\d.]+)d?vh/g, `($1*${height}/100)`);
+      .replace(/(-?[\d.]+)[ds]?vh/g, `($1*${height}/100)`);
     return Function(`return ${js};`)() as number;
   };
 
@@ -79,9 +79,12 @@ describe("heroPosterCss (히어로 포스터, 이슈 #46)", () => {
     const canvas = computeSplineViewport(vpLayout);
     const { poster } = PHONE_3D;
     const css = heroPosterCss(vpLayout.isMobile);
-    expect(evalCss(css.left, width, height)).toBeCloseTo(canvas.left + poster.left * canvas.width, 1);
+    // 가로는 캔버스 가운데 기준 가상 폭(높이 × 1.6) — 모바일 캔버스는 화면 폭만 그리지만 같은 자리·크기로 그린다
+    const virtualWidth = canvas.height * 1.6;
+    const centerX = canvas.left + canvas.width / 2;
+    expect(evalCss(css.left, width, height)).toBeCloseTo(centerX + (poster.left - 0.5) * virtualWidth, 1);
     expect(evalCss(css.top, width, height)).toBeCloseTo(canvas.top + poster.top * canvas.height, 1);
-    expect(evalCss(css.width, width, height)).toBeCloseTo(poster.width * canvas.width, 1);
+    expect(evalCss(css.width, width, height)).toBeCloseTo(poster.width * virtualWidth, 1);
     expect(evalCss(css.height, width, height)).toBeCloseTo(poster.height * canvas.height, 1);
   });
 });
@@ -153,7 +156,7 @@ describe("computeShareRigs (share: 폰 두 대 3D 배치, `docs/plans/0009`)", (
   it("share 전에는 두 묶음 다 제자리(히어로 합체 그대로)", () => {
     const rigs = computeShareRigs(frameAtScrollY(0));
     expect(rigs.a).toEqual({ x: 0, scale: 1 });
-    expect(rigs.b).toEqual({ x: 0, y: 0, rotateZDeg: 0, isVisible: false });
+    expect(rigs.b).toEqual({ x: 0, y: 0, rotateZDeg: 0, scale: 1, isVisible: false });
   });
 
   it("closing: A 묶음은 CSS 폰 A와 같은 자리·배율로 커진다(`docs/plans/0010`)", () => {
@@ -236,12 +239,12 @@ describe("fitShareRigB (Spline이 쥔 PhoneB 자세를 묶음으로 되돌린다
   };
 
   it("B가 안 보이면 묶음은 제자리 — 히어로 합체는 씬 그대로", () => {
-    const rig = fitShareRigB({ x: 0, y: 0, rotateZDeg: 0, isVisible: false }, GONE, PHONE_SCALE);
+    const rig = fitShareRigB({ x: 0, y: 0, rotateZDeg: 0, scale: 1, isVisible: false }, GONE, PHONE_SCALE);
     expect(rig).toEqual({ x: 0, y: 0, z: 0, rotateZDeg: 0, scale: 1 });
   });
 
   it("B가 보이면 PhoneB가 A와 같은 크기로, A와 같은 면(z 0)의 목표 자리에 선다", () => {
-    const target = { x: 213, y: -12, rotateZDeg: 6, isVisible: true };
+    const target = { x: 213, y: -12, rotateZDeg: 6, scale: 1, isVisible: true };
     const world = toWorld(fitShareRigB(target, GONE, PHONE_SCALE), GONE);
     expect(world.x).toBeCloseTo(213);
     expect(world.y).toBeCloseTo(-12);
@@ -251,16 +254,24 @@ describe("fitShareRigB (Spline이 쥔 PhoneB 자세를 묶음으로 되돌린다
 
   it("PhoneB가 로컬에서 비켜 있어도(회전 포함) 목표 자리에 맞춘다", () => {
     const local = { x: 3, y: -2, z: -40, scale: 2.2284 };
-    const target = { x: -50, y: 30, rotateZDeg: -10, isVisible: true };
+    const target = { x: -50, y: 30, rotateZDeg: -10, scale: 1, isVisible: true };
     const world = toWorld(fitShareRigB(target, local, PHONE_SCALE), local);
     expect(world.x).toBeCloseTo(-50);
     expect(world.y).toBeCloseTo(30);
     expect(world.z).toBeCloseTo(0);
   });
 
+  it("모바일 공유에서 B를 키운 만큼(target.scale) PhoneB 크기도 커진다(이슈 #50)", () => {
+    const target = { x: 100, y: 0, rotateZDeg: 0, scale: 1.4, isVisible: true };
+    const world = toWorld(fitShareRigB(target, GONE, PHONE_SCALE), GONE);
+    expect(world.scale).toBeCloseTo(PHONE_SCALE * 1.4);
+    expect(world.x).toBeCloseTo(100);
+    expect(world.z).toBeCloseTo(0);
+  });
+
   it("PhoneB 크기가 0이어도 무한대로 튀지 않는다", () => {
     const rig = fitShareRigB(
-      { x: 1, y: 1, rotateZDeg: 0, isVisible: true },
+      { x: 1, y: 1, rotateZDeg: 0, scale: 1, isVisible: true },
       { ...GONE, scale: 0 },
       PHONE_SCALE,
     );
