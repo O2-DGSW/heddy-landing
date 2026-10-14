@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import { COPY, TIMELINE, type SectionKey } from "@/shared/config";
 import { Reveal, StoreButtons } from "@/shared/ui";
@@ -29,7 +29,14 @@ const copyOf = (key: SectionKey): SectionCopy => {
   }
 };
 
-/** 리포트: 데스크톱 막대와 같은 지표 4개(정지 막대) */
+/** 막대가 차례로 차오르는 간격·시작 지연(ms) — 문구가 떠오른 뒤 시작 */
+const BAR_STAGGER_MS = 120;
+const BAR_START_MS = 300;
+
+/**
+ * 리포트: 데스크톱 막대와 같은 지표 4개. 섹션이 화면에 들어오면(부모 `Reveal`의 data-revealed) 막대가 0에서
+ * 점수만큼 차례로 차오른다(CSS transition, 이슈 #52). 동작 줄이기면 처음부터 찬 상태.
+ */
 const ReportMetrics = () => (
   <ul className="mt-6 flex flex-col gap-4">
     {COPY.sections.report.metrics.map(({ label, value }, i) => (
@@ -40,8 +47,13 @@ const ReportMetrics = () => (
         </div>
         <div aria-hidden="true" className="mt-2 h-1 overflow-hidden rounded-full bg-[#EFEFEF]">
           <div
-            className="h-full origin-left rounded-full bg-neutral-900"
-            style={{ transform: `scaleX(${TIMELINE.report.barValues[i]})` }}
+            className="h-full origin-left rounded-full bg-neutral-900 transition-transform duration-1000 ease-out [transform:scaleX(0)] group-data-[revealed=true]:[transform:scaleX(var(--bar))] motion-reduce:[transform:scaleX(var(--bar))] motion-reduce:transition-none"
+            style={
+              {
+                "--bar": TIMELINE.report.barValues[i],
+                transitionDelay: `${BAR_START_MS + i * BAR_STAGGER_MS}ms`,
+              } as CSSProperties
+            }
           />
         </div>
       </li>
@@ -81,7 +93,7 @@ const MobileSectionView = ({ section }: MobileSectionViewProps) => {
       data-mobile-section={key}
       className={`px-5 ${isHero ? "pb-10 pt-28" : "py-16"} ${isDark ? "bg-[#0D0D0D] text-white" : ""}`}
     >
-      <Appear isInstant={isHero}>
+      <Appear isInstant={isHero} className="group">
         {eyebrow ? <p className="text-14 mb-2 font-medium text-neutral-500">{eyebrow}</p> : null}
         <h2 className="text-28 font-bold">
           {title.map((line) => (
