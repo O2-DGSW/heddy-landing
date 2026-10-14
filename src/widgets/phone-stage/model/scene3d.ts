@@ -1,4 +1,4 @@
-import { PHONE, PHONE_3D } from "@/shared/config";
+import { PHONE, PHONE_3D, STAGE_LAYOUT } from "@/shared/config";
 import type { SceneFrame, StageLayout } from "@/shared/lib/scroll";
 
 import { computeRecommendTabSwitch, type RecommendTabSwitch } from "./recommendScene";
@@ -34,6 +34,38 @@ export const computeSplineViewport = (layout: StageLayout): SplineViewport => {
     top: layout.center.y - height / 2,
     width,
     height,
+  };
+};
+
+export type CssRect = { left: string; top: string; width: string; height: string };
+
+/** 소수 자릿수를 줄여 CSS를 짧게 */
+const num = (value: number): string => String(Math.round(value * 1e4) / 1e4);
+
+/**
+ * 히어로 포스터 자리(이슈 #46)를 CSS 길이식으로 낸다 — `computeStageLayout` · `computeSplineViewport`와 같은 식을
+ * `min()` · vw · vh로 옮겨, JS가 돌기 전(서버 HTML 첫 페인트)부터 3D 캔버스와 같은 자리에 포스터가 놓인다.
+ * 데스크톱은 vh(= innerHeight), 모바일은 dvh(주소창 높이 변화 반영).
+ */
+export const heroPosterCss = (isMobile: boolean): CssRect => {
+  const { fovDeg, distance } = PHONE_3D.camera;
+  const canvasHeight = 2 * distance * Math.tan(((fovDeg / 2) * Math.PI) / 180);
+  const canvasWidth = canvasHeight * CANVAS_ASPECT;
+  const { poster } = PHONE_3D;
+  const vh = isMobile ? "dvh" : "vh";
+  const stage = isMobile ? STAGE_LAYOUT.mobile : STAGE_LAYOUT.desktop;
+  /** k × S(폰 스케일) — S = min(상한, H·비율/615, W/나눗수)를 CSS 길이로 */
+  const scaled = (k: number): string =>
+    `min(${num(k * stage.scaleCap)}px, ${num((k * stage.scaleHeightRatio * 100) / PHONE.height)}${vh}, ${num((k * 100) / stage.scaleWidthDivisor)}vw)`;
+  const centerX = `${num(stage.centerXRatio * 100)}vw`;
+  const centerY = isMobile
+    ? `${num(STAGE_LAYOUT.mobile.centerYRatio * 100)}${vh}`
+    : `calc(50${vh} + ${num(STAGE_LAYOUT.desktop.centerYOffset)}px)`;
+  return {
+    left: `calc(${centerX} - ${scaled(canvasWidth * (0.5 - poster.left))})`,
+    top: `calc(${centerY} - ${scaled(canvasHeight * (0.5 - poster.top))})`,
+    width: scaled(canvasWidth * poster.width),
+    height: scaled(canvasHeight * poster.height),
   };
 };
 

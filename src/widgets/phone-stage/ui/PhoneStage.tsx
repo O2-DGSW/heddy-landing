@@ -5,7 +5,7 @@ import { useRef, type ReactNode } from "react";
 import Image from "next/image";
 
 import { PHONE, PHONE_3D, SHARE_SCREEN } from "@/shared/config";
-import { useSceneFrame } from "@/shared/lib/scroll";
+import { useFirstInteraction, useSceneFrame } from "@/shared/lib/scroll";
 import { PhoneFrame } from "@/shared/ui";
 
 import { computePhones, computeScreens } from "../model/scene";
@@ -18,6 +18,7 @@ import { SplineStage } from "./SplineStage";
 import { ArScreen } from "./ArScreen";
 import { ArSnapshotScreen, DetailScreen, HomeScreen, RecordScreen } from "./screens";
 import { ClosingHomeScreen } from "./ClosingHomeScreen";
+import { HeroPoster } from "./HeroPoster";
 
 /** Spline 씬 URL. 없으면 CSS 폰만 쓴다(`docs/plans/0003`) */
 const SPLINE_HERO_SCENE = process.env.NEXT_PUBLIC_SPLINE_HERO_SCENE;
@@ -56,6 +57,13 @@ export const PhoneStage = () => {
   const bScreenRefs = useRef<Partial<Record<PhoneBScreenKey, HTMLDivElement | null>>>({});
   const isSplineFailedRef = useRef(false);
   const isSplineLoadedRef = useRef(false);
+  const posterRef = useRef<HTMLDivElement>(null);
+  // 첫 상호작용 전엔 히어로 포스터만 그린다 — 3D·화면 밖 폰 화면 이미지(수십 장)는 그때 시작해
+  // 첫 화면 로딩과 메인 스레드를 비워 둔다(이슈 #46). 3D 씬이 없으면 CSS 폰이 바로 필요하다
+  const hasInteracted = useFirstInteraction();
+  const isStageMounted = !SPLINE_HERO_SCENE || hasInteracted;
+  /** 3D 캔버스가 다 나타나 포스터를 치웠는지 */
+  const isPosterDoneRef = useRef(false);
 
   useSceneFrame((frame) => {
     const { a, b, qrFlight } = computePhones(frame);
@@ -64,7 +72,12 @@ export const PhoneStage = () => {
     // Spline이 실패/타임아웃이면 CSS 폰으로 되돌린다
     const isSplineActive = Boolean(SPLINE_HERO_SCENE) && !isSplineFailedRef.current;
     const handoff = computeSplineHandoff(frame);
-    const cssOpacity = isSplineActive ? handoff.cssOpacity : 1;
+    // Spline이 뜨기 전(첫 상호작용 전, 이슈 #46): 히어로 자세 동안은 포스터, 그 밖은 CSS 폰이 대신한다
+    const isPosterShown =
+      isSplineActive && !isPosterDoneRef.current && !frame.isReducedMotion && frame.scrollY < PHONE_3D.posterMaxScrollPx;
+    if (posterRef.current) posterRef.current.style.opacity = isPosterShown ? "1" : "0";
+    const isSplineShown = isSplineActive && isSplineLoadedRef.current;
+    const cssOpacity = isSplineShown ? handoff.cssOpacity : isPosterShown ? 0 : 1;
     // 캔버스와 화면 오버레이를 한 장으로 묶어 페이드한다 — 따로 반투명해지면 오버레이 아래 3D 화면(기록)이 비친다
     if (stage3dRef.current) stage3dRef.current.style.opacity = String(handoff.canvasOpacity);
 
@@ -94,12 +107,19 @@ export const PhoneStage = () => {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-40">
+      {SPLINE_HERO_SCENE && <HeroPoster ref={posterRef} />}
       <div ref={stage3dRef} className="absolute inset-0">
         {SPLINE_HERO_SCENE && (
           <SplineStage
             sceneUrl={SPLINE_HERO_SCENE}
+            isStarted={hasInteracted}
             onLoad={() => {
               isSplineLoadedRef.current = true;
+              // 캔버스가 다 나타난 뒤(페이드) 포스터를 치운다 — 겹친 동안 같은 그림이라 티가 나지 않는다
+              window.setTimeout(() => {
+                isPosterDoneRef.current = true;
+                window.dispatchEvent(new Event("scroll"));
+              }, PHONE_3D.posterHideDelayMs);
             }}
             onFail={() => {
               isSplineFailedRef.current = true;
@@ -108,10 +128,10 @@ export const PhoneStage = () => {
             }}
           />
         )}
-        {SPLINE_HERO_SCENE && (
+        {SPLINE_HERO_SCENE && isStageMounted && (
           <ScreenOverlay getIsEnabled={() => !isSplineFailedRef.current && isSplineLoadedRef.current} />
         )}
-        {SPLINE_HERO_SCENE && (
+        {SPLINE_HERO_SCENE && isStageMounted && (
           <ScreenOverlayB getIsEnabled={() => !isSplineFailedRef.current && isSplineLoadedRef.current} />
         )}
       </div>
@@ -124,7 +144,7 @@ export const PhoneStage = () => {
             }}
             className="absolute inset-0"
           >
-            {node}
+            {isStageMounted && node}
           </div>
         ))}
       </PhoneFrame>
@@ -137,7 +157,7 @@ export const PhoneStage = () => {
             }}
             className="absolute inset-0"
           >
-            {node}
+            {isStageMounted && node}
           </div>
         ))}
       </PhoneFrame>
@@ -148,7 +168,9 @@ export const PhoneStage = () => {
       >
         {/* 안쪽 여백은 %가 아닌 inset으로 — padding %는 부모(뷰포트) 폭 기준이라 QR이 0으로 줄어든다 */}
         <div className="absolute inset-[5%]">
-          <Image src="/screens/share/qr.png" alt="" fill loading="eager" sizes="240px" className="object-contain" />
+          {isStageMounted && (
+            <Image src="/screens/share/qr.png" alt="" fill loading="eager" sizes="240px" className="object-contain" />
+          )}
         </div>
       </div>
     </div>

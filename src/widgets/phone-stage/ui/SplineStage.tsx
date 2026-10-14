@@ -1,7 +1,7 @@
 "use client";
 
 import { Component, useEffect, useRef, type ReactNode } from "react";
-import { preconnect, preload } from "react-dom";
+import { preconnect } from "react-dom";
 
 import dynamic from "next/dynamic";
 import type { Application, SPEObject } from "@splinetool/runtime";
@@ -145,6 +145,11 @@ const applyRecordStack = (objects: RecordObjects, scene: RecordStackScene): void
 
 interface SplineStageProps {
   sceneUrl: string;
+  /**
+   * Spline을 시작할지 — 첫 상호작용 때 true(이슈 #46). 무거운 실행(런타임·씬 파싱, 긴 작업 수백 ms)을 미루고
+   * 그 전까지 히어로는 포스터가 같은 그림을 보여 준다
+   */
+  isStarted: boolean;
   onLoad: () => void;
   onFail: () => void;
 }
@@ -176,7 +181,7 @@ class SplineErrorBoundary extends Component<SplineErrorBoundaryProps, { hasError
  * record의 회전·기록 스택은 여기서 런타임 API로 쓴다(Scroll 이벤트는 px 고정이라 뷰포트마다 어긋남).
  * 캔버스를 CSS 폰 A 자리에 맞추고, record가 끝나면 CSS 폰으로 페이드해 넘긴다.
  */
-export const SplineStage = ({ sceneUrl, onLoad, onFail }: SplineStageProps) => {
+export const SplineStage = ({ sceneUrl, isStarted, onLoad, onFail }: SplineStageProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const fadeRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<Application | null>(null);
@@ -185,9 +190,9 @@ export const SplineStage = ({ sceneUrl, onLoad, onFail }: SplineStageProps) => {
   const shareObjectsRef = useRef<ShareObjects | null>(null);
   const isFailedRef = useRef(false);
 
-  // 서버 렌더 HTML에 <link>로 들어가서, JS가 끝나기 전부터 씬 파일(~1.3MB)을 받기 시작한다
+  // 씬 파일(~0.7MB)은 시작할 때 받는다 — 첫 화면은 히어로 포스터가 맡으므로 이미지·폰트와 대역폭을 다투지 않게
+  // 미리 받지 않고 연결만 열어 둔다
   preconnect(new URL(sceneUrl).origin);
-  preload(sceneUrl, { as: "fetch", crossOrigin: "anonymous" });
 
   const handleFail = () => {
     if (isFailedRef.current || appRef.current) return;
@@ -197,11 +202,12 @@ export const SplineStage = ({ sceneUrl, onLoad, onFail }: SplineStageProps) => {
   };
 
   useEffect(() => {
+    if (!isStarted) return undefined;
     const timeoutId = window.setTimeout(handleFail, LOAD_TIMEOUT_MS);
     return () => window.clearTimeout(timeoutId);
-    // 마운트 시 한 번만 타이머를 건다
+    // 시작할 때 한 번만 타이머를 건다
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isStarted]);
 
   const handleLoad = (app: Application) => {
     if (isFailedRef.current) return;
@@ -278,9 +284,11 @@ export const SplineStage = ({ sceneUrl, onLoad, onFail }: SplineStageProps) => {
     <div ref={containerRef} className="pointer-events-none absolute left-0 top-0 opacity-0">
       {/* 로드 완료 시 한 번 페이드 인 (스크롤 연동 opacity는 바깥 div가 담당) */}
       <div ref={fadeRef} className="h-full w-full opacity-0 transition-opacity duration-500">
-        <SplineErrorBoundary onError={handleFail}>
-          <Spline scene={sceneUrl} onLoad={handleLoad} />
-        </SplineErrorBoundary>
+        {isStarted && (
+          <SplineErrorBoundary onError={handleFail}>
+            <Spline scene={sceneUrl} onLoad={handleLoad} />
+          </SplineErrorBoundary>
+        )}
       </div>
     </div>
   );

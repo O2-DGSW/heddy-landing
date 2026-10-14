@@ -6,3 +6,4 @@ export * from "./useSmoothSceneFrame";
 export * from "./reportBarProgress";
 export * from "./smoothScroll";
 export * from "./useSmoothWheelScroll";
+export * from "./useFirstInteraction";
