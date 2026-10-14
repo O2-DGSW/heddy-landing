@@ -75,7 +75,8 @@
       animation-timing-function: linear;
       animation-fill-mode: both;
       animation-timeline: view();
-      animation-range: entry 40% cover 55%;
+      /* 카드가 화면에 들어와 다 지나갈 때까지 내내 — 짧은 구간에 몰면 확 올라가 부자연스럽다 */
+      animation-range: cover 0% cover 100%;
     }
   }
 }

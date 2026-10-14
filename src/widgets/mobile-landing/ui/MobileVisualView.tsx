@@ -57,8 +57,9 @@ export const MobileVisualView = ({ visual, tone }: MobileVisualViewProps) => {
     );
   }
 
-  // overflow-clip: hidden은 스크롤 컨테이너가 되어 안쪽 스크롤 연동 애니메이션(view())의 기준이 카드로 잡힌다
-  const cardClassName = `relative aspect-[1/1.08] overflow-clip rounded-[28px] ${
+  // overflow-clip: hidden은 스크롤 컨테이너가 되어 안쪽 스크롤 연동 애니메이션(view())의 기준이 카드로 잡힌다.
+  // min-h-0: clip이면 비율 상자가 내용(목업) 높이만큼 늘어나 목업이 잘리지 않으므로 비율을 고정한다
+  const cardClassName = `relative aspect-[1/1.08] min-h-0 overflow-clip rounded-[28px] ${
     tone === "dark" ? "bg-[#1A1A1A]" : "bg-[#F4F4F5]"
   }`;
 

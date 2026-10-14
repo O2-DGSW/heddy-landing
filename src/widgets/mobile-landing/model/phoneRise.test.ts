@@ -18,10 +18,10 @@ describe("phoneRisePercent (스크롤하면 폰이 카드에 걸칠 만큼 올�
     expect(endBottom).toBeGreaterThan(cardHeight);
   });
 
-  it("그래도 잘린 부분의 절반쯤은 드러난다", () => {
+  it("살짝만 움직인다: 잘린 부분의 4분의 1쯤 드러난다(많이 움직이면 부자연스러움)", () => {
     const shown = (startBottom - endBottom) / (startBottom - cardHeight);
-    expect(shown).toBeGreaterThan(0.4);
-    expect(shown).toBeLessThan(0.6);
+    expect(shown).toBeGreaterThan(0.15);
+    expect(shown).toBeLessThan(0.35);
   });
 
   it("윗부분(상태바)은 거의 잘리지 않는다: 폰 위 끝이 카드 위 끝 근처에 머문다", () => {
