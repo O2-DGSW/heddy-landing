@@ -51,3 +51,32 @@
     transform: translateY(150px);
   }
 }
+
+/*
+ * 모바일 카드 안 폰 목업이 스크롤에 따라 위로 올라와 아랫부분(탭바)까지 보인다(이슈 #52).
+ * 스크롤 연동 CSS 애니메이션이라 JS가 프레임마다 계산하지 않는다. 올라갈 거리는 --rise(`phoneRisePercent`).
+ * 지원하지 않는 브라우저·동작 줄이기에선 움직이지 않는다(윗부분만 보임).
+ */
+@keyframes phone-rise {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(var(--rise, 0%));
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .scroll-rise {
+      /* 단축 속성은 재생 시간을 0s로 넣어 바로 끝 상태가 된다 — 스크롤 연동은 auto여야 해서 하나씩 쓴다 */
+      animation-name: phone-rise;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: view();
+      /* 카드가 화면에 들어와 다 지나갈 때까지 내내 — 짧은 구간에 몰면 확 올라가 부자연스럽다 */
+      animation-range: cover 0% cover 100%;
+    }
+  }
+}

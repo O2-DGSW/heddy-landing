@@ -85,6 +85,11 @@ export const PHONE_3D = {
    * (`public/screens/hero/poster.webp`, 캔버스 3030×1894 렌더에서 폰·그림자만 잘라냄). 값은 캔버스 대비 비율.
    */
   poster: { left: 0.267, top: 0.3321, width: 0.4099, height: 0.5533 },
+  /**
+   * 포스터 이미지 — 모바일 히어로(이슈 #52)도 같은 파일·같은 sizes를 써서 한 번만 내려받는다
+   * (데스크톱 포스터는 모바일에서 숨겨도 이미지는 받아지므로 주소를 맞춘다)
+   */
+  posterImage: { src: "/screens/hero/poster.webp", sizes: "(min-width: 1024px) 740px, 420px" },
   /** 포스터는 히어로 자세가 그대로인 동안만 맞다 — Spline Scroll 이벤트(합체)가 시작되는 스크롤 위치(PhoneA 900) */
   posterMaxScrollPx: 900,
   /** 3D 캔버스가 다 나타난 뒤(페이드 500ms) 포스터를 숨기기까지(ms) */

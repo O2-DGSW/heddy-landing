@@ -4,7 +4,8 @@ import { useRef, type ReactNode } from "react";
 
 import Image from "next/image";
 
-import { PHONE, PHONE_3D, SHARE_SCREEN } from "@/shared/config";
+import { PHONE, PHONE_3D, STAGE_LAYOUT, SHARE_SCREEN } from "@/shared/config";
+import { useMediaQuery } from "@/shared/lib/media";
 import { useFirstInteraction, useSceneFrame } from "@/shared/lib/scroll";
 import { PhoneFrame } from "@/shared/ui";
 
@@ -19,6 +20,9 @@ import { ArScreen } from "./ArScreen";
 import { ArSnapshotScreen, DetailScreen, HomeScreen, RecordScreen } from "./screens";
 import { ClosingHomeScreen } from "./ClosingHomeScreen";
 import { HeroPoster } from "./HeroPoster";
+
+/** 데스크톱(`lg`, `STAGE_LAYOUT.desktop.breakpoint`) — 이 레이어는 데스크톱에서만 쓴다 */
+const DESKTOP_QUERY = `(min-width: ${STAGE_LAYOUT.desktop.breakpoint}px)`;
 
 /** Spline 씬 URL. 없으면 CSS 폰만 쓴다(`docs/plans/0003`) */
 const SPLINE_HERO_SCENE = process.env.NEXT_PUBLIC_SPLINE_HERO_SCENE;
@@ -60,8 +64,10 @@ export const PhoneStage = () => {
   const posterRef = useRef<HTMLDivElement>(null);
   // 첫 상호작용 전엔 히어로 포스터만 그린다 — 3D·화면 밖 폰 화면 이미지(수십 장)는 그때 시작해
   // 첫 화면 로딩과 메인 스레드를 비워 둔다(이슈 #46). 3D 씬이 없으면 CSS 폰이 바로 필요하다
+  // 모바일은 이 레이어를 쓰지 않고 섹션을 쌓는다(`MobileLanding`, 이슈 #52) — 3D·폰 화면 이미지를 아예 시작하지 않는다
+  const isDesktop = useMediaQuery(DESKTOP_QUERY);
   const hasInteracted = useFirstInteraction();
-  const isStageMounted = !SPLINE_HERO_SCENE || hasInteracted;
+  const isStageMounted = isDesktop && (!SPLINE_HERO_SCENE || hasInteracted);
   /** 3D 캔버스가 다 나타나 포스터를 치웠는지 */
   const isPosterDoneRef = useRef(false);
 
@@ -106,13 +112,13 @@ export const PhoneStage = () => {
   });
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-40">
+    <div className="pointer-events-none fixed inset-0 z-40 hidden lg:block">
       {SPLINE_HERO_SCENE && <HeroPoster ref={posterRef} />}
       <div ref={stage3dRef} className="absolute inset-0">
         {SPLINE_HERO_SCENE && (
           <SplineStage
             sceneUrl={SPLINE_HERO_SCENE}
-            isStarted={hasInteracted}
+            isStarted={isDesktop && hasInteracted}
             onLoad={() => {
               isSplineLoadedRef.current = true;
               // 캔버스가 다 나타난 뒤(페이드) 포스터를 치운다 — 겹친 동안 같은 그림이라 티가 나지 않는다

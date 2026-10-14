@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 446 906" width="446" height="906">
+  <!-- 헤디 평면 폰 목업(직접 그림, 상표 요소 없음). 화면 402×874는 (22, 16)에서 투명하게 뚫려 있다 -->
+  <defs>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6E7176"/>
+      <stop offset="0.25" stop-color="#2E3033"/>
+      <stop offset="0.55" stop-color="#4A4D52"/>
+      <stop offset="0.8" stop-color="#26282B"/>
+      <stop offset="1" stop-color="#5B5E63"/>
+    </linearGradient>
+    <linearGradient id="button" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3A3C40"/>
+      <stop offset="1" stop-color="#1E2023"/>
+    </linearGradient>
+    <linearGradient id="gloss" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.10"/>
+      <stop offset="0.35" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 측면 버튼 -->
+  <rect x="0" y="176" width="6" height="34" rx="2" fill="url(#button)"/>
+  <rect x="0" y="236" width="6" height="62" rx="2" fill="url(#button)"/>
+  <rect x="0" y="312" width="6" height="62" rx="2" fill="url(#button)"/>
+  <rect x="440" y="262" width="6" height="96" rx="2" fill="url(#button)"/>
+
+  <!-- 금속 테두리(바깥) − 화면 구멍 -->
+  <path fill="url(#rim)" fill-rule="evenodd" d="
+    M 76 2 H 370 A 72 72 0 0 1 442 74 V 832 A 72 72 0 0 1 370 904 H 76 A 72 72 0 0 1 4 832 V 74 A 72 72 0 0 1 76 2 Z
+    M 77 16 H 369 A 55 55 0 0 1 424 71 V 835 A 55 55 0 0 1 369 890 H 77 A 55 55 0 0 1 22 835 V 71 A 55 55 0 0 1 77 16 Z"/>
+  <!-- 검은 베젤(테두리 안쪽) − 화면 구멍 -->
+  <path fill="#0B0C0D" fill-rule="evenodd" d="
+    M 76 7 H 370 A 67 67 0 0 1 437 74 V 832 A 67 67 0 0 1 370 899 H 76 A 67 67 0 0 1 9 832 V 74 A 67 67 0 0 1 76 7 Z
+    M 77 16 H 369 A 55 55 0 0 1 424 71 V 835 A 55 55 0 0 1 369 890 H 77 A 55 55 0 0 1 22 835 V 71 A 55 55 0 0 1 77 16 Z"/>
+  <!-- 테두리 윤광 -->
+  <path fill="url(#gloss)" fill-rule="evenodd" d="
+    M 76 2 H 370 A 72 72 0 0 1 442 74 V 832 A 72 72 0 0 1 370 904 H 76 A 72 72 0 0 1 4 832 V 74 A 72 72 0 0 1 76 2 Z
+    M 77 16 H 369 A 55 55 0 0 1 424 71 V 835 A 55 55 0 0 1 369 890 H 77 A 55 55 0 0 1 22 835 V 71 A 55 55 0 0 1 77 16 Z"/>
+
+  <!-- 다이내믹 아일랜드(화면 위에 그린다) -->
+  <rect x="160.5" y="27" width="125" height="36" rx="18" fill="#000000"/>
+  <circle cx="267" cy="45" r="6" fill="#0E1626"/>
+  <circle cx="267" cy="45" r="2.5" fill="#1C2C4A"/>
+</svg>
