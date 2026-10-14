@@ -36,7 +36,11 @@ export const MOBILE_SECTIONS: readonly MobileSection[] = [
       isTilted: true,
     },
   },
-  { key: "archive", tone: "light", visual: { kind: "screen", src: "/screens/home.png", alt: "헤디 홈 화면" } },
+  {
+    key: "archive",
+    tone: "light",
+    visual: { kind: "screen", src: "/screens/home.png", alt: "헤디 홈 화면" },
+  },
   {
     key: "record",
     tone: "light",
@@ -49,7 +53,11 @@ export const MOBILE_SECTIONS: readonly MobileSection[] = [
     visual: { kind: "screen", src: "/screens/mobile/report.webp", alt: "다운펌 분석 리포트 화면" },
   },
   { key: "recommend", tone: "light", visual: { kind: "carousel" } },
-  { key: "ar", tone: "dark", visual: { kind: "screen", src: "/screens/mobile/ar.webp", alt: "AR 스타일 체험 화면" } },
+  {
+    key: "ar",
+    tone: "dark",
+    visual: { kind: "screen", src: "/screens/mobile/ar.webp", alt: "AR 스타일 체험 화면" },
+  },
   {
     key: "share",
     tone: "light",
