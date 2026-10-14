@@ -22,15 +22,18 @@ export const STAGE_LAYOUT = {
   desktop: {
     /** 이 너비(px) 이상이면 데스크톱 레이아웃 */
     breakpoint: 1024,
-    /** 폰 크기 상한·뷰포트 높이 비율 — 원본(1 / 0.78)이 커서 사용자 요청으로 줄임(2026-10-01) */
-    scaleCap: 0.8,
-    scaleHeightRatio: 0.5,
+    /**
+     * 폰 크기 상한·뷰포트 높이 비율 — 원본(1 / 0.78)이 커서 줄였다가(2026-10-01, 0.8 / 0.5),
+     * 팀 피드백 "목업을 더 크게"로 다시 키움(2026-10-14)
+     */
+    scaleCap: 1,
+    scaleHeightRatio: 0.62,
     scaleWidthDivisor: 1400,
-    /** 폰 가로 중심 — 카피 오른쪽 빈 영역의 가운데(원본 0.7, 2026-10-01 조정) */
-    centerXRatio: 0.65,
+    /** 폰 가로 중심 — 카피 오른쪽 빈 영역의 가운데(원본 0.7 → 0.65, 팀 피드백으로 카피와 함께 오른쪽으로 0.68) */
+    centerXRatio: 0.68,
     centerYOffset: 20,
-    /** 좌측 카피 최대 너비(vw) */
-    copyMaxWidthVw: 40,
+    /** 좌측 카피 최대 너비(vw) — `SectionShell`의 lg:max-w와 같다 */
+    copyMaxWidthVw: 46,
     /** hero→archive 수렴 시 폰 A/B가 벌어지는 거리(px, 스케일 전) */
     convergeDx: 105,
   },

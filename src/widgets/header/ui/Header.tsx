@@ -34,7 +34,7 @@ export const Header = () => {
     <header
       ref={headerRef}
       data-dark="false"
-      className="group fixed inset-x-0 top-0 z-50 flex items-center justify-between bg-white/90 px-16 py-4 backdrop-blur-md data-[dark=true]:bg-transparent data-[dark=true]:backdrop-blur-none [transform:translateY(calc(var(--header-offset,0px)*-1))] transition-[transform,background-color] duration-200 ease-out focus-within:[transform:none] motion-reduce:transition-none"
+      className="group fixed inset-x-0 top-0 z-50 flex items-center justify-between bg-white/90 px-5 py-4 lg:px-gutter backdrop-blur-md data-[dark=true]:bg-transparent data-[dark=true]:backdrop-blur-none [transform:translateY(calc(var(--header-offset,0px)*-1))] transition-[transform,background-color] duration-200 ease-out focus-within:[transform:none] motion-reduce:transition-none"
     >
       <div className="relative h-7 w-20 transition-opacity duration-300 group-data-[dark=true]:opacity-0">
         <Image

@@ -92,10 +92,10 @@ describe("share: 폰 B 등장과 QR 비행(`docs/plans/0009`)", () => {
     const k = PHONE_3D.screen.width / SHARE_SCREEN.designWidth;
     const designHeight = (PHONE_3D.screen.height / PHONE_3D.screen.width) * SHARE_SCREEN.designWidth;
     const S = layout.scale;
-    const start = computePhones(frameAtSectionProgress("share", TIMELINE.qrFlight[0] + 1e-4));
+    const start = computePhones(frameAtSectionProgress("share", TIMELINE.qrFlight[0] + 1e-6));
     expect(start.qrFlight.x).toBeCloseTo(start.a.x, 0);
     expect(start.qrFlight.y).toBeCloseTo(start.a.y + SHARE_SCREEN.qrModal.qrOffsetY * k * S, 0);
-    const end = computePhones(frameAtSectionProgress("share", TIMELINE.qrFlight[1] - 1e-4));
+    const end = computePhones(frameAtSectionProgress("share", TIMELINE.qrFlight[1] - 1e-6));
     expect(end.qrFlight.x).toBeCloseTo(end.b.x, 0);
     expect(end.qrFlight.y).toBeCloseTo(
       end.b.y + (SHARE_SCREEN.scanFrame.centerYRatio - 0.5) * designHeight * k * S,
