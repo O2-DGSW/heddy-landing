@@ -1,6 +1,6 @@
 /**
- * 모바일 섹션 카드 비율(카드 폭 = 1 기준). 카드 안 평면 목업은 처음엔 아래가 잘려 있다가, 스크롤하면 위로 올라와
- * 아랫부분(탭바)까지 보인다(이슈 #52). `MobileVisualView` 클래스와 같은 값이어야 한다.
+ * 모바일 섹션 카드 비율(카드 폭 = 1 기준). 카드 안 평면 목업은 처음엔 아래가 잘려 있다가, 스크롤하면 위로 조금
+ * 올라와 카드 아래에 걸친 채 멈춘다(이슈 #52, 끝까지 올리면 너무 내려 보여 줄였다). `MobileVisualView` 클래스와 같은 값이어야 한다.
  */
 export const MOBILE_CARD = {
   /** 카드 높이 / 폭 (aspect-[1/1.08]) */
@@ -11,14 +11,14 @@ export const MOBILE_CARD = {
   topPaddingRatio: 0.09,
   /** 목업 높이 / 폭 (phone-frame.svg 906/446) */
   frameAspect: 906 / 446,
-  /** 다 올라왔을 때 목업 아래 끝과 카드 아래 끝 사이 / 카드 폭 */
-  bottomMarginRatio: 0.06,
+  /** 카드 아래로 잘린 부분 중 스크롤하면 드러나는 비율 — 나머지는 걸친 채로 둔다 */
+  revealFraction: 0.42,
 } as const;
 
 /** 목업이 올라갈 거리 — 목업 자기 높이 대비 %(translateY, 음수 = 위로) */
 export const phoneRisePercent = (): number => {
-  const { aspect, phoneWidthRatio, topPaddingRatio, frameAspect, bottomMarginRatio } = MOBILE_CARD;
+  const { aspect, phoneWidthRatio, topPaddingRatio, frameAspect, revealFraction } = MOBILE_CARD;
   const phoneHeight = phoneWidthRatio * frameAspect;
-  const overflow = topPaddingRatio + phoneHeight - (aspect - bottomMarginRatio);
-  return -(overflow / phoneHeight) * 100;
+  const cutOff = topPaddingRatio + phoneHeight - aspect;
+  return -((cutOff * revealFraction) / phoneHeight) * 100;
 };
