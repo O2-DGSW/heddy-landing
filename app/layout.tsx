@@ -23,7 +23,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="ko" className="h-full antialiased">
       <head>
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
-        <link id="pretendard-css" rel="stylesheet" href={PRETENDARD_CSS} media="print" crossOrigin="anonymous" />
+        {/* media는 아래 스크립트가 React보다 먼저 print → all로 바꾸므로(의도) 이 속성 불일치 경고는 끈다 */}
+        <link
+          id="pretendard-css"
+          rel="stylesheet"
+          href={PRETENDARD_CSS}
+          media="print"
+          crossOrigin="anonymous"
+          suppressHydrationWarning
+        />
         <script dangerouslySetInnerHTML={{ __html: LOAD_FONT_CSS }} />
         <noscript>
           <link rel="stylesheet" href={PRETENDARD_CSS} />
