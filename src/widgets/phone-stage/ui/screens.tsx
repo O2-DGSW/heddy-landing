@@ -13,7 +13,7 @@ import { computeSettledRecordCards } from "../model/recordStack";
 
 /** 홈 화면 — 실제 앱 홈 화면 캡처 (`docs/design/spec.md` §4) */
 export const HomeScreen = () => (
-  <Image src="/screens/home.png" alt="헤디 홈 화면" fill priority sizes="280px" className="object-cover" />
+  <Image src="/screens/home.png" alt="Heddy 홈 화면" fill priority sizes="280px" className="object-cover" />
 );
 
 /** record 끝에서 3D 폰이 넘겨주는 카드 배치(12건이 다 쌓이고 내려앉은 상태) */
@@ -31,7 +31,7 @@ export const RecordScreen = () => {
     <div className="relative h-full w-full overflow-hidden">
       <Image
         src="/screens/record/base.png"
-        alt="헤디 시술기록 화면"
+        alt="Heddy 시술기록 화면"
         fill
         sizes="280px"
         className="object-fill"
@@ -183,5 +183,5 @@ export const DetailScreen = ({
 
 /** 폰 B의 AR 화면 — 실제 앱 AR 체험 화면 캡처(히어로 CSS 폰 대체용). 폰 A의 AR 화면은 `ArScreen`(HTML) */
 export const ArSnapshotScreen = () => (
-  <Image src="/screens/ar.webp" alt="헤디 AR 스타일 체험 화면" fill sizes="280px" className="object-cover" />
+  <Image src="/screens/ar.webp" alt="Heddy AR 스타일 체험 화면" fill sizes="280px" className="object-cover" />
 );

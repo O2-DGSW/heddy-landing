@@ -8,7 +8,7 @@ import Image from "next/image";
 export const ClosingHomeScreen = () => (
   <Image
     src="/screens/closing/home.webp"
-    alt="헤디 홈 화면"
+    alt="Heddy 홈 화면"
     fill
     loading="eager"
     sizes="560px"
