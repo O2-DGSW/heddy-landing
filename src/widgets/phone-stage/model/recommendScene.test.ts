@@ -9,6 +9,7 @@ import {
   computeRecommendTabSwitch,
   recommendScrollRangePx,
 } from "./recommendScene";
+import { computePhones } from "./scene";
 
 const W = 1440;
 const H = 900;
@@ -159,5 +160,35 @@ describe("computeRecommendScroll (화면 안 스크롤)", () => {
 
   it("reduced motion이면 맨 위에 둔다", () => {
     expect(computeRecommendScroll(atP(1, true), screen3d).offsetPx).toBe(0);
+  });
+});
+
+describe("모바일: 떠오른 추천 카드가 화면 안에 있다(이슈 #50)", () => {
+  it.each([
+    [390, 664],
+    [390, 844],
+    [360, 640],
+    [430, 932],
+  ])("%i×%i", (width, height) => {
+    const mSections = stackSections({}, height);
+    const mLayout = computeStageLayout(width, height);
+    const mRecommend = mSections.find((section) => section.key === "recommend");
+    if (!mRecommend) throw new Error("recommend not found");
+    const { card, designWidth } = RECOMMEND_SCREEN;
+    // 3D 화면 폭 기준 피그마 px → 페이지 px(폰 배율 포함)
+    const toPage = (a: { scale: number }) => (PHONE_3D.screen.width / designWidth) * a.scale;
+    let maxRight = 0;
+    for (let p = 0; p <= 1; p += 0.02) {
+      const frame = createFrame(mRecommend.top + p * (mRecommend.height - height), mLayout, mSections, false);
+      const { a } = computePhones(frame);
+      computeRecommendCards(frame).forEach((pose) => {
+        if (!pose.isVisible) return;
+        const halfWidth = (card.width / 2) * pose.scale;
+        const centerX = card.x + card.width / 2 + pose.x - designWidth / 2;
+        maxRight = Math.max(maxRight, a.x + (centerX + halfWidth) * toPage(a));
+      });
+    }
+    expect(maxRight).toBeGreaterThan(width * 0.6);
+    expect(maxRight).toBeLessThanOrEqual(width - 4);
   });
 });

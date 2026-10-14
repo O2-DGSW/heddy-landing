@@ -37,11 +37,16 @@ export const STAGE_LAYOUT = {
   mobile: {
     scaleCap: 0.52,
     scaleHeightRatio: 0.39,
-    scaleWidthDivisor: 620,
+    /**
+     * 히어로 3D 폰 두 대(V자, 씬 폭 ≈ 924)가 화면 폭 안에 들어오게 — 924 / 0.96(이슈 #50, 원본 620은 큰 폰에서 잘림).
+     * 히어로가 지난 뒤엔 `MOBILE_ZOOM`으로 폰을 키운다
+     */
+    scaleWidthDivisor: 960,
     centerXRatio: 0.5,
-    centerYRatio: 0.7,
-    /** 상단 카피 시작 위치(vh) */
-    copyTopVh: 14,
+    /** 위 카피 아래 남는 공간의 가운데(원본 0.7, 이슈 #50) */
+    centerYRatio: 0.66,
+    /** 상단 카피 시작 위치(svh, 원본 14vh) */
+    copyTopVh: 10,
     convergeDx: 80,
   },
   /** hero→archive 수렴 시 폰 기울기(도) */
@@ -315,6 +320,26 @@ export const SMOOTH_SCROLL = {
   externalJumpPx: 3,
 } as const;
 
+/**
+ * 모바일 폰 확대(이슈 #50): 모바일은 히어로 V자 두 대가 화면 폭에 들어가야 해서 기본 크기(S)가 작다.
+ * 합체가 끝나 폰이 한 대가 되면 남는 공간을 채울 만큼 키우고(묶음 배율), 공유에서 두 대가 나란히 서면
+ * 화면 폭에 들어가게 줄였다가, 마지막 섹션에서 다시 키운다. 데스크톱은 쓰지 않는다.
+ */
+export const MOBILE_ZOOM = {
+  /** 한 대일 때 폰 높이·폭 상한(뷰포트 대비) */
+  phoneHeightOfViewport: 0.56,
+  phoneWidthOfViewport: 0.62,
+  /** 공유에서 두 대가 나란히 설 때 폰 한 대 폭(뷰포트 대비) */
+  sharePhoneWidthOfViewport: 0.44,
+  /** archive 진행도: B가 사라진 뒤 폰이 커지는 구간 */
+  zoomInArchive: [0.86, 1] as Range,
+} as const;
+
+/** 모바일 주소창 대응(이슈 #50): 터치 기기에서 이 정도(px) 높이 변화는 주소창이 접히고 펴진 것으로 보고 무시한다 */
+export const STABLE_VIEWPORT = {
+  toolbarSlackPx: 150,
+} as const;
+
 /** 헤더: 스크롤 양만큼 위로 밀려 올라가고(숨김), 위로 올리면 같은 양만큼 내려온다 */
 export const HEADER = {
   /** 이 위치(px) 이하에서는 항상 완전히 보인다 */
@@ -349,6 +374,8 @@ export const RECOMMEND_SCREEN = {
    * 살짝 엇갈려 기운다. 카드 i마다 y·회전이 다르다.
    */
   pop: { dx: 330, dy: [-12, 8, 24], rotateDeg: [-4, 3, -3], scale: 1.06 },
+  /** 모바일에선 떠오른 카드 오른쪽 끝이 화면 오른쪽에서 이만큼(px) 안쪽에 오게 dx를 줄인다(이슈 #50) */
+  popMobileEdgeMarginPx: 8,
   /** 탭바 속 "추천" 아이콘 중심(탭바 좌상단 기준 px) — 상세 → 추천 탭 전환 때 누르는 자리 */
   recommendTabCenter: { x: 279, y: 33.4 },
 } as const;

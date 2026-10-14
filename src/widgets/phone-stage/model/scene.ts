@@ -1,5 +1,6 @@
 import {
   CLOSING_PHONE,
+  MOBILE_ZOOM,
   PHONE,
   PHONE_3D,
   SHARE_SCREEN,
@@ -124,16 +125,11 @@ export const computePhones = (frame: SceneFrame): PhonesScene => {
 
   // share: 폰 A/B가 미용실 나란히 배치로 이동
   if (isPastShareStart) {
-    const pShare = frame.progress("share");
-    const sh = easeInOutCubic(progressIn(pShare, TIMELINE.shareXShift));
-    // share 고정이 끝나면 B는 오른쪽으로 빠지고 A는 closing 자리로 간다(원본은 share.end~closing.top, 길이 0이라 순간 이동)
-    const shareStickyEnd = shareSection.end - layout.viewportHeight;
-    const back = easeInOutCubic(
-      progressIn(frame.scrollY, [shareStickyEnd, Math.max(shareSection.end, closingSection.top)]),
-    );
+    const { sh, back } = computeShareProgress(frame);
 
     const viewportWidth = layout.viewportWidth;
-    const aTargetX = layout.isMobile ? viewportWidth * 0.29 : cx - 0.13 * viewportWidth;
+    // 모바일은 두 대가 화면 폭에 나란히(각 0.44W, `MOBILE_ZOOM`) — 원본 0.29W는 확대한 폰이 가운데서 겹침
+    const aTargetX = layout.isMobile ? viewportWidth * 0.27 : cx - 0.13 * viewportWidth;
     const bRestX = viewportWidth + 220 * scale;
     const bTargetX = layout.isMobile ? viewportWidth * 0.73 : cx + 0.13 * viewportWidth;
     const closing = computeClosingPose(layout);
@@ -155,9 +151,49 @@ export const computePhones = (frame: SceneFrame): PhonesScene => {
     b = { x: bX, y: cy, rotate: bRotate, scale, opacity: isBVisible ? 1 : 0 };
   }
 
+  // 모바일: 히어로가 지나면 폰을 키운다(이슈 #50)
+  if (layout.isMobile) {
+    const zoom = computeMobileZoom(frame);
+    a = { ...a, scale: scale * zoom.a };
+    b = { ...b, scale: scale * zoom.b };
+  }
+
   const qrFlight = computeQrFlight(frame, a, b, scale);
 
   return { a, b, qrFlight };
+};
+
+/** share 진행도: sh = 나란히 서기, back = share 고정 끝 ~ share.end에 B가 빠지고 A가 closing 자리로 */
+const computeShareProgress = (frame: SceneFrame): { sh: number; back: number } => {
+  const shareSection = getSection(frame, "share");
+  const closingSection = getSection(frame, "closing");
+  const sh = easeInOutCubic(progressIn(frame.progress("share"), TIMELINE.shareXShift));
+  // 원본은 share.end~closing.top(길이 0이라 순간 이동)
+  const shareStickyEnd = shareSection.end - frame.layout.viewportHeight;
+  const back = easeInOutCubic(
+    progressIn(frame.scrollY, [shareStickyEnd, Math.max(shareSection.end, closingSection.top)]),
+  );
+  return { sh, back };
+};
+
+/**
+ * 모바일 폰 확대 배율(기본 크기 S 대비, 이슈 #50). 히어로·합체 중엔 1(V자 두 대가 화면 폭에 들어가는 크기),
+ * B가 사라지면 남는 공간을 채울 만큼(`MOBILE_ZOOM`) 커지고, 공유에서 두 대가 나란히 서면 화면 폭에 맞게
+ * 줄였다가, 마지막 섹션에서 다시 커진다. b는 공유 폰 B 배율.
+ */
+const computeMobileZoom = (frame: SceneFrame): { a: number; b: number } => {
+  const { scale, viewportWidth: W, viewportHeight: H } = frame.layout;
+  const { phoneHeightOfViewport, phoneWidthOfViewport, sharePhoneWidthOfViewport, zoomInArchive } = MOBILE_ZOOM;
+  const single = Math.max(
+    1,
+    Math.min((phoneHeightOfViewport * H) / (PHONE.height * scale), (phoneWidthOfViewport * W) / (PHONE.width * scale)),
+  );
+  const pair = Math.min(single, (sharePhoneWidthOfViewport * W) / (PHONE.width * scale));
+  const zoomIn = easeInOutCubic(progressIn(frame.progress("archive"), zoomInArchive));
+  const isPastShareStart = frame.scrollY >= getSection(frame, "share").top;
+  if (!isPastShareStart) return { a: lerp(1, single, zoomIn), b: 1 };
+  const { sh, back } = computeShareProgress(frame);
+  return { a: lerp(lerp(single, pair, sh), single, back), b: pair };
 };
 
 /**
@@ -183,17 +219,20 @@ const computeQrFlight = (frame: SceneFrame, a: PhonePose, b: PhonePose, scale: n
   const isVisible = f > 0 && f < 1;
 
   const { designWidth, qrModal, scanFrame } = SHARE_SCREEN;
+  // 폰마다 크기가 다를 수 있다(모바일 확대) — 출발은 A, 도착은 B 크기로
   const designToPage = (PHONE_3D.screen.width / designWidth) * scale;
+  const designToPageA = designToPage * (a.scale / scale);
+  const designToPageB = designToPage * (b.scale / scale);
   const designHeight = (PHONE_3D.screen.height / PHONE_3D.screen.width) * designWidth;
-  const start = { x: a.x, y: a.y + qrModal.qrOffsetY * designToPage };
-  const end = { x: b.x, y: b.y + (scanFrame.centerYRatio - 0.5) * designHeight * designToPage };
+  const start = { x: a.x, y: a.y + qrModal.qrOffsetY * designToPageA };
+  const end = { x: b.x, y: b.y + (scanFrame.centerYRatio - 0.5) * designHeight * designToPageB };
   const arcHeight = 200 * scale * 4 * f * (1 - f);
 
   const x = lerp(start.x, end.x, f);
   const y = lerp(start.y, end.y, f) - arcHeight;
   const rotate = -10 * Math.sin(Math.PI * f);
-  // 모달 속 QR 크기에서 스캔 틀 크기로
-  const flightScale = lerp(1, scanFrame.size / qrModal.qrSize, f);
+  // 모달 속 QR 크기에서 스캔 틀 크기로(기준 크기 S 대비)
+  const flightScale = lerp(a.scale / scale, (scanFrame.size / qrModal.qrSize) * (b.scale / scale), f);
   const endFade = 1 - progressIn(f, TIMELINE.qrFlightEndFade);
 
   return {
