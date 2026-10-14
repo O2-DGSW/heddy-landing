@@ -6,9 +6,15 @@ export const DOWNLOAD_PATH = "/download";
 
 export type StoreKey = "appstore" | "onestore";
 
-/** 다운로드 진입 주소(상대). store를 주면 OS 판별 대신 그 스토어로 보낸다 */
-export const downloadPath = (src: string, store?: StoreKey): string =>
+/**
+ * `/download`의 store 값. 없으면 랜딩페이지(명함에 인쇄된 QR), `auto`는 기기 OS별 스토어,
+ * `appstore`·`onestore`는 그 스토어로 보낸다(이슈 #48, `docs/plans/0002`)
+ */
+export type DownloadStore = StoreKey | "auto";
+
+/** 다운로드 진입 주소(상대) */
+export const downloadPath = (src: string, store?: DownloadStore): string =>
   `${DOWNLOAD_PATH}?src=${encodeURIComponent(src)}${store ? `&store=${store}` : ""}`;
 
-/** QR에 인코딩되는 절대 주소 */
-export const downloadUrl = (src: string): string => `${SITE_URL}${downloadPath(src)}`;
+/** QR에 인코딩되는 절대 주소. 사이트 안 QR은 `auto`(OS별 스토어) — store 없는 주소는 명함 QR(랜딩)이다 */
+export const downloadUrl = (src: string, store?: DownloadStore): string => `${SITE_URL}${downloadPath(src, store)}`;

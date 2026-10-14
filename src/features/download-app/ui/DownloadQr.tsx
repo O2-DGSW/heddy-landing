@@ -30,7 +30,7 @@ export const DownloadQr = ({ source, size = 160 }: DownloadQrProps) => {
 
   return (
     <div style={{ position: "relative", width: size, height: size }}>
-      <QRCodeSVG value={downloadUrl(source)} size={size} level="H" marginSize={0} />
+      <QRCodeSVG value={downloadUrl(source, "auto")} size={size} level="H" marginSize={0} />
       <svg
         width={size}
         height={size}

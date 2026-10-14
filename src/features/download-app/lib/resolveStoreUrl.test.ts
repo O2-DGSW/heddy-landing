@@ -21,6 +21,12 @@ describe("resolveStoreUrl", () => {
     expect(resolveStoreUrl("android", "appstore", ENV)).toBe(ENV.APP_STORE_URL);
   });
 
+  it("store=auto(사이트 QR)는 기기 OS로 정한다, 이슈 #48", () => {
+    expect(resolveStoreUrl("ios", "auto", ENV)).toBe(ENV.APP_STORE_URL);
+    expect(resolveStoreUrl("android", "auto", ENV)).toBe(ENV.ONE_STORE_URL);
+    expect(resolveStoreUrl("desktop", "auto", ENV)).toBeNull();
+  });
+
   it("PC + store 지정 없음은 null이다", () => {
     expect(resolveStoreUrl("desktop", null, ENV)).toBeNull();
     expect(resolveStoreUrl("desktop", undefined, ENV)).toBeNull();

@@ -17,7 +17,7 @@ export const DownloadAppButton = () => {
 
   const handleClick = (): void => {
     if (window.matchMedia("(pointer: coarse)").matches) {
-      window.location.href = downloadPath("header");
+      window.location.href = downloadPath("header", "auto");
       return;
     }
     setIsOpen((prev) => !prev);
