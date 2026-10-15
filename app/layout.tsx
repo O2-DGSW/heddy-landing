@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 
 import { AppProviders } from "@/app/entrypoint";
+import { buildStructuredData, SITE_METADATA } from "@/app/seo";
 
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "Heddy",
-  description: "헤디 랜딩 페이지",
-};
+export const metadata: Metadata = SITE_METADATA;
+
+/** 검색 엔진용 구조화 데이터(JSON-LD, 이슈 #68) — `<`를 이스케이프해 스크립트 밖으로 새지 않게 */
+const STRUCTURED_DATA = JSON.stringify(buildStructuredData()).replace(/</g, "\\u003c");
 
 /**
  * Pretendard 가변 글꼴 — 화면에 쓰인 글자 범위만 받는 dynamic subset(이슈 #46). 렌더링을 막지 않게
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <noscript>
           <link rel="stylesheet" href={PRETENDARD_CSS} />
         </noscript>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: STRUCTURED_DATA }} />
       </head>
       <body className="min-h-full flex flex-col font-sans">
         <AppProviders>{children}</AppProviders>
