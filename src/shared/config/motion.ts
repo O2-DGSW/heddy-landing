@@ -552,7 +552,7 @@ export const FULLPAGE = {
     ["closing", 0],
   ] as ReadonlyArray<readonly [SectionKey, number]>,
   /** 넘어가는 시간(ms) = base + perViewport × (거리 / 뷰포트 높이), [min, max]로 자른다 */
-  duration: { baseMs: 600, perViewportMs: 380, minMs: 900, maxMs: 2600 },
+  duration: { baseMs: 960, perViewportMs: 608, minMs: 1440, maxMs: 4160 },
   /** 휠이 이만큼(ms) 끊겼다 다시 오면 새 동작 — 트랙패드 관성·연속 휠은 한 화면만 넘긴다 */
   gestureGapMs: 220,
 } as const;
