@@ -6,12 +6,13 @@ export type MobileVisual =
   | { kind: "screen"; src: string; alt: string }
   /** 추천 결과 Top 3 카드가 옆으로 넘어가는 캐러셀(토스 상품 카드 참고) */
   | { kind: "carousel" }
-  /** 폰 두 대 나란히. isTilted면 V자로 기울인다(히어로, 데스크톱 히어로 V자와 같은 느낌) */
+  /** 소개 애니메이션(인트로, 이슈 #70) 자리 — 위젯끼리 가져다 쓰지 않게 페이지가 `MobileLanding`에 넣어 준다 */
+  | { kind: "intro" }
+  /** 폰 두 대 나란히 */
   | {
       kind: "pair";
       left: { src: string; alt: string };
       right: { src: string; alt: string };
-      isTilted?: boolean;
     };
 
 export type MobileSection = {
@@ -29,12 +30,7 @@ export const MOBILE_SECTIONS: readonly MobileSection[] = [
   {
     key: "hero",
     tone: "light",
-    visual: {
-      kind: "pair",
-      left: { src: "/screens/home.png", alt: "Heddy 홈 화면" },
-      right: { src: "/screens/mobile/ar.webp", alt: "AR 스타일 체험 화면" },
-      isTilted: true,
-    },
+    visual: { kind: "intro" },
   },
   {
     key: "archive",

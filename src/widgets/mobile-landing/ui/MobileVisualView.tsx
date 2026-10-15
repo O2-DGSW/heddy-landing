@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import Image from "next/image";
 
@@ -42,23 +42,17 @@ const PhoneMockup = ({ src, alt, isPriority = false, className = "" }: PhoneMock
 interface MobileVisualViewProps {
   visual: MobileVisual;
   tone: "light" | "dark";
+  /** 히어로 자리에 넣을 소개 애니메이션(페이지가 넣어 준다) */
+  intro?: ReactNode;
 }
 
 /**
  * 섹션 화면(이슈 #52) — toss.im 모바일처럼 회색 둥근 카드 안에 평면 폰 목업을 둔다. 목업은 카드 아래로 잘려
- * 윗부분만 보인다. 히어로는 카드 없이 목업 두 대를 V자로 기울인다.
+ * 윗부분만 보인다. 히어로는 소개 애니메이션(인트로)이다.
  */
-export const MobileVisualView = ({ visual, tone }: MobileVisualViewProps) => {
+export const MobileVisualView = ({ visual, tone, intro }: MobileVisualViewProps) => {
   if (visual.kind === "carousel") return <RecommendCarousel />;
-
-  if (visual.kind === "pair" && visual.isTilted) {
-    return (
-      <div className="relative flex aspect-[1/0.92] items-end justify-center">
-        <PhoneMockup {...visual.left} isPriority className="w-[46%] translate-x-[8%] -rotate-[8deg]" />
-        <PhoneMockup {...visual.right} isPriority className="w-[46%] -translate-x-[8%] rotate-[8deg]" />
-      </div>
-    );
-  }
+  if (visual.kind === "intro") return <div className="-mx-5 overflow-hidden">{intro}</div>;
 
   // overflow-clip: hidden은 스크롤 컨테이너가 되어 안쪽 스크롤 연동 애니메이션(view())의 기준이 카드로 잡힌다.
   // min-h-0: clip이면 비율 상자가 내용(목업) 높이만큼 늘어나 목업이 잘리지 않으므로 비율을 고정한다

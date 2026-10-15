@@ -1,5 +1,6 @@
 import { Footer } from "@/widgets/footer";
 import { Header } from "@/widgets/header";
+import { Intro } from "@/widgets/intro";
 import { MobileLanding } from "@/widgets/mobile-landing";
 import { PhoneStage } from "@/widgets/phone-stage";
 import { ArSection } from "@/widgets/section-ar";
@@ -29,7 +30,7 @@ export const LandingPage = () => {
         <ShareSection />
         <ClosingSection />
       </div>
-      <MobileLanding />
+      <MobileLanding intro={<Intro className="aspect-video" />} />
       <Footer />
       <PhoneStage />
     </>
