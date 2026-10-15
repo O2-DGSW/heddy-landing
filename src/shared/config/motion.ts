@@ -78,8 +78,9 @@ export const PHONE_3D = {
    * tiltDeg는 합쳐진 자세의 뒤로 눕힘(씬 rotX −8°). 모서리는 가로·세로 반경이 다른 스쿼클이다.
    * 베젤을 얇게 하려고 ScreenA를 274×596 → 280×601로 키우고 RecordLayer도 같은 크기로 맞췄다(2026-10-05).
    * 한쪽 베젤 ≈ 폰 폭의 1.6%(원본 ≈ 3%).
+   * contentRadius는 화면 오버레이 내용의 모서리 반경 — 3D 화면 윤곽보다 둥글게 잘라 모서리가 뾰족해 보이지 않게(2026-10-15).
    */
-  screen: { width: 280, height: 601.4, z: 18, tiltDeg: 8, radiusX: 38, radiusY: 59 },
+  screen: { width: 280, height: 601.4, z: 18, tiltDeg: 8, radiusX: 38, radiusY: 59, contentRadius: 62 },
   /**
    * 다이내믹 아일랜드(ScreenA에 뚫린 구멍 = 뒤의 검은 유리). 화면 좌상단 기준 px.
    * 기록 화면(RecordIsland)과 상세 화면 오버레이는 화면을 덮으므로 같은 자리에 다시 그린다.
