@@ -22,7 +22,8 @@ created: 2026-10-15
 ## 모션 명세
 
 - `FULLPAGE.stops`: intro 0, record 1, report .95, recommend .45, ar .25/.92, share .92, closing 0. 마지막에 실제 최대 스크롤(푸터)을 추가한다.
-- `FULLPAGE.duration`: 거리별 전환 900~2600ms, easeInOutCubic. 실제 window.scrollY가 움직이므로 기록 쌓임·추천 팝·AR 스타일·QR 전달이 중간 구간에서 재생된다.
+- `FULLPAGE.duration`: 거리별 전환 1440~4160ms, easeInOutCubic. 기존보다 1.6배 느리게 이동한다. 실제 window.scrollY가 움직이므로 기록 쌓임·추천 팝·AR 스타일·QR 전달이 중간 구간에서 재생된다.
+- 상단바는 배경과 블러 없이 투명하게 겹쳐 인트로가 화면 상단까지 이어진다. AR 다크 패널의 로고 숨김은 유지한다.
 - `FULLPAGE.gestureGapMs`: 220ms. 관성 꼬리는 같은 제스처로 소비하고 이동 중 요청은 쌓지 않는다.
 - `TIMELINE.stageRevealVh`: record 시작 -0.6~-0.3 화면에서 폰 레이어가 나타난다. 인트로 최소 높이에 이 밴드 길이를 더해 500px 등 낮은 화면에서도 Spline 합체(1678px) 이후 나타나게 한다.
 - `shared/lib/scroll/fullpageScroll.test.ts`: 순서·완성 지점·푸터·경계·역방향·거리별 시간·관성 꼬리·낮은 화면 명세.

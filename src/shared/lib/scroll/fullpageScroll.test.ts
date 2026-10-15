@@ -82,6 +82,12 @@ describe("fullpage navigation", () => {
 });
 
 describe("fullpage animation", () => {
+  it("한 화면 이동에도 1.5초 이상 사용하고 긴 이동은 4.16초로 제한한다", () => {
+    expect(fullpageDuration(H, H)).toBe(1568);
+    expect(fullpageDuration(H * 3, H)).toBe(2784);
+    expect(fullpageDuration(H * 100, H)).toBe(4160);
+  });
+
   it("거리별 제한 시간 안에서 시작·중간 모션을 지나 정확히 목표에 멈춘다", () => {
     expect(fullpageDuration(0, H)).toBe(FULLPAGE.duration.minMs);
     expect(fullpageDuration(H * 100, H)).toBe(FULLPAGE.duration.maxMs);
