@@ -26,13 +26,14 @@ export const ReportSection = () => {
     <SectionShell
       section="report"
       heightVh={SECTION_HEIGHT_VH.report}
+      eyebrow={COPY.sections.report.eyebrow}
       title={COPY.sections.report.title}
       // 막대는 모바일에서 숨긴다 — 커진 폰과 겹치고, 폰 화면 안 같은 막대가 같은 타이밍으로 찬다(이슈 #50)
       footer={
         <ul className="mt-10 hidden w-[min(80vw,420px)] flex-col gap-6 lg:flex">
           {COPY.sections.report.metrics.map(({ label, value }, i) => (
             <li key={label}>
-              <div className="text-12 flex items-baseline justify-between">
+              <div className="text-12 flex items-baseline justify-between lg:text-16">
                 <span className="text-neutral-500">{label}</span>
                 <span className="font-semibold">{value}</span>
               </div>

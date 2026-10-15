@@ -7,6 +7,7 @@ export const RecommendSection = () => {
     <SectionShell
       section="recommend"
       heightVh={SECTION_HEIGHT_VH.recommend}
+      eyebrow={COPY.sections.recommend.eyebrow}
       title={COPY.sections.recommend.title}
     />
   );

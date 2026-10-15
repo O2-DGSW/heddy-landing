@@ -26,16 +26,19 @@ export const STAGE_LAYOUT = {
     breakpoint: 1024,
     /**
      * 폰 크기 상한·뷰포트 높이 비율 — 원본(1 / 0.78)이 커서 줄였다가(2026-10-01, 0.8 / 0.5),
-     * 팀 피드백 "목업을 더 크게"로 다시 키움(2026-10-14)
+     * 팀 피드백 "목업을 더 크게"로 다시 키웠다가(2026-10-14, 0.62) 카피가 눈에 안 들어온다는 의견으로 줄임(2026-10-15)
      */
     scaleCap: 1,
-    scaleHeightRatio: 0.62,
+    scaleHeightRatio: 0.54,
     scaleWidthDivisor: 1400,
-    /** 폰 가로 중심 — 카피 오른쪽 빈 영역의 가운데(원본 0.7 → 0.65, 팀 피드백으로 카피와 함께 오른쪽으로 0.68) */
-    centerXRatio: 0.68,
+    /**
+     * 폰 가로 중심(스크롤바를 뺀 폭 기준) — 원본 0.7 → 0.65 → 0.68(2026-10-14) → 화면 가장자리에서 떨어지게
+     * 가운데 쪽으로 0.64(2026-10-15)
+     */
+    centerXRatio: 0.64,
     centerYOffset: 20,
     /** 좌측 카피 최대 너비(vw) — `SectionShell`의 lg:max-w와 같다 */
-    copyMaxWidthVw: 46,
+    copyMaxWidthVw: 50,
     /** hero→archive 수렴 시 폰 A/B가 벌어지는 거리(px, 스케일 전) */
     convergeDx: 105,
   },
@@ -313,10 +316,11 @@ export const TIMELINE = {
  * 동안 share 자리에서 여기로 옮겨 간다. 모바일은 지금처럼 가운데로 돌아온다.
  */
 export const CLOSING_PHONE = {
-  centerXRatio: 0.78,
+  /** 원본 0.78 · 0.8 — 폰이 카피·스토어 버튼보다 눈에 띄어 가운데 쪽으로 옮기고 줄임(2026-10-15) */
+  centerXRatio: 0.7,
   centerYRatio: 0.5,
   /** 폰 높이 / 뷰포트 높이 */
-  heightRatio: 0.8,
+  heightRatio: 0.66,
   /** 폰 오른쪽 끝과 뷰포트 오른쪽 사이 최소 여백(px) — 좁은 화면에선 이 안에 들어가게 줄인다 */
   edgeMarginPx: 32,
 } as const;
@@ -346,7 +350,6 @@ export const SCROLL_STOP = {
     ["report", 0],
     ["recommend", 0],
     ["ar", 0.14],
-    ["ar", 0.56],
     ["ar", TIMELINE.ar.styleSteps[0]],
     ["ar", TIMELINE.ar.styleSteps[1]],
     ["share", 0],
@@ -354,10 +357,15 @@ export const SCROLL_STOP = {
   ] as ReadonlyArray<readonly [SectionKey, number]>,
   /** 멈춤 지점에 닿은 뒤 최소로 머무는 시간(ms) */
   minHoldMs: 350,
-  /** 휠이 이만큼(ms) 조용해야 다음 휠에서 풀린다 — 트랙패드 관성이 그대로 지나가지 않게 */
+  /** 휠이 이만큼(ms) 조용하면 다음 휠에서 풀린다 — 트랙패드 관성이 그대로 지나가지 않게 */
   quietMs: 180,
-  /** 계속 굴려도 갇히지 않게, 흡수한 휠이 뷰포트 높이의 이 비율을 넘으면 풀린다 */
-  maxAbsorbOfViewport: 0.9,
+  /**
+   * 휠이 쉬지 않고 들어와도 이만큼(ms) 지나면 풀린다. 처음엔 휠이 조용해질 때까지 붙잡아 트랙패드로 AR을 지날 때
+   * 3초 넘게 막혔다(2026-10-15 버그)
+   */
+  maxHoldMs: 650,
+  /** 세게 굴리면, 흡수한 휠이 뷰포트 높이의 이 비율을 넘는 순간 풀린다(처음 0.9) */
+  maxAbsorbOfViewport: 0.4,
 } as const;
 
 /** 모바일 주소창 대응(이슈 #50): 터치 기기에서 이 정도(px) 높이 변화는 주소창이 접히고 펴진 것으로 보고 무시한다 */

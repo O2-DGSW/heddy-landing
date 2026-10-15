@@ -29,20 +29,24 @@ export const SectionShell = ({
   return (
     <section data-section={section} style={{ height: `${heightVh}vh` }} className="relative">
       <div className="sticky top-0 flex h-svh flex-col items-start justify-start pt-[10svh] lg:flex-row lg:items-center lg:justify-start lg:pt-0">
-        <div className="max-w-[85vw] px-6 lg:max-w-[46vw] lg:px-gutter">
-          {eyebrow ? <p className="text-14 font-medium">{eyebrow}</p> : null}
-          <h2 className="text-28 font-semibold lg:text-36">
+        <div className="max-w-[85vw] px-6 lg:max-w-[50vw] lg:px-gutter">
+          {eyebrow ? <p className="text-14 font-medium lg:text-16 lg:mb-2">{eyebrow}</p> : null}
+          <h2 className="text-28 font-semibold lg:text-44">
             {title.map((line) => (
               <span key={line} className="block">
                 {line}
               </span>
             ))}
           </h2>
-          {body?.map((line) => (
-            <p key={line} className="text-16">
-              {line}
-            </p>
-          ))}
+          {body ? (
+            <div className="lg:mt-4">
+              {body.map((line) => (
+                <p key={line} className="text-16 lg:text-20">
+                  {line}
+                </p>
+              ))}
+            </div>
+          ) : null}
           {footer}
         </div>
         {children}

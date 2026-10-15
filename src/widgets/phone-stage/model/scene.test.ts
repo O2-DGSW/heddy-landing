@@ -115,7 +115,7 @@ describe("closing: 폰 A가 오른쪽에 크게 선다(`docs/plans/0010`)", () =
     expect(a.scale).toBeCloseTo(layout.scale);
   });
 
-  it("share가 끝나면 B는 오른쪽으로 빠지고, A는 (0.78W, 0.5H)에서 화면 높이 80%로 선다", () => {
+  it("share가 끝나면 B는 오른쪽으로 빠지고, A는 closing 자리(0.7W, 0.5H)에서 화면 높이 66%로 선다", () => {
     const { a, b } = computePhones(frameAtScrollY(share.end));
     expect(a.x).toBeCloseTo(CLOSING_PHONE.centerXRatio * W);
     expect(a.y).toBeCloseTo(CLOSING_PHONE.centerYRatio * H);
@@ -138,9 +138,9 @@ describe("closing: 폰 A가 오른쪽에 크게 선다(`docs/plans/0010`)", () =
     expect(scrolled.x).toBeCloseTo(atTop.x);
   });
 
-  it("좁은 화면에선 폰 오른쪽 끝이 여백 안에 들어오게 줄인다", () => {
+  it("좁고 긴 화면에선 폰 오른쪽 끝이 여백 안에 들어오게 줄인다", () => {
     const w = 1024;
-    const h = 1000;
+    const h = 2000;
     const narrowSections = stackSections({}, h);
     const narrowLayout = computeStageLayout(w, h);
     const narrowShare = narrowSections.find((section) => section.key === "share");

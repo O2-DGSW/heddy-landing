@@ -21,9 +21,16 @@ const copyOf = (key: SectionKey): SectionCopy => {
     case "record":
       return { eyebrow: sections.record.eyebrow, title: sections.record.title, body: sections.record.body };
     case "share":
-      return { title: sections.share.title, body: toLines(sections.share.body) };
+      return {
+        eyebrow: sections.share.eyebrow,
+        title: sections.share.title,
+        body: toLines(sections.share.body),
+      };
     case "ar":
-      return { title: sections.ar.panelCopy, body: sections.ar.copy };
+      return { eyebrow: sections.ar.eyebrow, title: sections.ar.panelCopy, body: sections.ar.copy };
+    case "report":
+    case "recommend":
+      return { eyebrow: sections[key].eyebrow, title: sections[key].title, body: [] };
     default:
       return { title: sections[key].title, body: [] };
   }

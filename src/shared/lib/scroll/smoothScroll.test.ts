@@ -82,7 +82,7 @@ describe("scrollStopsPx", () => {
 });
 
 describe("isStopReleased (멈춘 뒤 풀리는 조건)", () => {
-  const { minHoldMs, quietMs } = SCROLL_STOP;
+  const { minHoldMs, quietMs, maxHoldMs } = SCROLL_STOP;
 
   it("멈춤 지점에 닿기 전엔 풀리지 않는다", () => {
     expect(isStopReleased({ now: 5000, arrivedAt: null, lastWheelAt: 0, absorbedPx: 0 }, 900)).toBe(false);
@@ -92,12 +92,31 @@ describe("isStopReleased (멈춘 뒤 풀리는 조건)", () => {
     const base = { arrivedAt: 1000, lastWheelAt: 1000, absorbedPx: 0 };
     expect(isStopReleased({ ...base, now: 1000 + minHoldMs - 1 }, 900)).toBe(false);
     expect(isStopReleased({ ...base, now: 1000 + Math.max(minHoldMs, quietMs) }, 900)).toBe(true);
-    // 트랙패드 관성처럼 휠이 계속 들어오면 붙잡아 둔다
-    expect(isStopReleased({ ...base, lastWheelAt: 2000, now: 2010 }, 900)).toBe(false);
   });
 
-  it("계속 굴려도 갇히지 않게, 흡수한 휠이 뷰포트 비율을 넘으면 풀린다", () => {
+  it("트랙패드처럼 휠이 쉬지 않고 들어와도 maxHoldMs(1초 이하)가 지나면 풀린다 — AR에서 막히던 버그", () => {
+    expect(maxHoldMs).toBeLessThanOrEqual(1000);
+    const hold = { arrivedAt: 1000, absorbedPx: 0 };
+    expect(
+      isStopReleased({ ...hold, lastWheelAt: 1000 + maxHoldMs - 10, now: 1000 + maxHoldMs - 1 }, 900),
+    ).toBe(false);
+    expect(isStopReleased({ ...hold, lastWheelAt: 1000 + maxHoldMs, now: 1000 + maxHoldMs }, 900)).toBe(true);
+  });
+
+  it("세게 굴리면 흡수한 휠이 뷰포트 비율(0.5 이하)을 넘는 순간 풀린다", () => {
+    expect(SCROLL_STOP.maxAbsorbOfViewport).toBeLessThanOrEqual(0.5);
     const absorbedPx = SCROLL_STOP.maxAbsorbOfViewport * 900 + 1;
-    expect(isStopReleased({ now: 2010, arrivedAt: 1000, lastWheelAt: 2000, absorbedPx }, 900)).toBe(true);
+    expect(isStopReleased({ now: 1010, arrivedAt: 1000, lastWheelAt: 1005, absorbedPx }, 900)).toBe(true);
+  });
+});
+
+describe("SCROLL_STOP 지점", () => {
+  it("멈춤 지점끼리는 섹션 진행도로 0.15 넘게 떨어져 있다(한 섹션에 몰리지 않게)", () => {
+    const bySection = new Map<string, number[]>();
+    for (const [key, p] of SCROLL_STOP.points) bySection.set(key, [...(bySection.get(key) ?? []), p]);
+    for (const list of bySection.values()) {
+      const sorted = [...list].sort((a, b) => a - b);
+      for (let i = 1; i < sorted.length; i += 1) expect(sorted[i] - sorted[i - 1]).toBeGreaterThan(0.15);
+    }
   });
 });
