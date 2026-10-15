@@ -26,6 +26,7 @@ export const ReportSection = () => {
     <SectionShell
       section="report"
       heightVh={SECTION_HEIGHT_VH.report}
+      eyebrow={COPY.sections.report.eyebrow}
       title={COPY.sections.report.title}
       // 막대는 모바일에서 숨긴다 — 커진 폰과 겹치고, 폰 화면 안 같은 막대가 같은 타이밍으로 찬다(이슈 #50)
       footer={

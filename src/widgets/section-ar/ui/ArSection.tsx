@@ -90,6 +90,7 @@ export const ArSection = () => {
         {/* 카피: 다른 섹션과 같은 자리(좌측, 모바일은 위) */}
         <div className="absolute inset-0 flex flex-col items-start justify-start pt-[10svh] lg:flex-row lg:items-center lg:pt-0">
           <div ref={copyRef} className="max-w-[85vw] px-6 opacity-0 lg:max-w-[50vw] lg:px-gutter">
+            <p className="text-14 font-medium text-white/70 lg:mb-2 lg:text-16">{ar.eyebrow}</p>
             <h2 className="text-28 font-semibold text-white lg:text-44">
               {ar.copy.map((line) => (
                 <span key={line} className="block">
