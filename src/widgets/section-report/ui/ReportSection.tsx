@@ -32,7 +32,7 @@ export const ReportSection = () => {
         <ul className="mt-10 hidden w-[min(80vw,420px)] flex-col gap-6 lg:flex">
           {COPY.sections.report.metrics.map(({ label, value }, i) => (
             <li key={label}>
-              <div className="text-12 flex items-baseline justify-between">
+              <div className="text-12 flex items-baseline justify-between lg:text-16">
                 <span className="text-neutral-500">{label}</span>
                 <span className="font-semibold">{value}</span>
               </div>

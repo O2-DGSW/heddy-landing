@@ -26,7 +26,7 @@ export const ShareSection = () => {
       heightVh={SECTION_HEIGHT_VH.share}
       title={COPY.sections.share.title}
       footer={
-        <p ref={bodyRef} className="text-16 mt-3 opacity-0">
+        <p ref={bodyRef} className="text-16 mt-3 opacity-0 lg:mt-4 lg:text-20">
           {COPY.sections.share.body}
         </p>
       }

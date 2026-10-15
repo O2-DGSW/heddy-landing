@@ -78,7 +78,7 @@ export const ArSection = () => {
         {/* 패널 문구: 다크 패널 가운데 */}
         <p
           ref={panelCopyRef}
-          className="text-28 absolute left-1/2 top-1/2 whitespace-nowrap text-center font-bold text-white opacity-0 lg:text-36"
+          className="text-28 absolute left-1/2 top-1/2 whitespace-nowrap text-center font-bold text-white opacity-0 lg:text-44"
         >
           {ar.panelCopy.map((line) => (
             <span key={line} className="block">
@@ -89,8 +89,8 @@ export const ArSection = () => {
 
         {/* 카피: 다른 섹션과 같은 자리(좌측, 모바일은 위) */}
         <div className="absolute inset-0 flex flex-col items-start justify-start pt-[10svh] lg:flex-row lg:items-center lg:pt-0">
-          <div ref={copyRef} className="max-w-[85vw] px-6 opacity-0 lg:max-w-[46vw] lg:px-gutter">
-            <h2 className="text-28 font-semibold text-white lg:text-36">
+          <div ref={copyRef} className="max-w-[85vw] px-6 opacity-0 lg:max-w-[50vw] lg:px-gutter">
+            <h2 className="text-28 font-semibold text-white lg:text-44">
               {ar.copy.map((line) => (
                 <span key={line} className="block">
                   {line}

@@ -16,6 +16,10 @@
   --font-sans: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;
 
   /* 폰트 크기 (spec §6: 36/32/28/24/20/18/16/14/12, 행간 130%, 자간 -2%) */
+  /* 데스크톱 섹션 제목 — 카피가 폰보다 먼저 읽히게 키움(2026-10-15) */
+  --text-44: 44px;
+  --text-44--line-height: 130%;
+  --text-44--letter-spacing: -0.02em;
   --text-36: 36px;
   --text-36--line-height: 130%;
   --text-36--letter-spacing: -0.02em;
