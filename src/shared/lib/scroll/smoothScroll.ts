@@ -67,10 +67,11 @@ export type StopHold = {
   absorbedPx: number;
 };
 
-/** 멈춘 뒤 풀리는가: 닿고 minHoldMs가 지났고 휠이 quietMs 조용했거나, 흡수한 휠이 너무 많으면 */
+/** 멈춘 뒤 풀리는가: 닿고 minHoldMs가 지났고 휠이 quietMs 조용했거나, maxHoldMs가 지났거나, 흡수한 휠이 많으면 */
 export const isStopReleased = (hold: StopHold, viewportHeight: number): boolean => {
   if (hold.arrivedAt == null) return false;
   if (hold.absorbedPx > SCROLL_STOP.maxAbsorbOfViewport * viewportHeight) return true;
+  if (hold.now - hold.arrivedAt >= SCROLL_STOP.maxHoldMs) return true;
   return (
     hold.now - hold.arrivedAt >= SCROLL_STOP.minHoldMs && hold.now - hold.lastWheelAt >= SCROLL_STOP.quietMs
   );

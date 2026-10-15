@@ -346,7 +346,6 @@ export const SCROLL_STOP = {
     ["report", 0],
     ["recommend", 0],
     ["ar", 0.14],
-    ["ar", 0.56],
     ["ar", TIMELINE.ar.styleSteps[0]],
     ["ar", TIMELINE.ar.styleSteps[1]],
     ["share", 0],
@@ -354,10 +353,15 @@ export const SCROLL_STOP = {
   ] as ReadonlyArray<readonly [SectionKey, number]>,
   /** 멈춤 지점에 닿은 뒤 최소로 머무는 시간(ms) */
   minHoldMs: 350,
-  /** 휠이 이만큼(ms) 조용해야 다음 휠에서 풀린다 — 트랙패드 관성이 그대로 지나가지 않게 */
+  /** 휠이 이만큼(ms) 조용하면 다음 휠에서 풀린다 — 트랙패드 관성이 그대로 지나가지 않게 */
   quietMs: 180,
-  /** 계속 굴려도 갇히지 않게, 흡수한 휠이 뷰포트 높이의 이 비율을 넘으면 풀린다 */
-  maxAbsorbOfViewport: 0.9,
+  /**
+   * 휠이 쉬지 않고 들어와도 이만큼(ms) 지나면 풀린다. 처음엔 휠이 조용해질 때까지 붙잡아 트랙패드로 AR을 지날 때
+   * 3초 넘게 막혔다(2026-10-15 버그)
+   */
+  maxHoldMs: 650,
+  /** 세게 굴리면, 흡수한 휠이 뷰포트 높이의 이 비율을 넘는 순간 풀린다(처음 0.9) */
+  maxAbsorbOfViewport: 0.4,
 } as const;
 
 /** 모바일 주소창 대응(이슈 #50): 터치 기기에서 이 정도(px) 높이 변화는 주소창이 접히고 펴진 것으로 보고 무시한다 */
