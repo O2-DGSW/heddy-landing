@@ -25,7 +25,7 @@ Claude Design `Heddy Landing v2.dc.html`의 마크업과 `update()` 로직에서
 - 폰: 300×615, 프레임 `#1C1E20` radius 42, 화면은 inset 6px(288×603) radius 38 — 3D 폰과 같은 얇은 베젤(원본 inset 10, 2026-10-05 조정), 배경 `#FBFBFB`. 그림자 `0 40px 70px -30px rgba(13,13,13,.45)`.
 - 폰 두 대(A=메인, B=보조)는 **모든 섹션 위에 떠 있는 fixed 레이어 하나**에 있다.
 - 배치: `translate(x−150, y−307.5) rotate(r) scale(S)`, (x,y)=폰 중심.
-- 데스크톱(≥1024): S = min(1, H×0.62/615, W/1400), 중심 (0.68W, H/2+20) (원본 min(1, H×0.78/615, …)·0.7W → 2026-10-01 min(0.8, H×0.5/615)·0.65W로 줄였다가 2026-10-14 팀 피드백으로 키움, `docs/plans/0015`). 카피는 좌측 여백 max(4rem, 9vw)·max 46vw, 세로 가운데.
+- 데스크톱(≥1024): S = min(1, H×0.54/615, W/1400), 중심 (0.64W, H/2+20). W는 스크롤바를 뺀 폭(clientWidth). (원본 min(1, H×0.78/615, …)·0.7W → 2026-10-01 0.5·0.65W → 2026-10-14 0.62·0.68W → 2026-10-15 카피가 먼저 읽히게 0.54·0.64W, `docs/plans/0016`). 카피는 좌측 여백 max(4rem, 9vw)·max 50vw, 세로 가운데. 제목 44px · 본문 20px(데스크톱).
 - 모바일(<1024): S = min(0.52, H×0.39/615, W/620) (원본 min(0.62, H×0.46/615, …)에서 줄임), 중심 (0.5W, 0.7H). 카피는 상단 14vh부터.
 - 이징은 전부 easeInOutCubic: `t<.5 ? 4t³ : 1−(−2t+2)³/2`.
 
@@ -40,7 +40,7 @@ Claude Design `Heddy Landing v2.dc.html`의 마크업과 `update()` 로직에서
 - **share**(ar.end 이후): sh = E(R(p_share, 0.38~0.52)) (원본 0.10~0.32, 2026-10-13 레퍼런스 영상 순서로 미룸, `docs/plans/0009`), back = E(R(scrollY, share 고정 끝~share.end)) (원본 share.end~closing.top은 길이 0)
   A.x = lerp(lerp(cx, cx−0.13W, sh), cx, back) (모바일 0.29W) · B.x = lerp(lerp(W+220S, cx+0.13W, sh), W+220S, back) (모바일 0.73W)
   B 회전 lerp(lerp(10, 0, sh), 10, back), B는 sh>0 && back<1일 때만 보임. QR 비행 = R(p_share, 0.56~0.70). 폰 두 대 모두 Spline 3D(A = RecordRig, B = ShareRigB).
-- **closing**(2026-10-13, `docs/plans/0010`): back 동안 A가 share 자리에서 closing 자리로 간다 — 데스크톱 (0.78W, 0.5H), 폰 높이 0.8H(오른쪽 여백 32px 안으로 줄임, S 미만으로는 안 줄임). 푸터가 f px 올라오면 폰은 남은 높이(H − f)에 맞춰 위치·크기를 (H − f)/H배로 줄여 잘리지 않는다(2026-10-14 팀 피드백). 모바일은 (cx, cy)·S 그대로.
+- **closing**(2026-10-13, `docs/plans/0010`): back 동안 A가 share 자리에서 closing 자리로 간다 — 데스크톱 (0.7W, 0.5H), 폰 높이 0.66H(2026-10-15, 원본 0.78W·0.8H)(오른쪽 여백 32px 안으로 줄임, S 미만으로는 안 줄임). 푸터가 f px 올라오면 폰은 남은 높이(H − f)에 맞춰 위치·크기를 (H − f)/H배로 줄여 잘리지 않는다(2026-10-14 팀 피드백). 모바일은 (cx, cy)·S 그대로.
   3D는 RecordRig 배율 = A.scale / S, 화면 오버레이도 같은 배율, 그림자 바닥(ShadowCatcher)도 같은 배율만큼 내린다.
 
 ## 4. 폰 화면 전환 (크로스페이드)
