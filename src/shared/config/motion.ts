@@ -1,4 +1,5 @@
 import type { Range } from "@/shared/lib/motion";
+import type { SectionKey } from "./sections";
 
 /** 폰 목업 치수 (`docs/design/spec.md` §2) */
 export const PHONE = {
@@ -37,8 +38,6 @@ export const STAGE_LAYOUT = {
     centerYOffset: 20,
     /** 좌측 카피 최대 너비(vw) — `SectionShell`의 lg:max-w와 같다 */
     copyMaxWidthVw: 50,
-    /** hero→archive 수렴 시 폰 A/B가 벌어지는 거리(px, 스케일 전) */
-    convergeDx: 105,
   },
   mobile: {
     scaleCap: 0.52,
@@ -52,10 +51,7 @@ export const STAGE_LAYOUT = {
     centerYRatio: 0.66,
     /** 상단 카피 시작 위치(svh, 원본 14vh) */
     copyTopVh: 10,
-    convergeDx: 80,
   },
-  /** hero→archive 수렴 시 폰 기울기(도) */
-  heroTilt: 12,
 } as const;
 
 /**
@@ -176,10 +172,12 @@ export const RECORD_STACK = {
  */
 export const TIMELINE = {
   // --- 폰 A/B 자세 (§3) ---
-  /** archive 진행도: hero→archive 폰 A/B 수렴 */
-  heroArchiveConverge: [0, 0.72] as Range,
-  /** archive 진행도: 폰 B 페이드아웃(끝나면 B=0) */
-  archiveBFade: [0.72, 0.86] as Range /** ar 진행도: 폰 A 재등장 y (yOffset) */,
+  /**
+   * record.top 기준 뷰포트 높이 배수: 인트로 뒤에 숨어 있던 3D 폰 레이어가 나타나는 구간(이슈 #71) — 폰이 회전하며
+   * 기울기 시작할 무렵(`record.spinVh` 시작 -0.6)
+   */
+  stageRevealVh: [-0.6, -0.3] as Range,
+  /** ar 진행도: 폰 A 재등장 y (yOffset) */
   arReappearY: [0.46, 0.56] as Range,
   /** ar 진행도: 폰 A 재등장 opacity */
   arReappearOpacity: [0.46, 0.53] as Range,
@@ -468,3 +466,96 @@ export const SHARE_SCREEN = {
   /** 폰 B 스캔 화면 틀: 크기와 중심 y(화면 높이 비율) */
   scanFrame: { size: 196, centerYRatio: 0.44 },
 } as const;
+
+/**
+ * 첫 화면 소개 애니메이션(이슈 #70) — After Effects 키트 `Heddy_Intro45_Build.jsx`를 웹 코드로 옮긴 것.
+ * 무대는 1920×1080(원본 컴프)이고 화면에 맞춰 통째로 줄인다. 장면 구간(초)은 원본 그대로, 장면 안 키프레임은
+ * `widgets/intro/model/scenes`에 원본 순서대로 있다.
+ */
+export const INTRO = {
+  duration: 45,
+  stage: { width: 1920, height: 1080 },
+  colors: {
+    mint: "#41BE8E",
+    mintDark: "#2E9E72",
+    ink: "#1C1E20",
+    bg: "#F4F5F6",
+  },
+  /** 텍스트 기준선 = 글자 상자 위 + 0.95 × 글자 크기, 행간 1.19(원본 HTML 측정) */
+  baseline: 0.95,
+  lineHeight: 1.19,
+  scenes: {
+    s01: [0, 3.0],
+    s02: [3.0, 5.6],
+    s03: [5.6, 8.2],
+    s04: [8.2, 11.6],
+    s05: [11.6, 14.6],
+    s06: [14.6, 17.2],
+    s07: [17.2, 20.2],
+    s08: [20.2, 22.4],
+    s09: [22.4, 25.4],
+    s10: [25.4, 28.2],
+    s11: [28.2, 30.6],
+    s12: [30.6, 33.6],
+    s13: [33.6, 36.6],
+    s14: [36.6, 40.0],
+    s15: [40.0, 45.0],
+  } as Record<string, Range>,
+} as const;
+
+/** 원본 HTML에서 잰 글자 폭·자간 위치(Pretendard, px) — 문구를 바꾸면 다시 잰다(`INTRO_COPY`) */
+export const INTRO_LAYOUT = {
+  s1: [73, 146, 242, 73, 146, 292],
+  s2: { items: [344, 234, 317, 289, 425], tail: 308, q1: 31 },
+  s5: { w: 422, x: [0, 162] },
+  s10: { w: 586, x: [0, 162, 262] },
+  s11: { w: 1006, x: [0, 492] },
+  s7w: [79, 79, 79, 79, 158, 158, 158, 158, 158, 79, 158, 158],
+  s13: {
+    yw: 101,
+    rw: 101,
+    a: 433,
+    l2w: 351,
+    l2h: 64,
+    kids: [
+      [0, 3, 123, 58],
+      [137, 0, 64, 64],
+      [215, 1, 89, 62],
+      [310, 3, 41, 58],
+    ],
+  },
+  s14: { w: 1030, x: [0, 88, 176, 197, 285, 372, 460, 548, 569, 657, 745, 833, 854, 942], a: 339 },
+  s15: { bar: 342, cap: 293, sub: 319, bartxt: 274 },
+  s9: { kL: 225, kR: 568 },
+} as const;
+
+/**
+ * 데스크톱 한 화면씩 넘기기(이슈 #71, baemin.com 참고): 휠·키보드 한 번에 다음 멈춤 지점까지 시간 기반으로 자동
+ * 스크롤한다 — 그 사이 스크롤 연동 모션(3D 폰 회전·기록 쌓임·카드 팝·AR 패널·공유 QR)이 그대로 재생된다.
+ * 멈춤 지점은 [섹션, 진행도]: 각 화면이 완성된 상태. 마지막 뒤엔 푸터(최대 스크롤)가 한 번 더 있다.
+ */
+export const FULLPAGE = {
+  stops: [
+    ["intro", 0],
+    /** 기록 12건이 다 쌓이고 정면으로 돌아옴 */
+    ["record", 1],
+    /** 상세 화면 스크롤·지표 막대가 다 참 */
+    ["report", 0.95],
+    /** 추천 카드 3장이 폰 밖으로 펼쳐짐 */
+    ["recommend", 0.45],
+    /** 다크 패널 문구("머릿속 상상을 지우고 / 이제는 눈앞의 결과로") */
+    ["ar", 0.25],
+    /** AR 폰 + 카피, 스타일 전환 지점 둘 다 지남 */
+    ["ar", 0.92],
+    /** QR 전달 · 공유된 기록 · 부제까지 */
+    ["share", 0.92],
+    ["closing", 0],
+  ] as ReadonlyArray<readonly [SectionKey, number]>,
+  /** 넘어가는 시간(ms) = base + perViewport × (거리 / 뷰포트 높이), [min, max]로 자른다 */
+  duration: { baseMs: 600, perViewportMs: 380, minMs: 900, maxMs: 2600 },
+  /** 휠이 이만큼(ms) 끊겼다 다시 오면 새 동작 — 트랙패드 관성·연속 휠은 한 화면만 넘긴다 */
+  gestureGapMs: 220,
+} as const;
+
+/** 인트로 섹션 최소 높이(px) — 3D 폰 합체(`PHONE_3D.mergeEndScrollPx`)가 폰이 나타나기(record −0.6 화면) 전에 끝나게 */
+export const INTRO_SECTION_MIN_PX = PHONE_3D.mergeEndScrollPx + 120;

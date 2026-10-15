@@ -11,13 +11,12 @@ type SectionCopy = { eyebrow?: string; title: readonly string[]; body: readonly 
 const toLines = (value: string | readonly string[] | undefined): readonly string[] =>
   value === undefined ? [] : typeof value === "string" ? [value] : value;
 
-/** 섹션 문구 — 데스크톱과 같은 `COPY.sections`. AR은 패널 문구를 제목, 카피를 본문으로 */
+/** 섹션 문구 — 데스크톱과 같은 `COPY.sections`. 첫 화면은 히어로 문구, AR은 패널 문구를 제목, 카피를 본문으로 */
 const copyOf = (key: SectionKey): SectionCopy => {
   const { sections } = COPY;
   switch (key) {
-    case "hero":
-    case "archive":
-      return { title: sections[key].title, body: sections[key].body };
+    case "intro":
+      return { title: sections.hero.title, body: sections.hero.body };
     case "record":
       return { eyebrow: sections.record.eyebrow, title: sections.record.title, body: sections.record.body };
     case "share":
@@ -31,8 +30,8 @@ const copyOf = (key: SectionKey): SectionCopy => {
     case "report":
     case "recommend":
       return { eyebrow: sections[key].eyebrow, title: sections[key].title, body: [] };
-    default:
-      return { title: sections[key].title, body: [] };
+    case "closing":
+      return { title: sections.closing.title, body: [] };
   }
 };
 
@@ -70,6 +69,7 @@ const ReportMetrics = () => (
 
 interface MobileSectionViewProps {
   section: MobileSection;
+  intro?: ReactNode;
 }
 
 interface AppearProps {
@@ -90,11 +90,11 @@ const Appear = ({ isInstant, delayMs, className, children }: AppearProps) =>
     </Reveal>
   );
 
-const MobileSectionView = ({ section }: MobileSectionViewProps) => {
+const MobileSectionView = ({ section, intro }: MobileSectionViewProps) => {
   const { key, tone, visual } = section;
   const { eyebrow, title, body } = copyOf(key);
   const isDark = tone === "dark";
-  const isHero = key === "hero";
+  const isHero = key === "intro";
   return (
     <section
       data-mobile-section={key}
@@ -126,7 +126,7 @@ const MobileSectionView = ({ section }: MobileSectionViewProps) => {
         ) : null}
       </Appear>
       <Appear isInstant={isHero} delayMs={120} className="mt-8">
-        <MobileVisualView visual={visual} tone={tone} />
+        <MobileVisualView visual={visual} tone={tone} intro={intro} />
       </Appear>
     </section>
   );
@@ -137,10 +137,15 @@ const MobileSectionView = ({ section }: MobileSectionViewProps) => {
  * 3D 폰·긴 고정 섹션 대신 섹션마다 정지 화면을 보여 주고, 화면에 들어올 때 살짝 떠오르는 효과만 쓴다.
  * 순서·문구는 데스크톱과 같다.
  */
-export const MobileLanding = () => (
+interface MobileLandingProps {
+  /** 히어로 자리 소개 애니메이션(인트로) — 위젯끼리 가져다 쓰지 않게 페이지가 넣어 준다 */
+  intro?: ReactNode;
+}
+
+export const MobileLanding = ({ intro }: MobileLandingProps) => (
   <div className="lg:hidden">
     {MOBILE_SECTIONS.map((section) => (
-      <MobileSectionView key={section.key} section={section} />
+      <MobileSectionView key={section.key} section={section} intro={intro} />
     ))}
   </div>
 );

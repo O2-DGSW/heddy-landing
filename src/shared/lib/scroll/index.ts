@@ -8,3 +8,5 @@ export * from "./smoothScroll";
 export * from "./useSmoothWheelScroll";
 export * from "./useFirstInteraction";
 export * from "./stableViewport";
+export * from "./fullpageScroll";
+export * from "./useFullpageScroll";

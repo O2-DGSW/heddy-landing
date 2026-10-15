@@ -52,7 +52,12 @@ export const DownloadAppButton = () => {
         {COPY.header.downloadButton}
       </button>
       {isOpen ? (
-        <div className="rounded-DEFAULT absolute right-0 top-full mt-2 flex flex-col items-center gap-3 border bg-white p-4">
+        <div
+          role="dialog"
+          aria-label={COPY.header.downloadButton}
+          data-native-scroll
+          className="rounded-DEFAULT absolute right-0 top-full mt-2 flex flex-col items-center gap-3 border bg-white p-4"
+        >
           <p className="text-14">{COPY.header.qrPopover.scanPrompt}</p>
           <DownloadQr source="header" />
           <StoreButtons source="header" />
