@@ -45,7 +45,8 @@ const num = (value: number): string => String(Math.round(value * 1e4) / 1e4);
 
 /**
  * 히어로 포스터 자리(이슈 #46)를 CSS 길이식으로 낸다 — `computeStageLayout` · `computeSplineViewport`와 같은 식을
- * `min()` · vw · vh로 옮겨, JS가 돌기 전(서버 HTML 첫 페인트)부터 3D 캔버스와 같은 자리에 포스터가 놓인다.
+ * `min()` · cqw · vh로 옮겨, JS가 돌기 전(서버 HTML 첫 페인트)부터 3D 캔버스와 같은 자리에 포스터가 놓인다.
+ * 가로는 폰 레이어(fixed, `@container`) 폭 기준 cqw — 레이아웃처럼 스크롤바를 뺀 폭이다(vw는 스크롤바를 포함).
  * 데스크톱은 vh(= innerHeight), 모바일은 svh — 주소창이 보이는 작은 뷰포트(레이아웃이 붙잡는 높이와 같다, 이슈 #50).
  */
 export const heroPosterCss = (isMobile: boolean): CssRect => {
@@ -57,8 +58,8 @@ export const heroPosterCss = (isMobile: boolean): CssRect => {
   const stage = isMobile ? STAGE_LAYOUT.mobile : STAGE_LAYOUT.desktop;
   /** k × S(폰 스케일) — S = min(상한, H·비율/615, W/나눗수)를 CSS 길이로 */
   const scaled = (k: number): string =>
-    `min(${num(k * stage.scaleCap)}px, ${num((k * stage.scaleHeightRatio * 100) / PHONE.height)}${vh}, ${num((k * 100) / stage.scaleWidthDivisor)}vw)`;
-  const centerX = `${num(stage.centerXRatio * 100)}vw`;
+    `min(${num(k * stage.scaleCap)}px, ${num((k * stage.scaleHeightRatio * 100) / PHONE.height)}${vh}, ${num((k * 100) / stage.scaleWidthDivisor)}cqw)`;
+  const centerX = `${num(stage.centerXRatio * 100)}cqw`;
   const centerY = isMobile
     ? `${num(STAGE_LAYOUT.mobile.centerYRatio * 100)}${vh}`
     : `calc(50${vh} + ${num(STAGE_LAYOUT.desktop.centerYOffset)}px)`;
@@ -116,7 +117,10 @@ export const computeShareRigs = (frame: SceneFrame): ShareRigs => {
   const { scale, center, viewportWidth, viewportHeight } = frame.layout;
   if (!share || frame.scrollY < share.top) {
     // 가로 자리는 히어로 합체(씬 Scroll 이벤트)가 맡고, 배율만 CSS 폰을 따른다(모바일 확대)
-    return { a: { x: 0, scale: a.scale / scale }, b: { x: 0, y: 0, rotateZDeg: 0, scale: 1, isVisible: false } };
+    return {
+      a: { x: 0, scale: a.scale / scale },
+      b: { x: 0, y: 0, rotateZDeg: 0, scale: 1, isVisible: false },
+    };
   }
   // 퇴장 끝(share.end)은 레이아웃 반올림으로 최대 스크롤보다 1px 뒤일 수 있다 — 다 빠진 B는 숨겨 그림자를 없앤다.
   // 들어올 때는 밖에서부터 보여 그림자가 먼저 들어온다

@@ -112,7 +112,7 @@ export const PhoneStage = () => {
   });
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-40 hidden lg:block">
+    <div className="@container pointer-events-none fixed inset-0 z-40 hidden lg:block">
       {SPLINE_HERO_SCENE && <HeroPoster ref={posterRef} />}
       <div ref={stage3dRef} className="absolute inset-0">
         {SPLINE_HERO_SCENE && (

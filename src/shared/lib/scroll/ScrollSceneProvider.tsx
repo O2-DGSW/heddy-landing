@@ -2,12 +2,13 @@
 
 import { createContext, useEffect, useRef, type ReactNode } from "react";
 
+import { STAGE_LAYOUT, type SectionKey } from "@/shared/config";
+
 import { createFrame, type SceneFrame } from "./sceneFrame";
 import { stableViewportSize, type ViewportSize } from "./stableViewport";
 import { computeStageLayout } from "./stageLayout";
 import { useSmoothWheelScroll } from "./useSmoothWheelScroll";
 import type { SectionFrame } from "./stageLayout";
-import type { SectionKey } from "@/shared/config";
 
 type FrameListener = (frame: SceneFrame) => void;
 
@@ -50,7 +51,12 @@ export const ScrollSceneProvider = ({ children }: ScrollSceneProviderProps) => {
 
     const emit = () => {
       rafIdRef.current = null;
-      viewport = stableViewportSize(viewport, { width: window.innerWidth, height: window.innerHeight }, isTouch);
+      // 폭은 스크롤바를 뺀 폭(clientWidth) — 폰이 스크롤바만큼 오른쪽으로 밀리지 않게(fixed 폰 레이어와 같은 폭)
+      // CSS 미디어 쿼리(lg)는 스크롤바 포함 폭으로 판단하므로, 데스크톱으로 보이는 동안엔 모바일 레이아웃으로 넘어가지 않게 한다
+      const { breakpoint } = STAGE_LAYOUT.desktop;
+      const clientWidth = document.documentElement.clientWidth;
+      const width = window.innerWidth >= breakpoint ? Math.max(clientWidth, breakpoint) : clientWidth;
+      viewport = stableViewportSize(viewport, { width, height: window.innerHeight }, isTouch);
       const layout = computeStageLayout(viewport.width, viewport.height);
       const isReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const frame = createFrame(window.scrollY, layout, sectionsRef.current, isReducedMotion);

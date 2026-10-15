@@ -55,13 +55,17 @@ describe("computeSplineViewport", () => {
 });
 
 describe("heroPosterCss (히어로 포스터, 이슈 #46)", () => {
-  /** 생성된 CSS 길이식(calc · min · px · vw · vh · dvh)을 뷰포트 크기로 계산한다 */
+  /**
+   * 생성된 CSS 길이식(calc · min · px · cqw · vh · svh)을 계산한다. cqw는 폰 레이어(fixed, 스크롤바를 뺀 폭)
+   * 기준이라 width는 스크롤바를 뺀 폭이다. vw(스크롤바 포함)는 쓰지 않는다.
+   */
   const evalCss = (expr: string, width: number, height: number): number => {
+    expect(expr).not.toMatch(/\dvw/);
     const js = expr
       .replace(/calc\(/g, "(")
       .replace(/min\(/g, "Math.min(")
       .replace(/(-?[\d.]+)px/g, "($1)")
-      .replace(/(-?[\d.]+)vw/g, `($1*${width}/100)`)
+      .replace(/(-?[\d.]+)cqw/g, `($1*${width}/100)`)
       .replace(/(-?[\d.]+)[ds]?vh/g, `($1*${height}/100)`);
     return Function(`return ${js};`)() as number;
   };
@@ -71,6 +75,7 @@ describe("heroPosterCss (히어로 포스터, 이슈 #46)", () => {
     [1512, 827],
     [1024, 700],
     [1100, 1200],
+    [1425, 900], // 스크롤바(15px)가 보이는 1440 창 — 레이아웃은 스크롤바를 뺀 폭
     [1600, 1100],
     [390, 844],
     [768, 1024],
