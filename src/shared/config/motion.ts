@@ -1,7 +1,5 @@
 import type { Range } from "@/shared/lib/motion";
 
-import type { SectionKey } from "./sections";
-
 /** 폰 목업 치수 (`docs/design/spec.md` §2) */
 export const PHONE = {
   width: 300,
@@ -336,36 +334,6 @@ export const SMOOTH_SCROLL = {
   settlePx: 0.5,
   /** 애니메이션 중 실제 스크롤이 마지막으로 쓴 위치와 이만큼(px) 넘게 다르면 다른 입력(키보드·스크롤바)으로 보고 멈춘다 */
   externalJumpPx: 3,
-} as const;
-
-/**
- * 스크롤 멈춤(팀 피드백 2026-10-14 "섹션마다 스크롤이 잠깐 막혔다 풀리는 느낌"): 관성 휠 스크롤이 멈춤 지점을
- * 지나려 하면 그 자리에 세우고, 잠깐 머문 뒤 휠이 멈췄다 다시 들어오면 풀어 준다. 키보드·스크롤바·터치는
- * 막지 않는다. 지점은 [섹션, 진행도] — 섹션 카피가 다 나온 자리와 AR 스타일이 바뀌는 자리.
- */
-export const SCROLL_STOP = {
-  points: [
-    ["archive", 0],
-    ["record", 0],
-    ["report", 0],
-    ["recommend", 0],
-    ["ar", 0.14],
-    ["ar", TIMELINE.ar.styleSteps[0]],
-    ["ar", TIMELINE.ar.styleSteps[1]],
-    ["share", 0],
-    ["closing", 0],
-  ] as ReadonlyArray<readonly [SectionKey, number]>,
-  /** 멈춤 지점에 닿은 뒤 최소로 머무는 시간(ms) */
-  minHoldMs: 350,
-  /** 휠이 이만큼(ms) 조용하면 다음 휠에서 풀린다 — 트랙패드 관성이 그대로 지나가지 않게 */
-  quietMs: 180,
-  /**
-   * 휠이 쉬지 않고 들어와도 이만큼(ms) 지나면 풀린다. 처음엔 휠이 조용해질 때까지 붙잡아 트랙패드로 AR을 지날 때
-   * 3초 넘게 막혔다(2026-10-15 버그)
-   */
-  maxHoldMs: 650,
-  /** 세게 굴리면, 흡수한 휠이 뷰포트 높이의 이 비율을 넘는 순간 풀린다(처음 0.9) */
-  maxAbsorbOfViewport: 0.4,
 } as const;
 
 /** 모바일 주소창 대응(이슈 #50): 터치 기기에서 이 정도(px) 높이 변화는 주소창이 접히고 펴진 것으로 보고 무시한다 */
