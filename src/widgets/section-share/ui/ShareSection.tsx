@@ -27,7 +27,7 @@ export const ShareSection = () => {
       eyebrow={COPY.sections.share.eyebrow}
       title={COPY.sections.share.title}
       footer={
-        <p ref={bodyRef} className="text-16 mt-3 opacity-0 lg:mt-4 lg:text-20">
+        <p ref={bodyRef} className="text-16 mt-3 font-medium text-neutral-800 opacity-0 lg:mt-4 lg:text-20">
           {COPY.sections.share.body}
         </p>
       }

@@ -34,8 +34,8 @@ export const ReportSection = () => {
           {COPY.sections.report.metrics.map(({ label, value }, i) => (
             <li key={label}>
               <div className="text-12 flex items-baseline justify-between lg:text-16">
-                <span className="text-neutral-500">{label}</span>
-                <span className="font-semibold">{value}</span>
+                <span className="font-medium text-neutral-700">{label}</span>
+                <span className="font-bold">{value}</span>
               </div>
               <div aria-hidden="true" className="mt-2 h-1 overflow-hidden rounded-full bg-[#EFEFEF]">
                 <div

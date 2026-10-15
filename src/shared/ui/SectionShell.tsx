@@ -30,8 +30,8 @@ export const SectionShell = ({
     <section data-section={section} style={{ height: `${heightVh}vh` }} className="relative">
       <div className="sticky top-0 flex h-svh flex-col items-start justify-start pt-[10svh] lg:flex-row lg:items-center lg:justify-start lg:pt-0">
         <div className="max-w-[85vw] break-keep px-6 lg:max-w-[50vw] lg:px-gutter">
-          {eyebrow ? <p className="text-14 font-medium lg:text-16 lg:mb-2">{eyebrow}</p> : null}
-          <h2 className="text-28 font-semibold lg:text-44">
+          {eyebrow ? <p className="text-14 font-bold text-main-50 lg:mb-2 lg:text-16">{eyebrow}</p> : null}
+          <h2 className="text-28 font-bold lg:text-44">
             {title.map((line) => (
               <span key={line} className="block">
                 {line}
@@ -41,7 +41,7 @@ export const SectionShell = ({
           {body ? (
             <div className="lg:mt-4">
               {body.map((line) => (
-                <p key={line} className="text-16 lg:text-20">
+                <p key={line} className="text-16 font-medium text-neutral-800 lg:text-20">
                   {line}
                 </p>
               ))}

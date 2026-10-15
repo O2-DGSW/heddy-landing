@@ -48,9 +48,9 @@ const ReportMetrics = () => (
   <ul className="mt-6 flex flex-col gap-4">
     {COPY.sections.report.metrics.map(({ label, value }, i) => (
       <li key={label}>
-        <div className="text-12 flex items-baseline justify-between">
-          <span className="text-neutral-500">{label}</span>
-          <span className="font-semibold">{value}</span>
+        <div className="text-14 flex items-baseline justify-between">
+          <span className="font-medium text-neutral-700">{label}</span>
+          <span className="font-bold">{value}</span>
         </div>
         <div aria-hidden="true" className="mt-2 h-1 overflow-hidden rounded-full bg-[#EFEFEF]">
           <div
@@ -101,7 +101,7 @@ const MobileSectionView = ({ section }: MobileSectionViewProps) => {
       className={`px-5 ${isHero ? "pb-10 pt-28" : "py-16"} ${isDark ? "bg-[#0D0D0D] text-white" : ""}`}
     >
       <Appear isInstant={isHero} className="group">
-        {eyebrow ? <p className="text-14 mb-2 font-medium text-neutral-500">{eyebrow}</p> : null}
+        {eyebrow ? <p className="text-14 mb-2 font-bold text-main-50">{eyebrow}</p> : null}
         <h2 className="text-28 font-bold">
           {title.map((line) => (
             <span key={line} className="block">
@@ -110,7 +110,7 @@ const MobileSectionView = ({ section }: MobileSectionViewProps) => {
           ))}
         </h2>
         {body.length > 0 ? (
-          <p className={`text-16 mt-3 ${isDark ? "text-white/70" : "text-neutral-500"}`}>
+          <p className={`text-16 mt-3 font-medium ${isDark ? "text-white/85" : "text-neutral-700"}`}>
             {body.map((line) => (
               <span key={line} className="block">
                 {line}
