@@ -11,13 +11,12 @@ type SectionCopy = { eyebrow?: string; title: readonly string[]; body: readonly 
 const toLines = (value: string | readonly string[] | undefined): readonly string[] =>
   value === undefined ? [] : typeof value === "string" ? [value] : value;
 
-/** 섹션 문구 — 데스크톱과 같은 `COPY.sections`. AR은 패널 문구를 제목, 카피를 본문으로 */
+/** 섹션 문구 — 데스크톱과 같은 `COPY.sections`. 첫 화면은 히어로 문구, AR은 패널 문구를 제목, 카피를 본문으로 */
 const copyOf = (key: SectionKey): SectionCopy => {
   const { sections } = COPY;
   switch (key) {
-    case "hero":
-    case "archive":
-      return { title: sections[key].title, body: sections[key].body };
+    case "intro":
+      return { title: sections.hero.title, body: sections.hero.body };
     case "record":
       return { eyebrow: sections.record.eyebrow, title: sections.record.title, body: sections.record.body };
     case "share":
@@ -31,8 +30,8 @@ const copyOf = (key: SectionKey): SectionCopy => {
     case "report":
     case "recommend":
       return { eyebrow: sections[key].eyebrow, title: sections[key].title, body: [] };
-    default:
-      return { title: sections[key].title, body: [] };
+    case "closing":
+      return { title: sections.closing.title, body: [] };
   }
 };
 
@@ -95,7 +94,7 @@ const MobileSectionView = ({ section, intro }: MobileSectionViewProps) => {
   const { key, tone, visual } = section;
   const { eyebrow, title, body } = copyOf(key);
   const isDark = tone === "dark";
-  const isHero = key === "hero";
+  const isHero = key === "intro";
   return (
     <section
       data-mobile-section={key}

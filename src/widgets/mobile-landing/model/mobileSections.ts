@@ -28,14 +28,9 @@ export type MobileSection = {
  */
 export const MOBILE_SECTIONS: readonly MobileSection[] = [
   {
-    key: "hero",
+    key: "intro",
     tone: "light",
     visual: { kind: "intro" },
-  },
-  {
-    key: "archive",
-    tone: "light",
-    visual: { kind: "screen", src: "/screens/home.png", alt: "Heddy 홈 화면" },
   },
   {
     key: "record",

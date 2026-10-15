@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { SMOOTH_SCROLL } from "@/shared/config";
+import { SMOOTH_SCROLL, STAGE_LAYOUT } from "@/shared/config";
 
 import { addScrollTarget, stepSmoothScroll, wheelDeltaPx } from "./smoothScroll";
 
@@ -89,6 +89,7 @@ export const useSmoothWheelScroll = (): void => {
     state.isEnabled = true;
 
     const handleWheel = (event: WheelEvent) => {
+      if (window.innerWidth >= STAGE_LAYOUT.desktop.breakpoint) return;
       if (event.defaultPrevented || event.ctrlKey) return;
       if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
       if (canScrollInside(event.target, event.deltaY)) return;

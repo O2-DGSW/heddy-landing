@@ -1,12 +1,4 @@
-import {
-  CLOSING_PHONE,
-  PHONE,
-  PHONE_3D,
-  SHARE_SCREEN,
-  STAGE_LAYOUT,
-  TIMELINE,
-  type SectionKey,
-} from "@/shared/config";
+import { CLOSING_PHONE, PHONE, PHONE_3D, SHARE_SCREEN, TIMELINE, type SectionKey } from "@/shared/config";
 import { easeInOutCubic, lerp, progressIn, type Range } from "@/shared/lib/motion";
 import type { SceneFrame, SectionFrame, StageLayout } from "@/shared/lib/scroll";
 
@@ -44,8 +36,6 @@ export type ScreensScene = {
   hasDarkScreenA: boolean;
 };
 
-const degToRad = (deg: number): number => (deg * Math.PI) / 180;
-
 /** 섹션 프레임을 찾는다. SECTION_KEYS 전체가 항상 채워진다는 불변식을 가정한다 */
 const getSection = (frame: SceneFrame, key: SectionKey): SectionFrame => {
   const section = frame.sections.find((candidate) => candidate.key === key);
@@ -53,50 +43,28 @@ const getSection = (frame: SceneFrame, key: SectionKey): SectionFrame => {
   return section;
 };
 
-/** V(off, deg) = [cx+off+pivot·sin(deg), cy+pivot-pivot·cos(deg)]. 회전축(pivot)은 폰 하단 중심 */
-const convergePoint = (
-  cx: number,
-  cy: number,
-  pivot: number,
-  offset: number,
-  degrees: number,
-): { x: number; y: number } => ({
-  x: cx + offset + pivot * Math.sin(degToRad(degrees)),
-  y: cy + pivot - pivot * Math.cos(degToRad(degrees)),
-});
+/**
+ * 3D 폰 레이어 보임(0~1, 이슈 #71): 인트로를 보는 동안엔 숨기고, record 직전(폰이 회전하며 기울기 시작할 무렵)에
+ * 나타난다. 그 전에 Spline 합체(페이지 스크롤 `PHONE_3D.mergeEndScrollPx`까지)가 숨은 채 끝난다.
+ */
+export const computeStageReveal = (frame: SceneFrame): number => {
+  const record = getSection(frame, "record");
+  const vh = frame.layout.viewportHeight;
+  return progressIn(frame.scrollY, [
+    record.top + TIMELINE.stageRevealVh[0] * vh,
+    record.top + TIMELINE.stageRevealVh[1] * vh,
+  ]);
+};
 
 /** 폰 A/B의 위치·회전·화면 전환용 자세를 계산한다 (`docs/design/spec.md` §3) */
 export const computePhones = (frame: SceneFrame): PhonesScene => {
   const { layout } = frame;
   const scale = layout.scale;
   const { x: cx, y: cy } = layout.center;
-  const pivot = PHONE.pivot * scale;
-  const tilt = STAGE_LAYOUT.heroTilt;
-  const convergeDx =
-    (layout.isMobile ? STAGE_LAYOUT.mobile.convergeDx : STAGE_LAYOUT.desktop.convergeDx) * scale;
 
-  const pArchive = frame.progress("archive");
-  const converge = easeInOutCubic(progressIn(pArchive, TIMELINE.heroArchiveConverge));
-  const remaining = 1 - converge;
-
-  const aPoint = convergePoint(cx, cy, pivot, -convergeDx * remaining, -tilt * remaining);
-  const bPoint = convergePoint(cx, cy, pivot, convergeDx * remaining, tilt * remaining);
-  const bFadeOpacity = 1 - progressIn(pArchive, TIMELINE.archiveBFade);
-
-  let a: PhonePose = {
-    x: aPoint.x,
-    y: aPoint.y,
-    rotate: -tilt * remaining,
-    opacity: 1,
-    scale,
-  };
-  let b: PhonePose = {
-    x: bPoint.x,
-    y: bPoint.y,
-    rotate: tilt * remaining,
-    opacity: bFadeOpacity,
-    scale,
-  };
+  // 인트로~record: 합쳐진 폰 A 한 대가 스테이지 가운데 정면에 선다(히어로 V자·합체는 인트로 뒤에서 숨은 채 끝남)
+  let a: PhonePose = { x: cx, y: cy, rotate: 0, opacity: 1, scale };
+  let b: PhonePose = { x: cx, y: cy, rotate: 0, opacity: 0, scale };
 
   const arSection = getSection(frame, "ar");
   const shareSection = getSection(frame, "share");
@@ -236,7 +204,7 @@ const crossfadeAfter = (
  * 어느 시점이든 opacity 합이 1을 넘지 않는다.
  */
 export const computeScreens = (frame: SceneFrame): ScreensScene => {
-  const archiveEnd = getSection(frame, "archive").end;
+  const recordTop = getSection(frame, "record").top;
   const recordEnd = getSection(frame, "record").end;
   const reportEnd = getSection(frame, "report").end;
   const recommendEnd = getSection(frame, "recommend").end;
@@ -244,7 +212,7 @@ export const computeScreens = (frame: SceneFrame): ScreensScene => {
   const shareEnd = getSection(frame, "share").end;
   const arSection = getSection(frame, "ar");
 
-  const t0 = crossfadeAfter(frame, archiveEnd); // home -> record
+  const t0 = crossfadeAfter(frame, recordTop); // home -> record(record 시작 기준, 예전 archive 끝과 같은 자리)
   const t1 = crossfadeAfter(frame, recordEnd, TIMELINE.report.fromRecordBand); // record -> report(상세)
   const t2 = crossfadeAfter(frame, reportEnd, TIMELINE.recommend.tabSlideBand); // report -> recommend(3D 오버레이의 밀기와 같은 밴드)
   const t3 = crossfadeAfter(frame, recommendEnd); // recommend -> ar

@@ -2,12 +2,13 @@
 
 import { createContext, useEffect, useRef, type ReactNode } from "react";
 
-import { STAGE_LAYOUT, type SectionKey } from "@/shared/config";
+import { SECTION_KEYS, STAGE_LAYOUT } from "@/shared/config";
 
 import { createFrame, type SceneFrame } from "./sceneFrame";
 import { stableViewportSize, type ViewportSize } from "./stableViewport";
 import { computeStageLayout } from "./stageLayout";
 import { useSmoothWheelScroll } from "./useSmoothWheelScroll";
+import { useFullpageScroll } from "./useFullpageScroll";
 import type { SectionFrame } from "./stageLayout";
 
 type FrameListener = (frame: SceneFrame) => void;
@@ -29,19 +30,24 @@ export const ScrollSceneProvider = ({ children }: ScrollSceneProviderProps) => {
   const rafIdRef = useRef<number | null>(null);
   // 휠 스크롤을 관성 스크롤로 — 프레임은 실제 스크롤 위치(scroll 이벤트)에서 그대로 나온다
   useSmoothWheelScroll();
+  useFullpageScroll();
 
   useEffect(() => {
     const measure = () => {
       const nodes = document.querySelectorAll<HTMLElement>("[data-section]");
-      sectionsRef.current = Array.from(nodes).map((node) => {
-        const top = node.offsetTop;
+      sectionsRef.current = Array.from(nodes).flatMap((node) => {
+        const key = SECTION_KEYS.find((candidate) => candidate === node.dataset.section);
+        if (!key) return [];
+        const top = node.getBoundingClientRect().top + window.scrollY;
         const height = node.offsetHeight;
-        return {
-          key: node.dataset.section as SectionKey,
-          top,
-          height,
-          end: top + height,
-        };
+        return [
+          {
+            key,
+            top,
+            height,
+            end: top + height,
+          },
+        ];
       });
     };
 

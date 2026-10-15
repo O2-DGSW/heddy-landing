@@ -1,4 +1,5 @@
 import type { Range } from "@/shared/lib/motion";
+import type { SectionKey } from "./sections";
 
 /** 폰 목업 치수 (`docs/design/spec.md` §2) */
 export const PHONE = {
@@ -37,8 +38,6 @@ export const STAGE_LAYOUT = {
     centerYOffset: 20,
     /** 좌측 카피 최대 너비(vw) — `SectionShell`의 lg:max-w와 같다 */
     copyMaxWidthVw: 50,
-    /** hero→archive 수렴 시 폰 A/B가 벌어지는 거리(px, 스케일 전) */
-    convergeDx: 105,
   },
   mobile: {
     scaleCap: 0.52,
@@ -52,10 +51,7 @@ export const STAGE_LAYOUT = {
     centerYRatio: 0.66,
     /** 상단 카피 시작 위치(svh, 원본 14vh) */
     copyTopVh: 10,
-    convergeDx: 80,
   },
-  /** hero→archive 수렴 시 폰 기울기(도) */
-  heroTilt: 12,
 } as const;
 
 /**
@@ -176,10 +172,12 @@ export const RECORD_STACK = {
  */
 export const TIMELINE = {
   // --- 폰 A/B 자세 (§3) ---
-  /** archive 진행도: hero→archive 폰 A/B 수렴 */
-  heroArchiveConverge: [0, 0.72] as Range,
-  /** archive 진행도: 폰 B 페이드아웃(끝나면 B=0) */
-  archiveBFade: [0.72, 0.86] as Range /** ar 진행도: 폰 A 재등장 y (yOffset) */,
+  /**
+   * record.top 기준 뷰포트 높이 배수: 인트로 뒤에 숨어 있던 3D 폰 레이어가 나타나는 구간(이슈 #71) — 폰이 회전하며
+   * 기울기 시작할 무렵(`record.spinVh` 시작 -0.6)
+   */
+  stageRevealVh: [-0.6, -0.3] as Range,
+  /** ar 진행도: 폰 A 재등장 y (yOffset) */
   arReappearY: [0.46, 0.56] as Range,
   /** ar 진행도: 폰 A 재등장 opacity */
   arReappearOpacity: [0.46, 0.53] as Range,
@@ -530,3 +528,34 @@ export const INTRO_LAYOUT = {
   s15: { bar: 342, cap: 293, sub: 319, bartxt: 274 },
   s9: { kL: 225, kR: 568 },
 } as const;
+
+/**
+ * 데스크톱 한 화면씩 넘기기(이슈 #71, baemin.com 참고): 휠·키보드 한 번에 다음 멈춤 지점까지 시간 기반으로 자동
+ * 스크롤한다 — 그 사이 스크롤 연동 모션(3D 폰 회전·기록 쌓임·카드 팝·AR 패널·공유 QR)이 그대로 재생된다.
+ * 멈춤 지점은 [섹션, 진행도]: 각 화면이 완성된 상태. 마지막 뒤엔 푸터(최대 스크롤)가 한 번 더 있다.
+ */
+export const FULLPAGE = {
+  stops: [
+    ["intro", 0],
+    /** 기록 12건이 다 쌓이고 정면으로 돌아옴 */
+    ["record", 1],
+    /** 상세 화면 스크롤·지표 막대가 다 참 */
+    ["report", 0.95],
+    /** 추천 카드 3장이 폰 밖으로 펼쳐짐 */
+    ["recommend", 0.45],
+    /** 다크 패널 문구("머릿속 상상을 지우고 / 이제는 눈앞의 결과로") */
+    ["ar", 0.25],
+    /** AR 폰 + 카피, 스타일 전환 지점 둘 다 지남 */
+    ["ar", 0.92],
+    /** QR 전달 · 공유된 기록 · 부제까지 */
+    ["share", 0.92],
+    ["closing", 0],
+  ] as ReadonlyArray<readonly [SectionKey, number]>,
+  /** 넘어가는 시간(ms) = base + perViewport × (거리 / 뷰포트 높이), [min, max]로 자른다 */
+  duration: { baseMs: 600, perViewportMs: 380, minMs: 900, maxMs: 2600 },
+  /** 휠이 이만큼(ms) 끊겼다 다시 오면 새 동작 — 트랙패드 관성·연속 휠은 한 화면만 넘긴다 */
+  gestureGapMs: 220,
+} as const;
+
+/** 인트로 섹션 최소 높이(px) — 3D 폰 합체(`PHONE_3D.mergeEndScrollPx`)가 폰이 나타나기(record −0.6 화면) 전에 끝나게 */
+export const INTRO_SECTION_MIN_PX = PHONE_3D.mergeEndScrollPx + 120;

@@ -2,10 +2,16 @@
 
 import { useCallback, useEffect, useRef, type RefObject } from "react";
 
-import { HEADER } from "@/shared/config";
+import { HEADER, STAGE_LAYOUT } from "@/shared/config";
 import { smoothScrollBy, useSceneFrame, wheelDeltaPx, type SceneFrame } from "@/shared/lib/scroll";
 
-import { INITIAL_HEADER_STATE, consumeHeaderScroll, settleHeaderOffset, stepHeaderOffset, type HeaderState } from "./headerVisibility";
+import {
+  INITIAL_HEADER_STATE,
+  consumeHeaderScroll,
+  settleHeaderOffset,
+  stepHeaderOffset,
+  type HeaderState,
+} from "./headerVisibility";
 
 /**
  * 헤더 오프셋(위로 밀려 올라간 양)을 CSS 변수 --header-offset으로만 쓴다(프레임마다 setState 금지).
@@ -75,6 +81,8 @@ export const useHeaderOffset = (headerRef: RefObject<HTMLElement | null>): void 
     };
 
     const handleWheel = (event: WheelEvent) => {
+      // 데스크톱은 한 화면 컨트롤러가 휠 전체를 받는다. 헤더는 실제 스크롤 프레임을 따른다.
+      if (window.innerWidth >= STAGE_LAYOUT.desktop.breakpoint) return;
       if (event.ctrlKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
       if (takeDown(wheelDeltaPx(event, window.innerHeight), smoothScrollBy)) event.preventDefault();
     };
@@ -88,7 +96,8 @@ export const useHeaderOffset = (headerRef: RefObject<HTMLElement | null>): void 
       if (y == null || lastTouchY == null) return;
       const delta = lastTouchY - y; // 손가락을 위로 올리면 아래로 스크롤
       lastTouchY = y;
-      if (takeDown(delta, (remainder) => window.scrollBy(0, remainder)) && event.cancelable) event.preventDefault();
+      if (takeDown(delta, (remainder) => window.scrollBy(0, remainder)) && event.cancelable)
+        event.preventDefault();
     };
 
     // 캡처 단계: 관성 스크롤(window 버블 단계)보다 먼저 받아 헤더가 먼저 가져간다

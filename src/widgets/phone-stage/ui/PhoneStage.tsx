@@ -9,7 +9,7 @@ import { useMediaQuery } from "@/shared/lib/media";
 import { useFirstInteraction, useSceneFrame } from "@/shared/lib/scroll";
 import { PhoneFrame } from "@/shared/ui";
 
-import { computePhones, computeScreens } from "../model/scene";
+import { computePhones, computeScreens, computeStageReveal } from "../model/scene";
 import type { PhoneAScreenKey, PhoneBScreenKey, PhonePose } from "../model/scene";
 import { computeSplineHandoff } from "../model/scene3d";
 import { RecommendScreen } from "./RecommendScreen";
@@ -53,6 +53,7 @@ const applyPose = (el: HTMLDivElement | null, pose: PhonePose): void => {
 
 /** 폰 A·B가 모든 섹션 위에 떠 있는 fixed 레이어. 프레임마다 ref로만 갱신하고 setState는 쓰지 않는다 */
 export const PhoneStage = () => {
+  const stageRef = useRef<HTMLDivElement>(null);
   const phoneARef = useRef<HTMLDivElement>(null);
   const phoneBRef = useRef<HTMLDivElement>(null);
   const qrFlightRef = useRef<HTMLDivElement>(null);
@@ -72,6 +73,7 @@ export const PhoneStage = () => {
   const isPosterDoneRef = useRef(false);
 
   useSceneFrame((frame) => {
+    if (stageRef.current) stageRef.current.style.opacity = String(computeStageReveal(frame));
     const { a, b, qrFlight } = computePhones(frame);
     const screens = computeScreens(frame);
     // 3D 폰 구간(hero 합체~report 상세 화면)은 로드 전부터 CSS 폰을 숨기고, 같은 자세에서 넘겨받는다.
@@ -80,7 +82,10 @@ export const PhoneStage = () => {
     const handoff = computeSplineHandoff(frame);
     // Spline이 뜨기 전(첫 상호작용 전, 이슈 #46): 히어로 자세 동안은 포스터, 그 밖은 CSS 폰이 대신한다
     const isPosterShown =
-      isSplineActive && !isPosterDoneRef.current && !frame.isReducedMotion && frame.scrollY < PHONE_3D.posterMaxScrollPx;
+      isSplineActive &&
+      !isPosterDoneRef.current &&
+      !frame.isReducedMotion &&
+      frame.scrollY < PHONE_3D.posterMaxScrollPx;
     if (posterRef.current) posterRef.current.style.opacity = isPosterShown ? "1" : "0";
     const isSplineShown = isSplineActive && isSplineLoadedRef.current;
     const cssOpacity = isSplineShown ? handoff.cssOpacity : isPosterShown ? 0 : 1;
@@ -112,7 +117,11 @@ export const PhoneStage = () => {
   });
 
   return (
-    <div className="@container pointer-events-none fixed inset-0 z-40 hidden lg:block">
+    <div
+      ref={stageRef}
+      data-phone-stage
+      className="@container pointer-events-none fixed inset-0 z-40 hidden opacity-0 lg:block"
+    >
       {SPLINE_HERO_SCENE && <HeroPoster ref={posterRef} />}
       <div ref={stage3dRef} className="absolute inset-0">
         {SPLINE_HERO_SCENE && (
@@ -175,7 +184,14 @@ export const PhoneStage = () => {
         {/* 안쪽 여백은 %가 아닌 inset으로 — padding %는 부모(뷰포트) 폭 기준이라 QR이 0으로 줄어든다 */}
         <div className="absolute inset-[5%]">
           {isStageMounted && (
-            <Image src="/screens/share/qr.png" alt="" fill loading="eager" sizes="240px" className="object-contain" />
+            <Image
+              src="/screens/share/qr.png"
+              alt=""
+              fill
+              loading="eager"
+              sizes="240px"
+              className="object-contain"
+            />
           )}
         </div>
       </div>

@@ -12,7 +12,7 @@ import {
 } from "@/shared/config";
 import { computeStageLayout, createFrame, stackSections, type SceneFrame } from "@/shared/lib/scroll";
 
-import { computePhones, computeScreens } from "./scene";
+import { computePhones, computeScreens, computeStageReveal } from "./scene";
 
 const W = 1440;
 const H = 900;
@@ -36,23 +36,14 @@ const frameAtSectionProgress = (key: SectionKey, p: number): SceneFrame => {
 };
 
 describe("computePhones", () => {
-  it("hero에서 A·B 회전이 ∓12°다", () => {
-    const { a, b } = computePhones(frameAtScrollY(0));
-    expect(a.rotate).toBeCloseTo(-12);
-    expect(b.rotate).toBeCloseTo(12);
-  });
-
-  it("archive 0.72 지점에서 둘 다 회전 0·중심 일치다", () => {
-    const { a, b } = computePhones(frameAtSectionProgress("archive", 0.72));
-    expect(a.rotate).toBeCloseTo(0);
-    expect(b.rotate).toBeCloseTo(0);
-    expect(a.x).toBeCloseTo(b.x);
-    expect(a.y).toBeCloseTo(b.y);
-  });
-
-  it("archive 0.86 이후 B 불투명도가 0이다", () => {
-    const { b } = computePhones(frameAtSectionProgress("archive", 0.86));
-    expect(b.opacity).toBeCloseTo(0);
+  it("인트로 동안 A는 스테이지 가운데 정면 한 대(합체된 상태), B는 숨김 — 이슈 #71", () => {
+    for (const p of [0, 0.5, 1]) {
+      const { a, b } = computePhones(frameAtSectionProgress("intro", p));
+      expect(a.x).toBeCloseTo(layout.center.x);
+      expect(a.y).toBeCloseTo(layout.center.y);
+      expect(a.rotate).toBe(0);
+      expect(b.opacity).toBe(0);
+    }
   });
 
   it("recommend 고정이 끝나면 A가 페이지와 함께 위로 빠지고, ar 시작 때는 화면 밖(한 화면 위)이다", () => {
@@ -78,6 +69,22 @@ describe("computePhones", () => {
     const { a, b } = computePhones(frameAtSectionProgress("share", TIMELINE.shareXShift[1]));
     expect(a.x).toBeCloseTo(layout.center.x - 0.13 * W);
     expect(b.x).toBeCloseTo(layout.center.x + 0.13 * W);
+  });
+});
+
+describe("computeStageReveal (인트로 동안 3D 폰 레이어 숨김, 이슈 #71)", () => {
+  const record = sections.find((section) => section.key === "record");
+  if (!record) throw new Error("record not found");
+
+  it("인트로를 보는 동안엔 0, record 직전(회전 시작 무렵)에 나타나 record에선 1", () => {
+    expect(computeStageReveal(frameAtScrollY(0))).toBe(0);
+    expect(computeStageReveal(frameAtScrollY(record.top - 0.6 * H))).toBe(0);
+    expect(computeStageReveal(frameAtScrollY(record.top - 0.3 * H))).toBe(1);
+    expect(computeStageReveal(frameAtScrollY(record.top))).toBe(1);
+  });
+
+  it("폰이 나타나기 전에 Spline 합체(페이지 스크롤 1678px)가 끝난다", () => {
+    expect(record.top - 0.6 * H).toBeGreaterThanOrEqual(PHONE_3D.mergeEndScrollPx);
   });
 });
 

@@ -19,8 +19,8 @@ describe("MOBILE_SECTIONS (모바일 쌓기 구성, 이슈 #52)", () => {
   });
 
   it("히어로 화면은 소개 애니메이션(인트로, 이슈 #70) 자리다 — 페이지가 넣어 준다", () => {
-    const hero = MOBILE_SECTIONS.find((section) => section.key === "hero");
-    expect(hero?.visual).toEqual({ kind: "intro" });
+    const intro = MOBILE_SECTIONS.find((section) => section.key === "intro");
+    expect(intro?.visual).toEqual({ kind: "intro" });
   });
 
   it("추천은 토스식 카드 캐러셀(추천 결과 Top 3)로 보여 준다", () => {

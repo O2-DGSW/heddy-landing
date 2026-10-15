@@ -4,6 +4,8 @@ import {
   SECTION_HEIGHT_VH,
   SECTION_KEYS,
   type SectionKey,
+  INTRO_SECTION_MIN_PX,
+  TIMELINE,
 } from "@/shared/config";
 
 export type StageLayout = {
@@ -22,20 +24,11 @@ export type SectionFrame = {
 };
 
 /** 뷰포트 크기로 폰 스테이지 스케일·중심을 구한다 (`docs/design/spec.md` §2) */
-export const computeStageLayout = (
-  viewportWidth: number,
-  viewportHeight: number,
-): StageLayout => {
+export const computeStageLayout = (viewportWidth: number, viewportHeight: number): StageLayout => {
   const isMobile = viewportWidth < STAGE_LAYOUT.desktop.breakpoint;
 
   if (isMobile) {
-    const {
-      scaleCap,
-      scaleHeightRatio,
-      scaleWidthDivisor,
-      centerXRatio,
-      centerYRatio,
-    } = STAGE_LAYOUT.mobile;
+    const { scaleCap, scaleHeightRatio, scaleWidthDivisor, centerXRatio, centerYRatio } = STAGE_LAYOUT.mobile;
     const scale = Math.min(
       scaleCap,
       (viewportHeight * scaleHeightRatio) / PHONE.height,
@@ -53,13 +46,7 @@ export const computeStageLayout = (
     };
   }
 
-  const {
-    scaleCap,
-    scaleHeightRatio,
-    scaleWidthDivisor,
-    centerXRatio,
-    centerYOffset,
-  } = STAGE_LAYOUT.desktop;
+  const { scaleCap, scaleHeightRatio, scaleWidthDivisor, centerXRatio, centerYOffset } = STAGE_LAYOUT.desktop;
   const scale = Math.min(
     scaleCap,
     (viewportHeight * scaleHeightRatio) / PHONE.height,
@@ -87,8 +74,12 @@ export const stackSections = (
 ): SectionFrame[] => {
   let top = 0;
   return SECTION_KEYS.map((key) => {
+    const baseHeight = (SECTION_HEIGHT_VH[key] / 100) * viewportHeight;
     const height =
-      heightsPx[key] ?? (SECTION_HEIGHT_VH[key] / 100) * viewportHeight;
+      heightsPx[key] ??
+      (key === "intro"
+        ? Math.max(baseHeight, INTRO_SECTION_MIN_PX - TIMELINE.stageRevealVh[0] * viewportHeight)
+        : baseHeight);
     const frame: SectionFrame = { key, top, height, end: top + height };
     top += height;
     return frame;
