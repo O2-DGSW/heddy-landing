@@ -17,6 +17,7 @@ import {
   computeScreenOverlayB,
   type ScreenOverlayB as ScreenOverlayBScene,
 } from "../model/scene3d";
+import { squirclePath } from "../model/screenShape";
 import { ArScreen } from "./ArScreen";
 import { ScanScreen, ShareScreen, SharedRecordScreen } from "./ShareScreens";
 import { ClosingHomeScreen } from "./ClosingHomeScreen";
@@ -29,23 +30,21 @@ const RIPPLE_SIZE = 64;
 const CARD_RADIUS = 12;
 /** "추천" 탭 물결 지름(피그마 px) */
 const TAB_RIPPLE_SIZE = 56;
-/**
- * 화면 가장자리 링(씬 px): 3D 화면(스쿼클)과 오버레이(타원 모서리)의 곡선이 조금 달라 모서리·아랫변에 3D 화면
- * 바탕(흰색·초록)이 1px쯤 비쳤다(팀 피드백 "목업 테두리"). 베젤 안쪽과 같은 검정으로 둘러 덮는다.
- */
-const SCREEN_EDGE_RING = "0 0 0 4px #000";
-/** 모서리 가림막 그림자 — 둥근 모서리와 틀 모서리 사이를 다 덮을 만큼 퍼뜨린다(씬 px) */
-const CORNER_MASK = "0 0 0 40px #000";
+/** 화면 윤곽 — 3D 화면과 같은 스쿼클(`PHONE_3D.screen.corner`, 2026-10-15) */
+const SCREEN_CLIP = `path("${squirclePath(
+  PHONE_3D.screen.width,
+  PHONE_3D.screen.height,
+  PHONE_3D.screen.corner.radius,
+  PHONE_3D.screen.corner.exponent,
+)}")`;
 
 interface ScreenFrameProps {
   children: ReactNode;
 }
 
 /**
- * 화면 오버레이 틀(3D 화면 크기·윤곽 `PHONE_3D.screen` radiusX/Y). 맨 위에 모서리 가림막을 얹어 화면 모서리를
- * `contentRadius`로 더 둥글게 보이게 한다 — 3D 화면 윤곽 그대로면 모서리가 덜 둥글어 흰 화면이 베젤 쪽으로
- * 뾰족하게 튀어나와 보였다(2026-10-15). 가림막은 둥근 사각형 바깥에 검은 그림자를 퍼뜨린 것이라 모서리 틈만
- * 칠하고(곧은 변의 그림자는 틀 밖이라 잘린다), 오버레이가 투명한 구간에서도 3D 화면을 가리지 않는다.
+ * 화면 오버레이 틀: 3D 화면 크기로 놓고 3D 화면과 같은 스쿼클 윤곽으로 자른다. 예전엔 타원 모서리(38/59)라
+ * 모서리가 베젤 밖으로 뾰족하게 튀어나오고, 가림막·테두리 링으로 덮으려다 베젤과 어긋나 보였다(2026-10-15).
  */
 const ScreenFrame = ({ children }: ScreenFrameProps) => {
   const { screen } = PHONE_3D;
@@ -57,19 +56,14 @@ const ScreenFrame = ({ children }: ScreenFrameProps) => {
         top: -screen.height / 2,
         width: screen.width,
         height: screen.height,
-        borderRadius: `${screen.radiusX}px / ${screen.radiusY}px`,
-        boxShadow: SCREEN_EDGE_RING,
+        clipPath: SCREEN_CLIP,
       }}
     >
       {children}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
-        style={{ borderRadius: screen.contentRadius, boxShadow: CORNER_MASK }}
-      />
     </div>
   );
 };
+
 /** 폰 밖으로 떠오른 추천 카드 그림자(피그마 px) — 떠오른 정도만큼 진해진다 */
 const POP_SHADOW = { y: 18, blur: 40, alpha: 0.18 };
 

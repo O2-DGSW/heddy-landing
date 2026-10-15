@@ -75,12 +75,19 @@ export const PHONE_3D = {
   /**
    * 합쳐진 PhoneA의 화면(ScreenA = RecordBase 윤곽, 씬 단위 = px). 리포트 구간은 이 위에 HTML 화면을
    * CSS 3D로 투영해 겹친다(`docs/plans/0005`). z는 폰 중심에서 화면 면까지(RecordLayer 0.08×222.84 + 0.3),
-   * tiltDeg는 합쳐진 자세의 뒤로 눕힘(씬 rotX −8°). 모서리는 가로·세로 반경이 다른 스쿼클이다.
+   * tiltDeg는 합쳐진 자세의 뒤로 눕힘(씬 rotX −8°).
    * 베젤을 얇게 하려고 ScreenA를 274×596 → 280×601로 키우고 RecordLayer도 같은 크기로 맞췄다(2026-10-05).
    * 한쪽 베젤 ≈ 폰 폭의 1.6%(원본 ≈ 3%).
-   * contentRadius는 화면 오버레이 내용의 모서리 반경 — 3D 화면 윤곽보다 둥글게 잘라 모서리가 뾰족해 보이지 않게(2026-10-15).
+   * corner는 화면 모서리(스쿼클, `squirclePoints`): 렌더된 3D 화면 윤곽을 4배 해상도로 재서 맞춘 반경·지수
+   * (평균 오차 1px 안쪽, 2026-10-15). 원래 타원 38/59는 모서리가 베젤 밖으로 뾰족하게 튀어나왔다.
    */
-  screen: { width: 280, height: 601.4, z: 18, tiltDeg: 8, radiusX: 38, radiusY: 59, contentRadius: 62 },
+  screen: {
+    width: 280,
+    height: 601.4,
+    z: 18,
+    tiltDeg: 8,
+    corner: { radius: 52, exponent: 2.5 },
+  },
   /**
    * 다이내믹 아일랜드(ScreenA에 뚫린 구멍 = 뒤의 검은 유리). 화면 좌상단 기준 px.
    * 기록 화면(RecordIsland)과 상세 화면 오버레이는 화면을 덮으므로 같은 자리에 다시 그린다.
