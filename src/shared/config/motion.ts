@@ -551,8 +551,8 @@ export const FULLPAGE = {
     ["share", 0.92],
     ["closing", 0],
   ] as ReadonlyArray<readonly [SectionKey, number]>,
-  /** 넘어가는 시간(ms) = base + perViewport × (거리 / 뷰포트 높이), [min, max]로 자른다 */
-  duration: { baseMs: 1400, perViewportMs: 800, minMs: 2200, maxMs: 5200 },
+  /** 배민식 한 화면 넘김: 가상 스크롤 거리와 무관하게 일정한 시간에 도착한다. */
+  durationMs: 1800,
   /** 휠이 이만큼(ms) 끊겼다 다시 오면 새 동작 — 트랙패드 관성·연속 휠은 한 화면만 넘긴다 */
   gestureGapMs: 360,
 } as const;
