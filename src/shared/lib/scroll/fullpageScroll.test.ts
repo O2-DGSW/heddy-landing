@@ -18,14 +18,13 @@ const maxScroll = sections[sections.length - 1].end - H + 180;
 const stops = fullpageStops(sections, H, maxScroll);
 
 describe("fullpageStops", () => {
-  it("인트로부터 마지막까지 요구한 순서이고 AR 패널·체험을 각각 읽은 뒤 푸터에 도착한다", () => {
+  it("인트로부터 마지막까지 한 섹션에 한 번만 정지한 뒤 푸터에 도착한다", () => {
     expect(SECTION_KEYS).toEqual(["intro", "record", "report", "recommend", "ar", "share", "closing"]);
     expect(stops.map((stop) => stop.key)).toEqual([
       "intro",
       "record",
       "report",
       "recommend",
-      "ar",
       "ar",
       "share",
       "closing",
@@ -42,8 +41,7 @@ describe("fullpageStops", () => {
     expect(stops[1].scrollY).toBe(record.end - H);
     const ar = sections.find((section) => section.key === "ar");
     if (!ar) throw new Error("ar missing");
-    expect(stops[4].scrollY).toBe(ar.top + (ar.height - H) * 0.25);
-    expect(stops[5].scrollY).toBe(ar.top + (ar.height - H) * 0.92);
+    expect(stops[4].scrollY).toBe(ar.top + (ar.height - H) * 0.92);
   });
 
   it("푸터 높이가 없으면 마지막과 중복된 정지 지점을 만들지 않는다", () => {
@@ -82,10 +80,10 @@ describe("fullpage navigation", () => {
 });
 
 describe("fullpage animation", () => {
-  it("한 화면 이동에도 1.5초 이상 사용하고 긴 이동은 4.16초로 제한한다", () => {
-    expect(fullpageDuration(H, H)).toBe(1568);
-    expect(fullpageDuration(H * 3, H)).toBe(2784);
-    expect(fullpageDuration(H * 100, H)).toBe(4160);
+  it("한 화면 이동에도 2.2초를 사용하고 긴 이동은 5.2초로 제한한다", () => {
+    expect(fullpageDuration(H, H)).toBe(2200);
+    expect(fullpageDuration(H * 3, H)).toBe(3800);
+    expect(fullpageDuration(H * 100, H)).toBe(5200);
   });
 
   it("거리별 제한 시간 안에서 시작·중간 모션을 지나 정확히 목표에 멈춘다", () => {
@@ -101,6 +99,12 @@ describe("fullpage animation", () => {
 });
 
 describe("trackpad gesture", () => {
+  it("300ms 간격의 느린 관성 꼬리도 새 입력으로 보지 않는다", () => {
+    const gesture = { lastTime: 0, direction: 1 };
+    expect(consumeFullpageWheel(gesture, 300, 2, false).shouldAdvance).toBe(false);
+    expect(consumeFullpageWheel(gesture, 500, 120, false).shouldAdvance).toBe(true);
+  });
+
   it("관성 입력이 계속 오면 애니메이션이 끝나도 다음 화면으로 연달아 넘어가지 않는다", () => {
     let gesture = { lastTime: null as number | null, direction: 0 };
     let advances = 0;

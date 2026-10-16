@@ -474,6 +474,8 @@ export const SHARE_SCREEN = {
  */
 export const INTRO = {
   duration: 45,
+  /** 첫 방문은 첫 문구를 완성 상태로 즉시 표시한다. 이후 반복은 0초부터 원래 모션을 재생한다. */
+  initialTime: 2.4,
   stage: { width: 1920, height: 1080 },
   colors: {
     mint: "#41BE8E",
@@ -543,8 +545,6 @@ export const FULLPAGE = {
     ["report", 0.95],
     /** 추천 카드 3장이 폰 밖으로 펼쳐짐 */
     ["recommend", 0.45],
-    /** 다크 패널 문구("머릿속 상상을 지우고 / 이제는 눈앞의 결과로") */
-    ["ar", 0.25],
     /** AR 폰 + 카피, 스타일 전환 지점 둘 다 지남 */
     ["ar", 0.92],
     /** QR 전달 · 공유된 기록 · 부제까지 */
@@ -552,9 +552,9 @@ export const FULLPAGE = {
     ["closing", 0],
   ] as ReadonlyArray<readonly [SectionKey, number]>,
   /** 넘어가는 시간(ms) = base + perViewport × (거리 / 뷰포트 높이), [min, max]로 자른다 */
-  duration: { baseMs: 960, perViewportMs: 608, minMs: 1440, maxMs: 4160 },
+  duration: { baseMs: 1400, perViewportMs: 800, minMs: 2200, maxMs: 5200 },
   /** 휠이 이만큼(ms) 끊겼다 다시 오면 새 동작 — 트랙패드 관성·연속 휠은 한 화면만 넘긴다 */
-  gestureGapMs: 220,
+  gestureGapMs: 360,
 } as const;
 
 /** 인트로 섹션 최소 높이(px) — 3D 폰 합체(`PHONE_3D.mergeEndScrollPx`)가 폰이 나타나기(record −0.6 화면) 전에 끝나게 */
