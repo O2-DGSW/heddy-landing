@@ -16,7 +16,8 @@ interface IntroStageProps {
 }
 
 /**
- * 인트로 무대(이슈 #70): 1920×1080 장면들을 화면 안에 다 들어오게(contain) 줄여 가운데 두고, 시계 하나로
+ * 인트로 무대(이슈 #70): 1920×1080 장면을 데스크톱에서는 화면에 꽉 채우고(cover), 모바일에서는
+ * 전체가 보이도록(contain) 가운데 둔다. 시계 하나로
  * 모든 장면을 돌린다. 음소거로 자동 재생하고 끝나면 반복한다. 소리를 켜면 오디오(최종 믹스)를 처음부터 틀고
  * 시계를 오디오 재생 시각에 맞춘다. 화면 밖이면 멈추고, 동작 줄이기면 마지막 문구 장면에서 멈춘다.
  * `?intro-t=초`로 시각을 고정할 수 있다(장면 확인용).
@@ -40,14 +41,15 @@ export const IntroStage = ({ children, className = "h-svh" }: IntroStageProps) =
     [],
   );
 
-  // 무대 크기: 화면 안에 다 들어오게(contain) 줄여 가운데
+  // 데스크톱은 여백 없이 채우고, 모바일은 장면 전체를 보존한다.
   useEffect(() => {
     const root = rootRef.current;
     const stage = stageRef.current;
     if (!root || !stage) return undefined;
     const handleResize = () => {
       const { width, height } = INTRO.stage;
-      const scale = Math.min(root.clientWidth / width, root.clientHeight / height);
+      const scaleToFit = window.matchMedia("(min-width: 1024px)").matches ? Math.max : Math.min;
+      const scale = scaleToFit(root.clientWidth / width, root.clientHeight / height);
       const left = (root.clientWidth - width * scale) / 2;
       const top = (root.clientHeight - height * scale) / 2;
       stage.style.transform = `translate(${left}px, ${top}px) scale(${scale})`;
