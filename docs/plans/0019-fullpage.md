@@ -15,17 +15,17 @@ created: 2026-10-15
 
 - 화면 순서: 인트로 → 시술기록 저장 → 사진 분석 → 스타일 추천 → AR → 시술 공유 → 마지막.
 - 데스크톱 히어로·아카이브 위젯 제거. 모바일도 같은 순서로 쌓되 자유 스크롤 유지.
-- AR 패널 문구와 AR 체험은 별도 정지 지점이며 마지막 다음에는 푸터로 이동한다.
+- AR 패널 문구는 전환 도중 읽고 AR 체험에서 한 번만 멈춘다. 마지막 다음에는 푸터로 이동한다.
 - 키보드·점 내비게이션, 트랙패드 관성, reduced motion, 다운로드 팝오버의 기본 조작 보존.
 - Spline 씬·의존성·제품 카피는 변경하지 않는다.
 
 ## 모션 명세
 
-- `FULLPAGE.stops`: intro 0, record 1, report .95, recommend .45, ar .25/.92, share .92, closing 0. 마지막에 실제 최대 스크롤(푸터)을 추가한다.
-- `FULLPAGE.duration`: 거리별 전환 1440~4160ms, easeInOutCubic. 기존보다 1.6배 느리게 이동한다. 실제 window.scrollY가 움직이므로 기록 쌓임·추천 팝·AR 스타일·QR 전달이 중간 구간에서 재생된다.
+- `FULLPAGE.stops`: intro 0, record 1, report .95, recommend .45, ar .92, share .92, closing 0. 마지막에 실제 최대 스크롤(푸터)을 추가한다.
+- `FULLPAGE.duration`: 거리별 전환 2200~5200ms, easeInOutCubic. 실제 window.scrollY가 움직이므로 기록 쌓임·추천 팝·AR 스타일·QR 전달이 중간 구간에서 재생된다.
 - 상단바는 흰색 60% 반투명 배경과 약한 블러로 인트로 위에 겹친다. 인트로는 화면 상단까지 이어지고 로고·버튼은 선명하게 보인다. AR 다크 패널에서는 배경·블러와 로고를 숨긴다.
 - 데스크톱 인트로는 중앙 기준 cover로 확대해 맥북 등 16:9와 다른 화면에서도 여백 없이 채운다. 비율 차이에 따라 가장자리는 잘리며 모바일은 기존 contain을 유지한다.
-- `FULLPAGE.gestureGapMs`: 220ms. 관성 꼬리는 같은 제스처로 소비하고 이동 중 요청은 쌓지 않는다.
+- `FULLPAGE.gestureGapMs`: 360ms. 느린 관성 꼬리도 같은 제스처로 소비하고 이동 중 요청은 쌓지 않는다.
 - `TIMELINE.stageRevealVh`: record 시작 -0.6~-0.3 화면에서 폰 레이어가 나타난다. 인트로 최소 높이에 이 밴드 길이를 더해 500px 등 낮은 화면에서도 Spline 합체(1678px) 이후 나타나게 한다.
 - `shared/lib/scroll/fullpageScroll.test.ts`: 순서·완성 지점·푸터·경계·역방향·거리별 시간·관성 꼬리·낮은 화면 명세.
 

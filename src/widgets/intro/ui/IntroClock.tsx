@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useRef, type RefObject } from "react";
 
 import { isInScene } from "../model/clock";
+import { applySceneVisibility } from "../model/sceneVisibility";
 
 type FrameListener = (t: number) => void;
 
@@ -38,7 +39,7 @@ export const useIntroScene = (
     const root = rootRef.current;
     if (!root) return;
     const isActive = isInScene(t, window);
-    root.style.visibility = isActive ? "visible" : "hidden";
+    applySceneVisibility(root, isActive);
     if (isActive) update(t, root);
   });
   return rootRef;

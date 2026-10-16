@@ -28,6 +28,7 @@ export const ScrollSceneProvider = ({ children }: ScrollSceneProviderProps) => {
   const listenersRef = useRef(new Set<FrameListener>());
   const sectionsRef = useRef<SectionFrame[]>([]);
   const rafIdRef = useRef<number | null>(null);
+  const frameRef = useRef<SceneFrame | null>(null);
   // 휠 스크롤을 관성 스크롤로 — 프레임은 실제 스크롤 위치(scroll 이벤트)에서 그대로 나온다
   useSmoothWheelScroll();
   useFullpageScroll();
@@ -66,6 +67,7 @@ export const ScrollSceneProvider = ({ children }: ScrollSceneProviderProps) => {
       const layout = computeStageLayout(viewport.width, viewport.height);
       const isReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const frame = createFrame(window.scrollY, layout, sectionsRef.current, isReducedMotion);
+      frameRef.current = frame;
       listenersRef.current.forEach((listener) => listener(frame));
     };
 
@@ -98,6 +100,7 @@ export const ScrollSceneProvider = ({ children }: ScrollSceneProviderProps) => {
 
   const subscribe = (listener: FrameListener) => {
     listenersRef.current.add(listener);
+    if (frameRef.current) listener(frameRef.current);
     return () => listenersRef.current.delete(listener);
   };
 

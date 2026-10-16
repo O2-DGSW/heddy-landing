@@ -20,3 +20,13 @@ export const loopTime = (elapsed: number): number => {
 /** 장면 [t0, t1) 안에 있는가 — 마지막 장면은 끝 시각도 포함 */
 export const isInScene = (t: number, [t0, t1]: readonly [number, number]): boolean =>
   t >= t0 && (t < t1 || (t1 === INTRO.duration && t <= t1));
+
+/** 현재·다음 장면만 준비한다. 마지막 다음에는 첫 장면을 준비해 반복 경계를 보존한다. */
+export const introSceneIndices = (t: number): readonly [number, number] => {
+  const scenes = Object.values(INTRO.scenes);
+  const current = Math.max(
+    0,
+    scenes.findIndex((range) => isInScene(t, range)),
+  );
+  return [current, (current + 1) % scenes.length];
+};

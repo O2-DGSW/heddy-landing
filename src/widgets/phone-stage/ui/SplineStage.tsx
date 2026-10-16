@@ -11,6 +11,7 @@ import { RECORD_STACK } from "@/shared/config";
 import { useSceneFrame, useSmoothSceneFrame } from "@/shared/lib/scroll";
 
 import { computeRecordStack, type RecordStackScene } from "../model/recordStack";
+import { computeStageReveal } from "../model/scene";
 import {
   computeShareRigs,
   computeSplineHandoff,
@@ -146,8 +147,7 @@ const applyRecordStack = (objects: RecordObjects, scene: RecordStackScene): void
 interface SplineStageProps {
   sceneUrl: string;
   /**
-   * Spline을 시작할지 — 첫 상호작용 때 true(이슈 #46). 무거운 실행(런타임·씬 파싱, 긴 작업 수백 ms)을 미루고
-   * 그 전까지 히어로는 포스터가 같은 그림을 보여 준다
+   * 기록 섹션에 접근했고 동작 줄이기가 아닐 때 시작한다. 로딩 중에는 CSS 폰을 표시한다.
    */
   isStarted: boolean;
   onLoad: () => void;
@@ -269,13 +269,13 @@ export const SplineStage = ({ sceneUrl, isStarted, onLoad, onFail }: SplineStage
       setIfChanged(rigB.scale, "y", rig.scale);
       setIfChanged(rigB.scale, "z", rig.scale);
     }
-    if (appRef.current && canvasOpacity > 0) renderNow(appRef.current);
+    if (appRef.current && canvasOpacity > 0 && computeStageReveal(frame) > 0) renderNow(appRef.current);
   });
 
   // 기록 스택은 부드럽게 따라가는 스크롤로 움직인다 — 빠르게 내려도 카드가 건너뛰지 않는다.
   // 좌측 큰 날짜(RecordSection)도 같은 반감기를 써서 서로 맞는다
   useSmoothSceneFrame((frame) => {
-    if (!recordObjectsRef.current || isFailedRef.current) return;
+    if (!recordObjectsRef.current || isFailedRef.current || computeStageReveal(frame) === 0) return;
     applyRecordStack(recordObjectsRef.current, computeRecordStack(frame, RECORD_CARDS.length));
     if (appRef.current) renderNow(appRef.current);
   }, RECORD_STACK.smoothHalfLifeMs);

@@ -237,6 +237,7 @@ export const INTRO_COPY = {
   s7Count: ["한", "두", "세", "네", "다섯", "여섯", "일곱", "여덟", "아홉", "열", "열한"],
   soundOn: "소리 켜기",
   soundOff: "소리 끄기",
+  scrollHint: "스크롤하여 둘러보기",
 } as const;
 
 /**
