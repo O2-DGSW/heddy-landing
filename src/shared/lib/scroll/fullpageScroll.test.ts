@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { FULLPAGE, PHONE_3D, SECTION_KEYS, TIMELINE } from "@/shared/config";
+import { PHONE_3D, SECTION_KEYS, TIMELINE } from "@/shared/config";
 
 import {
   activeFullpageIndex,
@@ -80,16 +80,17 @@ describe("fullpage navigation", () => {
 });
 
 describe("fullpage animation", () => {
-  it("한 화면 이동에도 2.2초를 사용하고 긴 이동은 5.2초로 제한한다", () => {
-    expect(fullpageDuration(H, H)).toBe(2200);
-    expect(fullpageDuration(H * 3, H)).toBe(3800);
-    expect(fullpageDuration(H * 100, H)).toBe(5200);
+  it("작은 휠로 시작한 이동도 섹션 길이와 무관하게 1.8초에 도착한다", () => {
+    const duration = fullpageDuration();
+    expect(duration).toBe(1800);
+    for (const distance of [H, H * 3, H * 100]) {
+      expect(fullpagePosition(0, distance, duration, duration)).toBe(distance);
+      expect(fullpagePosition(0, distance, duration / 2, duration)).toBeCloseTo(distance / 2);
+    }
   });
 
-  it("거리별 제한 시간 안에서 시작·중간 모션을 지나 정확히 목표에 멈춘다", () => {
-    expect(fullpageDuration(0, H)).toBe(FULLPAGE.duration.minMs);
-    expect(fullpageDuration(H * 100, H)).toBe(FULLPAGE.duration.maxMs);
-    const duration = fullpageDuration(H * 3, H);
+  it("일정한 전환 시간 안에서 시작·중간 모션을 지나 정확히 목표에 멈춘다", () => {
+    const duration = fullpageDuration();
     expect(fullpagePosition(100, 1000, 0, duration)).toBe(100);
     expect(fullpagePosition(100, 1000, duration / 2, duration)).toBeCloseTo(550);
     expect(fullpagePosition(100, 1000, duration + 20, duration)).toBe(1000);
@@ -99,6 +100,14 @@ describe("fullpage animation", () => {
 });
 
 describe("trackpad gesture", () => {
+  it("1px·소수점 휠도 임계값 없이 시작하며 이동 중 입력은 예약하지 않는다", () => {
+    for (const delta of [1, 0.1, -1, -0.1]) {
+      const first = consumeFullpageWheel({ lastTime: null, direction: 0 }, 0, delta, false);
+      expect(first.shouldAdvance).toBe(true);
+      expect(consumeFullpageWheel(first.gesture, 500, delta, true).shouldAdvance).toBe(false);
+    }
+  });
+
   it("300ms 간격의 느린 관성 꼬리도 새 입력으로 보지 않는다", () => {
     const gesture = { lastTime: 0, direction: 1 };
     expect(consumeFullpageWheel(gesture, 300, 2, false).shouldAdvance).toBe(false);

@@ -66,11 +66,8 @@ export const activeFullpageIndex = (stops: readonly FullpageStop[], scrollY: num
   return nearest;
 };
 
-/** 이동 거리에 맞추되 너무 짧거나 길어지지 않도록 전환 시간을 제한한다. */
-export const fullpageDuration = (distancePx: number, viewportHeight: number): number => {
-  const { baseMs, perViewportMs, minMs, maxMs } = FULLPAGE.duration;
-  return clamp(baseMs + (perViewportMs * Math.abs(distancePx)) / Math.max(1, viewportHeight), minMs, maxMs);
-};
+/** 섹션의 모션용 스크롤 길이에 관계없이 같은 시간에 다음 완성 화면으로 이동한다. */
+export const fullpageDuration = (): number => FULLPAGE.durationMs;
 
 /** 프레임 간격과 무관하게 정해진 시간에 도착하며 중간 스크롤 모션도 재생한다. */
 export const fullpagePosition = (from: number, to: number, elapsedMs: number, durationMs: number): number =>

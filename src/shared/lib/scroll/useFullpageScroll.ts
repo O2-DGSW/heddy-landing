@@ -45,7 +45,6 @@ export const useFullpageScroll = (): void => {
     const desktop = window.matchMedia(`(min-width: ${STAGE_LAYOUT.desktop.breakpoint}px)`);
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     let rafId: number | null = null;
-    let lastWritten = window.scrollY;
     let gesture: FullpageWheelGesture = { lastTime: null, direction: 0 };
 
     const measureStops = () => {
@@ -81,16 +80,14 @@ export const useFullpageScroll = (): void => {
         window.scrollTo({ top: to, behavior: "instant" });
         return;
       }
-      const duration = fullpageDuration(to - from, window.innerHeight);
+      const duration = fullpageDuration();
       let startTime: number | null = null;
       const tick = (time: number) => {
         startTime ??= time;
         const elapsed = time - startTime;
         window.scrollTo({ top: fullpagePosition(from, to, elapsed, duration), behavior: "instant" });
-        lastWritten = window.scrollY;
         rafId = elapsed < duration ? requestAnimationFrame(tick) : null;
       };
-      lastWritten = from;
       rafId = requestAnimationFrame(tick);
     };
 
@@ -141,19 +138,20 @@ export const useFullpageScroll = (): void => {
       else moveBy(direction);
     };
 
-    const handleExternalScroll = () => {
-      if (rafId != null && Math.abs(window.scrollY - lastWritten) > 2) stop();
-    };
     const handleResize = () => {
       stop();
       gesture = { lastTime: null, direction: 0 };
     };
     const handleTouchStart = () => stop();
+    // 미세한 브라우저 스크롤 보정으로 취소하지 않는다. 명시적 포인터·터치 조작으로만 중단한다.
+    const handlePointerDown = () => {
+      if (desktop.matches) stop();
+    };
 
     navigateToStop = moveTo;
-    window.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("wheel", handleWheel, { passive: false, capture: true });
     window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("scroll", handleExternalScroll, { passive: true });
+    window.addEventListener("pointerdown", handlePointerDown, { passive: true });
     window.addEventListener("resize", handleResize);
     window.addEventListener("touchstart", handleTouchStart, { passive: true });
     desktop.addEventListener("change", handleResize);
@@ -161,9 +159,9 @@ export const useFullpageScroll = (): void => {
     return () => {
       stop();
       if (navigateToStop === moveTo) navigateToStop = null;
-      window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("wheel", handleWheel, { capture: true });
       window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("scroll", handleExternalScroll);
+      window.removeEventListener("pointerdown", handlePointerDown);
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("touchstart", handleTouchStart);
       desktop.removeEventListener("change", handleResize);
