@@ -13,8 +13,8 @@ import { useHeaderOffset } from "../model/useHeaderOffset";
 /**
  * 상단바: 로고(PNG) + 다운로드 버튼. 아래로 스크롤하면 헤더가 먼저 올라가 숨고(그동안 화면은 멈춤), 숨은 뒤에 화면이 스크롤된다.
  * 위로 스크롤하면 화면이 스크롤되는 만큼 헤더가 내려온다. 동작은 `useHeaderOffset`.
- * 배경과 블러 없이 인트로가 상단바 뒤까지 화면 전체를 채운다.
- * AR 다크 패널이 헤더 자리를 덮는 동안엔 로고를 숨긴다(`docs/plans/0008`).
+ * 반투명 흰 배경과 약한 블러로 인트로를 비추면서 로고와 버튼의 가독성을 확보한다.
+ * AR 다크 패널이 헤더 자리를 덮는 동안엔 배경과 블러를 없애고 로고를 숨긴다(`docs/plans/0008`).
  * 로고 PNG(`public/brand/logo-wordmark.png`)는 아직 없다 — 넣으면 그대로 보인다.
  */
 export const Header = () => {
@@ -34,7 +34,7 @@ export const Header = () => {
     <header
       ref={headerRef}
       data-dark="false"
-      className="group fixed inset-x-0 top-0 z-50 flex items-center justify-between bg-transparent px-5 py-4 lg:px-gutter [transform:translateY(calc(var(--header-offset,0px)*-1))] transition-transform duration-200 ease-out focus-within:[transform:none] motion-reduce:transition-none"
+      className="group fixed inset-x-0 top-0 z-50 flex items-center justify-between bg-white/60 px-5 py-4 lg:px-gutter backdrop-blur-sm data-[dark=true]:bg-transparent data-[dark=true]:backdrop-blur-none [transform:translateY(calc(var(--header-offset,0px)*-1))] transition-[transform,background-color] duration-200 ease-out focus-within:[transform:none] motion-reduce:transition-none"
     >
       <div className="relative h-7 w-20 transition-opacity duration-300 group-data-[dark=true]:opacity-0">
         <Image
