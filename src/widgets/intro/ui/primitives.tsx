@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode, Ref } from "react";
 import Image from "next/image";
 
 import { INTRO } from "@/shared/config";
+import { layerFilter, layerOpacity, layerTransform, type LayerState } from "../model/layer";
 
 /**
  * 인트로 무대(1920×1080) 위 레이어 부품들. 각 부품의 바깥 div가 AE 레이어의 기준점(anchor)이고,
@@ -29,14 +30,32 @@ interface LayerProps {
   isHidden?: boolean;
   children: ReactNode;
   className?: string;
+  initialState?: LayerState;
 }
 
 /** 기준점 div — 무대 왼쪽 위에 두고 transform으로 옮긴다 */
-export const Layer = ({ ref, position, isHidden = true, children, className = "" }: LayerProps) => (
+export const Layer = ({
+  ref,
+  position,
+  isHidden = true,
+  children,
+  className = "",
+  initialState,
+}: LayerProps) => (
   <div
     ref={ref}
-    className={`absolute left-0 top-0 origin-top-left will-change-transform ${isHidden ? "opacity-0" : ""} ${className}`}
-    style={position ? { transform: `translate(${position[0]}px, ${position[1]}px)` } : undefined}
+    className={`absolute left-0 top-0 origin-top-left ${isHidden ? "opacity-0" : ""} ${className}`}
+    style={
+      initialState
+        ? {
+            transform: layerTransform(initialState),
+            opacity: layerOpacity(initialState),
+            filter: layerFilter(initialState),
+          }
+        : position
+          ? { transform: `translate(${position[0]}px, ${position[1]}px)` }
+          : undefined
+    }
   >
     {children}
   </div>
@@ -54,6 +73,7 @@ interface TextProps {
   tracking?: number;
   align?: "left" | "center" | "right";
   isHidden?: boolean;
+  initialState?: LayerState;
 }
 
 const ALIGN_SHIFT = { left: "0%", center: "-50%", right: "-100%" } as const;
@@ -69,8 +89,9 @@ export const Text = ({
   tracking = -30,
   align = "left",
   isHidden,
+  initialState,
 }: TextProps) => (
-  <Layer ref={ref} isHidden={isHidden}>
+  <Layer ref={ref} isHidden={isHidden} initialState={initialState}>
     <span
       ref={spanRef}
       className="absolute left-0 top-0 whitespace-nowrap"

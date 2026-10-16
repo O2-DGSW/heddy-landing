@@ -27,6 +27,7 @@ const { mint, ink } = INTRO.colors;
 const { scenes } = INTRO;
 /** 장면 루트(무대 크기, 바탕색) */
 const SCENE_CLASS = "invisible absolute inset-0";
+const INITIAL_OPENING = s01(INTRO.initialTime);
 
 /* S01 민트 · 단어 타이핑 */
 export const S01 = () => {
@@ -38,8 +39,8 @@ export const S01 = () => {
     s.words.forEach((word, i) => applyLayer(wordRefs.current[i], word));
   });
   return (
-    <div ref={rootRef} className={`${SCENE_CLASS} bg-[#41BE8E]`}>
-      <Layer ref={lineRef} isHidden={false}>
+    <div ref={rootRef} className="absolute inset-0 bg-[#41BE8E]">
+      <Layer ref={lineRef} isHidden={false} position={[INITIAL_OPENING.line, 0]}>
         {INTRO_COPY.s1.map(([word, weight], i) => (
           <Text
             key={`${word}-${S1_WORD_X[i]}`}
@@ -51,6 +52,7 @@ export const S01 = () => {
             weight={weight}
             color="#FFFFFF"
             tracking={-35}
+            initialState={INITIAL_OPENING.words[i]}
           />
         ))}
       </Layer>

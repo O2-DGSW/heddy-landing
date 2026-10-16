@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { INTRO, INTRO_COPY } from "@/shared/config";
+import { scrollToFullpageStop } from "@/shared/lib/scroll";
 
 import { loopTime, parseFrozenTime, REDUCED_MOTION_TIME } from "../model/clock";
 import { IntroClockContext } from "./IntroClock";
@@ -27,12 +28,14 @@ export const IntroStage = ({ children, className = "h-svh" }: IntroStageProps) =
   const stageRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const listenersRef = useRef(new Set<FrameListener>());
+  const timeRef = useRef<number>(INTRO.initialTime);
   const [isSoundOn, setIsSoundOn] = useState(false);
 
   const clock = useMemo(
     () => ({
       subscribe: (listener: FrameListener) => {
         listenersRef.current.add(listener);
+        listener(timeRef.current);
         return () => {
           listenersRef.current.delete(listener);
         };
@@ -66,7 +69,10 @@ export const IntroStage = ({ children, className = "h-svh" }: IntroStageProps) =
     if (!root) return undefined;
     const frozen = parseFrozenTime(window.location.search);
     const isReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const emit = (t: number) => listenersRef.current.forEach((listener) => listener(t));
+    const emit = (t: number) => {
+      timeRef.current = t;
+      listenersRef.current.forEach((listener) => listener(t));
+    };
 
     if (frozen != null || isReducedMotion) {
       // 장면들이 구독을 마친 뒤 한 번 그린다
@@ -75,8 +81,10 @@ export const IntroStage = ({ children, className = "h-svh" }: IntroStageProps) =
     }
 
     let rafId: number | null = null;
-    let elapsed = 0;
+    let elapsed: number = INTRO.initialTime;
     let last: number | null = null;
+    let isIntersecting = false;
+    let shouldResumeAudio = false;
     const tick = (now: number) => {
       const audio = audioRef.current;
       if (audio && !audio.paused) {
@@ -89,17 +97,32 @@ export const IntroStage = ({ children, className = "h-svh" }: IntroStageProps) =
       rafId = requestAnimationFrame(tick);
     };
     const start = () => {
+      if (shouldResumeAudio && audioRef.current) {
+        void audioRef.current.play().catch(() => setIsSoundOn(false));
+        shouldResumeAudio = false;
+      }
       if (rafId == null) rafId = requestAnimationFrame(tick);
     };
     const stop = () => {
       if (rafId != null) cancelAnimationFrame(rafId);
       rafId = null;
       last = null;
+      const audio = audioRef.current;
+      if (audio && !audio.paused) {
+        shouldResumeAudio = true;
+        audio.pause();
+      }
     };
-    const observer = new IntersectionObserver(([entry]) => (entry?.isIntersecting ? start() : stop()));
+    const syncPlayback = () => (isIntersecting && !document.hidden ? start() : stop());
+    const observer = new IntersectionObserver(([entry]) => {
+      isIntersecting = Boolean(entry?.isIntersecting);
+      syncPlayback();
+    });
     observer.observe(root);
+    document.addEventListener("visibilitychange", syncPlayback);
     return () => {
       observer.disconnect();
+      document.removeEventListener("visibilitychange", syncPlayback);
       stop();
     };
   }, []);
@@ -114,8 +137,13 @@ export const IntroStage = ({ children, className = "h-svh" }: IntroStageProps) =
     }
     audio.currentTime = 0;
     audio.muted = false;
-    void audio.play().then(() => setIsSoundOn(true));
+    void audio
+      .play()
+      .then(() => setIsSoundOn(true))
+      .catch(() => setIsSoundOn(false));
   };
+
+  const handleExplore = () => scrollToFullpageStop(1);
 
   return (
     <IntroClockContext.Provider value={clock}>
@@ -130,7 +158,28 @@ export const IntroStage = ({ children, className = "h-svh" }: IntroStageProps) =
         >
           {children}
         </div>
-        {}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-0 hidden h-40 bg-gradient-to-t from-neutral-950/60 to-transparent lg:block"
+        />
+        <button
+          type="button"
+          onClick={handleExplore}
+          className="text-14 absolute bottom-7 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center gap-2 rounded-lg bg-neutral-950/25 px-5 py-2 font-medium text-white drop-shadow-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white lg:flex"
+        >
+          {INTRO_COPY.scrollHint}
+          <svg
+            aria-hidden="true"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </button>
         <audio ref={audioRef} src="/intro/heddy-intro.m4a" preload="none" loop />
         <button
           type="button"
