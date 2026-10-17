@@ -119,3 +119,19 @@ export const cubicBezier = (x1: number, y1: number, x2: number, y2: number): ((t
   };
   return (t: number) => (t <= 0 ? 0 : t >= 1 ? 1 : sampleY(solve(t)));
 };
+
+/**
+ * 앞뒤 ramp 비율 동안만 속도를 0에서 올리고 내리며 가운데는 일정한 속도로 가는 이징(속도 사다리꼴).
+ * 가운데 속도는 평균의 1/(1 − ramp)배 — 사인 easeInOut(약 1.57배)보다 가운데가 덜 몰린다.
+ */
+export const easePlateau = (ramp: number): ((t: number) => number) => {
+  const r = clamp(ramp, 1e-6, 0.5);
+  const v = 1 / (1 - r);
+  return (t: number) => {
+    if (t <= 0) return 0;
+    if (t >= 1) return 1;
+    if (t < r) return (v * t * t) / (2 * r);
+    if (t > 1 - r) return 1 - (v * (1 - t) * (1 - t)) / (2 * r);
+    return v * (t - r / 2);
+  };
+};

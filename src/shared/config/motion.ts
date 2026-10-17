@@ -577,11 +577,24 @@ export const FULLPAGE = {
    */
   enter: {
     msPerViewport: 700,
-    msPerViewportBySection: { record: 640, report: 1450, recommend: 1450, ar: 870, share: 1450 } as Partial<
+    /** AR·공유는 한 번 도착하는 동안 지나가는 장면이 가장 많아 더 길게(이슈 #86: AR 4.0 → 6.1초, 공유 2.9 → 4.6초) */
+    msPerViewportBySection: { record: 640, report: 1450, recommend: 1450, ar: 1320, share: 2000 } as Partial<
       Record<SectionKey, number>
     >,
     minMs: 1200,
-    maxMs: 4300,
+    maxMs: 6500,
+    /** 앞뒤 이 비율만 가속·감속하고 가운데는 일정한 속도(`easePlateau`) — 가운데 장면이 몰려 지나가지 않게(이슈 #86) */
+    ramp: 0.2,
+    /**
+     * 섹션 안에서 더 천천히 재생할 구간 [진행도 시작, 끝, 배율] — 좁은 진행도에 장면이 몰린 곳(이슈 #86).
+     * 공유: 링크 → QR 모달(0.31 → 약 0.55초), 폰 B 등장 끝 ~ QR 비행 ~ 공유된 기록(QR 비행 0.55 → 약 1.1초)
+     */
+    slowRanges: {
+      share: [
+        [0.26, 0.37, 1.8],
+        [0.5, 0.78, 2.2],
+      ],
+    } as Partial<Record<SectionKey, ReadonlyArray<readonly [number, number, number]>>>,
   },
   pass: { msPerViewport: 160 },
   hiddenSections: ["intro"] as readonly SectionKey[],
