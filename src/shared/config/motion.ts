@@ -553,8 +553,26 @@ export const FULLPAGE = {
     ["share", 0.92],
     ["closing", 0],
   ] as ReadonlyArray<readonly [SectionKey, number]>,
-  /** 한 입력에 한 화면 이동하되 기록 쌓임·카드·AR·공유의 중간 모션을 읽을 수 있게 천천히 전환한다. */
-  durationMs: 5000,
+  /**
+   * 전환 한 번을 스크롤 경로의 성격대로 나눠 시간·곡선을 준다(이슈 #82, `docs/plans/0023`). 예전엔 거리와 상관없이
+   * 5초 한 곡선이라 다음 화면이 올라오는 순간이 0.45~3.7초로 들쭉날쭉해 끌려가는 느낌이 났다.
+   * - slide: 화면 전체가 미끄러지는 구간(섹션 sticky 밖) — 배민 측정과 같은 0.9초, cubic-bezier(0.4, 0, 0.2, 1).
+   *   한 화면보다 짧으면(푸터) 900ms × √(거리/화면), 최소 shortMinMs
+   * - leave: 지금 섹션의 남은 모션(멈춤 지점 → sticky 끝) — 화면 이동이 늦게 시작하지 않게 짧게
+   * - enter: 다음 섹션 sticky 시작 → 멈춤 지점(도착 후 모션) — 화면당 시간, AR은 패널 문구를 읽게 더 천천히
+   * - pass: 여러 칸 건너뛸 때 지나가는 섹션
+   * - hiddenSections: sticky 동안 화면 변화가 없는 섹션(인트로: 폰 숨김·합체) — 0초로 건너뛴다
+   */
+  slide: { durationMs: 900, bezier: [0.4, 0, 0.2, 1] as const, shortMinMs: 450 },
+  leave: { msPerViewport: 240, maxMs: 700 },
+  enter: {
+    msPerViewport: 420,
+    msPerViewportBySection: { ar: 600 } as Partial<Record<SectionKey, number>>,
+    minMs: 400,
+    maxMs: 3000,
+  },
+  pass: { msPerViewport: 160 },
+  hiddenSections: ["intro"] as readonly SectionKey[],
   /** 휠이 이만큼(ms) 끊겼다 다시 오면 새 동작 — 트랙패드 관성·연속 휠은 한 화면만 넘긴다 */
   gestureGapMs: 360,
 } as const;

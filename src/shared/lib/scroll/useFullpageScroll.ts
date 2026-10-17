@@ -6,10 +6,13 @@ import { SECTION_KEYS, STAGE_LAYOUT } from "@/shared/config";
 
 import {
   consumeFullpageWheel,
-  fullpageDuration,
-  fullpagePosition,
+  fullpagePlan,
+  fullpagePlanDuration,
+  fullpagePlanKind,
+  fullpagePlanPosition,
   fullpageStops,
-  nextFullpageIndex,
+  interruptedTarget,
+  type FullpageSegment,
   type FullpageWheelGesture,
 } from "./fullpageScroll";
 import { wheelDeltaPx } from "./smoothScroll";
@@ -46,27 +49,37 @@ export const useFullpageScroll = (): void => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     let rafId: number | null = null;
     let gesture: FullpageWheelGesture = { lastTime: null, direction: 0 };
+    /** 진행 중인 전환: 구간들·시작 시각·목표 번호 */
+    let plan: readonly FullpageSegment[] = [];
+    let startTime: number | null = null;
+    let targetIndex: number | null = null;
 
-    const measureStops = () => {
-      const sections = Array.from(document.querySelectorAll<HTMLElement>("[data-section]")).flatMap(
-        (node) => {
-          const key = SECTION_KEYS.find((candidate) => candidate === node.dataset.section);
-          if (!key || node.offsetHeight === 0) return [];
-          const top = node.getBoundingClientRect().top + window.scrollY;
-          return [{ key, top, height: node.offsetHeight, end: top + node.offsetHeight }];
-        },
-      );
-      return fullpageStops(
-        sections,
+    const measureSections = () =>
+      Array.from(document.querySelectorAll<HTMLElement>("[data-section]")).flatMap((node) => {
+        const key = SECTION_KEYS.find((candidate) => candidate === node.dataset.section);
+        if (!key || node.offsetHeight === 0) return [];
+        const top = node.getBoundingClientRect().top + window.scrollY;
+        return [{ key, top, height: node.offsetHeight, end: top + node.offsetHeight }];
+      });
+
+    const measureStops = () =>
+      fullpageStops(
+        measureSections(),
         window.innerHeight,
         document.documentElement.scrollHeight - window.innerHeight,
       );
-    };
 
     const stop = () => {
       if (rafId != null) cancelAnimationFrame(rafId);
       rafId = null;
+      plan = [];
+      startTime = null;
+      targetIndex = null;
     };
+
+    /** 화면 전체가 미끄러지는 중이면 입력을 받지 않는다(배민과 같음). 떠나기·도착 중엔 받는다 */
+    const isSliding = () =>
+      rafId != null && startTime != null && fullpagePlanKind(plan, performance.now() - startTime) === "slide";
 
     const moveTo = (index: number) => {
       if (!desktop.matches) return;
@@ -80,19 +93,26 @@ export const useFullpageScroll = (): void => {
         window.scrollTo({ top: to, behavior: "instant" });
         return;
       }
-      const duration = fullpageDuration();
-      let startTime: number | null = null;
+      // 화면 이동(0.9초)·떠나기·도착 구간으로 나눈 시간표 — 숨은 구간은 0초라 휠 직후 바로 움직인다(이슈 #82)
+      plan = fullpagePlan(from, to, measureSections(), window.innerHeight);
+      const duration = fullpagePlanDuration(plan);
+      targetIndex = index;
+      startTime = performance.now();
       const tick = (time: number) => {
-        startTime ??= time;
-        const elapsed = time - startTime;
-        window.scrollTo({ top: fullpagePosition(from, to, elapsed, duration), behavior: "instant" });
-        rafId = elapsed < duration ? requestAnimationFrame(tick) : null;
+        if (startTime == null) return;
+        const elapsed = Math.max(0, time - startTime);
+        window.scrollTo({ top: fullpagePlanPosition(plan, elapsed), behavior: "instant" });
+        if (elapsed < duration) rafId = requestAnimationFrame(tick);
+        else stop();
       };
       rafId = requestAnimationFrame(tick);
     };
 
+    /** 정지 중이면 방향의 다음 화면, 떠나기·도착 중이면 진행 중인 목표 기준으로 이어 간다 */
     const moveBy = (direction: number) =>
-      moveTo(nextFullpageIndex(measureStops(), window.scrollY, direction));
+      moveTo(
+        interruptedTarget(measureStops(), window.scrollY, rafId != null ? targetIndex : null, direction),
+      );
 
     const handleWheel = (event: WheelEvent) => {
       if (
@@ -109,7 +129,7 @@ export const useFullpageScroll = (): void => {
         gesture,
         performance.now(),
         wheelDeltaPx(event, window.innerHeight),
-        rafId != null,
+        isSliding(),
       );
       gesture = result.gesture;
       if (result.shouldAdvance) moveBy(Math.sign(event.deltaY));
@@ -131,7 +151,7 @@ export const useFullpageScroll = (): void => {
       if (event.key === " ") direction = event.shiftKey ? -1 : 1;
       if (!direction && !["Home", "End"].includes(event.key)) return;
       event.preventDefault();
-      if (event.repeat || rafId != null) return;
+      if (event.repeat || isSliding()) return;
       gesture = { lastTime: performance.now(), direction };
       if (event.key === "Home") moveTo(0);
       else if (event.key === "End") moveTo(measureStops().length - 1);
