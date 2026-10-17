@@ -159,7 +159,8 @@ export const s12 = (t: number) => {
       y: tween(t, 30.75, leadY + 20, 31.3, leadY, "out"),
       opacity: tween(t, 30.75, 0, 31.2, 100, "out"),
     } satisfies LayerState,
-    title: reveal(t, 32.1, 0.6, 40, 220, baselineY(480, 70)),
+    /** 내레이션 "다음 스타일"에 맞춤(v16) */
+    title: reveal(t, 32.33, 0.6, 40, 220, baselineY(480, 70)),
     cards: S12_REC.map((card, i): LayerState => {
       const t0 = 31.0 + i * 0.3;
       return {

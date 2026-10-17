@@ -11,7 +11,7 @@ import { S13_LINE2, S13_WAVE, S14_CHARS, s13, s14, s15 } from "../../model/scene
 import { useIntroScene } from "../IntroClock";
 import { dropShadow, Layer, Picture, Text } from "../primitives";
 
-const { scenes, colors } = INTRO;
+const { colors } = INTRO;
 const SCENE_CLASS = "invisible absolute inset-0";
 const GRAY = "#A3A8AD";
 
@@ -22,7 +22,7 @@ export const S13 = () => {
   const waveRef = useRef<SVGPolylineElement>(null);
   const tailRef = useRef<HTMLDivElement>(null);
   const line2Ref = useRef<HTMLDivElement>(null);
-  const rootRef = useIntroScene(scenes.s13, (t) => {
+  const rootRef = useIntroScene("s13", (t) => {
     const s = s13(t);
     applyLayer(yeoRef.current, s.yeo);
     applyLayer(reoRef.current, s.reo);
@@ -95,7 +95,7 @@ export const S14 = () => {
   const leadRef = useRef<HTMLDivElement>(null);
   const leadSpanRef = useRef<HTMLSpanElement>(null);
   const charRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const rootRef = useIntroScene(scenes.s14, (t) => {
+  const rootRef = useIntroScene("s14", (t) => {
     const s = s14(t);
     applyLayer(leadRef.current, s.lead);
     if (leadSpanRef.current) leadSpanRef.current.style.letterSpacing = `calc(-0.03em + ${s.leadTracking}px)`;
@@ -138,7 +138,7 @@ export const S15 = () => {
   const titleRef = useRef<HTMLDivElement>(null);
   const subRef = useRef<HTMLDivElement>(null);
   const urlRef = useRef<HTMLDivElement>(null);
-  const rootRef = useIntroScene(scenes.s15, (t) => {
+  const rootRef = useIntroScene("s15", (t) => {
     const s = s15(t);
     applyLayer(circleRef.current, s.circle);
     applyLayer(symbolRef.current, s.symbol);

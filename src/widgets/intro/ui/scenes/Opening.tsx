@@ -24,7 +24,6 @@ import { useIntroScene } from "../IntroClock";
 import { Box, Layer, Picture, Text, Tile, tileShadow, type TileIcon } from "../primitives";
 
 const { mint, ink } = INTRO.colors;
-const { scenes } = INTRO;
 /** 장면 루트(무대 크기, 바탕색) */
 const SCENE_CLASS = "invisible absolute inset-0";
 const INITIAL_OPENING = s01(INTRO.initialTime);
@@ -33,7 +32,7 @@ const INITIAL_OPENING = s01(INTRO.initialTime);
 export const S01 = () => {
   const lineRef = useRef<HTMLDivElement>(null);
   const wordRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const rootRef = useIntroScene(scenes.s01, (t) => {
+  const rootRef = useIntroScene("s01", (t) => {
     const s = s01(t);
     applyLayer(lineRef.current, { x: s.line, y: 0 });
     s.words.forEach((word, i) => applyLayer(wordRefs.current[i], word));
@@ -63,15 +62,17 @@ export const S01 = () => {
 /* S02 슬롯 롤링 문구 */
 export const S02 = () => {
   const pinRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const tailInkRef = useRef<HTMLDivElement>(null);
   const underlineRef = useRef<HTMLDivElement>(null);
   const rollRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const rootRef = useIntroScene(scenes.s02, (t, root) => {
+  const rootRef = useIntroScene("s02", (t, root) => {
     const s = s02(t);
     root.style.opacity = String(s.scene / 100);
     const y = baselineY(S2_TOP, 64);
     const pinXs = [S2_LEFT, S2_GEOMETRY.tailX, S2_GEOMETRY.closeQuoteX];
     pinRefs.current.forEach((pin, i) => applyLayer(pin, { x: pinXs[i], y, opacity: s.pins }));
+    applyLayer(tailInkRef.current, { x: S2_GEOMETRY.tailX, y, opacity: s.tailInk });
     const { underline } = S2_GEOMETRY;
     applyLayer(underlineRef.current, { x: underline.x, y: underline.y, scaleX: s.underline });
     applyLayer(rollRef.current, { x: 0, y: s.roll });
@@ -100,6 +101,7 @@ export const S02 = () => {
           color={i === 1 ? "#B9BDC1" : "#6B7075"}
         />
       ))}
+      <Text ref={tailInkRef} text={INTRO_COPY.s2Tail} size={64} weight={700} color={ink} />
       <Box ref={underlineRef} width={S2_GEOMETRY.underline.width} height={3} color={ink} />
       {/* 롤링 영역(마스크) */}
       <div
@@ -133,7 +135,7 @@ export const S03 = () => {
   const blackRef = useRef<HTMLDivElement>(null);
   const whiteRefs = useRef<(HTMLDivElement | null)[]>([]);
   const wipeRef = useRef<HTMLDivElement>(null);
-  const rootRef = useIntroScene(scenes.s03, (t) => {
+  const rootRef = useIntroScene("s03", (t) => {
     const s = s03(t);
     if (mintRef.current) mintRef.current.style.visibility = s.isMint ? "visible" : "hidden";
     applyLayer(circleRef.current, s.circle);
@@ -195,7 +197,7 @@ export const S04 = () => {
   const shadowRefs = useRef<(HTMLDivElement | null)[]>([]);
   const grayRefs = useRef<(HTMLDivElement | null)[]>([]);
   const strongRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const rootRef = useIntroScene(scenes.s04, (t) => {
+  const rootRef = useIntroScene("s04", (t) => {
     s04(t).forEach((item, i) => {
       applyLayer(tileRefs.current[i], item.tile);
       const shadow = shadowRefs.current[i];

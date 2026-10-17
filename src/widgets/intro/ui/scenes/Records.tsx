@@ -26,7 +26,7 @@ import {
 import { useIntroScene } from "../IntroClock";
 import { dropShadow, Layer, Phone, Picture, Text, Tile, type TileIcon } from "../primitives";
 
-const { scenes, colors } = INTRO;
+const { colors } = INTRO;
 const SCENE_CLASS = "invisible absolute inset-0 bg-[#F4F5F6]";
 const ICONS: readonly TileIcon[] = ["scissors", "share", "ar", "rec"];
 const cardSrc = (n: number) => `card${String(n).padStart(2, "0")}.png`;
@@ -38,7 +38,7 @@ export const S05 = () => {
   const driftRef = useRef<HTMLDivElement>(null);
   const panelRefs = useRef<(HTMLDivElement | null)[]>([]);
   const cardRef = useRef<HTMLDivElement>(null);
-  const rootRef = useIntroScene(scenes.s05, (t, root) => {
+  const rootRef = useIntroScene("s05", (t, root) => {
     const s = s05(t);
     root.style.opacity = String(s.scene / 100);
     s.tiles.forEach((tile, i) => applyLayer(tileRefs.current[i], tile));
@@ -136,7 +136,7 @@ export const S06 = () => {
   const uiRef = useRef<HTMLDivElement>(null);
   const lineRefs = useRef<(HTMLDivElement | null)[]>([]);
   const floatRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const rootRef = useIntroScene(scenes.s06, (t) => {
+  const rootRef = useIntroScene("s06", (t) => {
     const s = s06(t);
     applyLayer(uiRef.current, s.ui);
     s.lines.forEach((line, i) => applyLayer(lineRefs.current[i], line));
@@ -214,7 +214,7 @@ export const S07 = () => {
   const slotWordRefs = useRef<(HTMLDivElement | null)[]>([]);
   const tailRef = useRef<HTMLDivElement>(null);
   const explainRef = useRef<HTMLDivElement>(null);
-  const rootRef = useIntroScene(scenes.s07, (t) => {
+  const rootRef = useIntroScene("s07", (t) => {
     const s = s07(t);
     applyLayer(phoneRef.current, s.phone);
     s.listCards.forEach((card, j) => applyLayer(listRefs.current[j], card));
@@ -310,7 +310,7 @@ export const S08 = () => {
   const panelRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const barRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const rootRef = useIntroScene(scenes.s08, (t) => {
+  const rootRef = useIntroScene("s08", (t) => {
     const s = s08(t);
     applyLayer(panelRef.current, s.panel);
     applyLayer(scrollRef.current, { x: 0, y: s.scroll });

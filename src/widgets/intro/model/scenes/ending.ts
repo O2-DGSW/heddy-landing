@@ -59,10 +59,11 @@ export const s13 = (t: number) => {
       y: baselineY(440, 48),
       opacity: tween(t, 33.95, 0, 34.35, 100, "out"),
     } satisfies LayerState,
+    /** 내레이션 "나만의"에 맞춤(v16) */
     line2: {
       x: 0,
-      y: tween(t, 33.9, 20, 34.4, 0, "out"),
-      opacity: tween(t, 33.9, 0, 34.3, 100, "out"),
+      y: tween(t, 35.89, 20, 36.39, 0, "out"),
+      opacity: tween(t, 35.89, 0, 36.29, 100, "out"),
     } satisfies LayerState,
   };
 };
@@ -80,7 +81,8 @@ export const s14 = (t: number) => ({
   lead: { x: 960, y: baselineY(380, 52), opacity: tween(t, 36.75, 0, 37.2, 92, "out") } satisfies LayerState,
   leadTracking: tween(t, 36.75, 150, 37.6, 0, "out5"),
   chars: S14_CHARS.map(({ x }, k): LayerState => {
-    const t0 = 37.5 + k * 0.11;
+    // 내레이션 "다음 스타일의 기준이 되다"에 맞춤(v16)
+    const t0 = 38.05 + k * 0.13;
     const y = baselineY(470, 104);
     return {
       x,
