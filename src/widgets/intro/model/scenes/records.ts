@@ -188,7 +188,8 @@ export const s07 = (t: number) => {
         baselineY(440, 84),
       ),
     } satisfies LayerState,
-    explain: reveal(t, S7_LAND[11] + 0.15, 0.5, 40, 220, baselineY(550, 84)),
+    /** 내레이션 "나를"에 맞춤(v16) */
+    explain: reveal(t, S7_LAND[11] + 1.4, 0.5, 40, 220, baselineY(550, 84)),
   };
 };
 

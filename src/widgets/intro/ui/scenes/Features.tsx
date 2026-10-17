@@ -22,7 +22,7 @@ import {
 import { useIntroScene } from "../IntroClock";
 import { dropShadow, Layer, Phone, Picture, Text } from "../primitives";
 
-const { scenes, colors } = INTRO;
+const { colors } = INTRO;
 const SCENE_CLASS = "invisible absolute inset-0";
 const cardSrc = (n: number) => `card${String(n).padStart(2, "0")}.png`;
 
@@ -41,7 +41,7 @@ export const S09 = () => {
   const rightRef = useRef<HTMLDivElement>(null);
   const leftSpanRef = useRef<HTMLSpanElement>(null);
   const rightSpanRef = useRef<HTMLSpanElement>(null);
-  const rootRef = useIntroScene(scenes.s09, (t) => {
+  const rootRef = useIntroScene("s09", (t) => {
     const s = s09(t);
     applyLayer(glowRef.current, s.glow);
     applyLayer(phoneRef.current, s.phone);
@@ -141,7 +141,7 @@ export const S10 = () => {
   const trackRefs = useRef<(HTMLDivElement | null)[]>([]);
   const knobRefs = useRef<(HTMLDivElement | null)[]>([]);
   const wordRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const rootRef = useIntroScene(scenes.s10, (t, root) => {
+  const rootRef = useIntroScene("s10", (t, root) => {
     const s = s10(t);
     root.style.opacity = String(s.scene / 100);
     s.cards.forEach((card, i) => {
@@ -237,7 +237,7 @@ export const S11 = () => {
   const haloRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<HTMLDivElement>(null);
   const wordRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const rootRef = useIntroScene(scenes.s11, (t) => {
+  const rootRef = useIntroScene("s11", (t) => {
     const s = s11(t);
     s.columns.forEach((y, i) => applyLayer(columnRefs.current[i], { x: 0, y }));
     applyLayer(haloRef.current, { x: 960, y: 540, opacity: s.halo });
@@ -320,7 +320,7 @@ export const S12 = () => {
   const leadRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const rootRef = useIntroScene(scenes.s12, (t) => {
+  const rootRef = useIntroScene("s12", (t) => {
     const s = s12(t);
     s.deco.forEach((deco, i) => applyLayer(decoRefs.current[i], deco));
     applyLayer(leadRef.current, s.lead);

@@ -4,7 +4,8 @@ import { at, baselineY, clamp01, pop, sceneFade, seg, tileX, track, tween, type 
 
 /* ===== S01 0–3.0 민트 · 단어 타이핑 ===== */
 
-const S1_TIMES = [0.3, 0.6, 0.9, 1.4, 1.7, 2.0];
+/** 단어 등장 시각 — v16 내레이션에 맞춤(이슈 #96) */
+const S1_TIMES = [0.34, 0.54, 0.82, 1.46, 1.7, 2.02];
 const S1_GAP = 26;
 const S1_SIZE = 88;
 const S1_TOP = 480;
@@ -59,6 +60,8 @@ export const s02 = (
 ): {
   scene: number;
   pins: number;
+  /** '하나면 충분' 진한 글자(내레이션 '하나면 충분'에 맞춰 회색 위로 나타남, v16) */
+  tailInk: number;
   underline: number;
   roll: number;
   items: { opacity: number; blur: number }[];
@@ -69,6 +72,7 @@ export const s02 = (
   return {
     scene: sceneFade(t, 5.35, 5.6, "inn"),
     pins: tween(t, 3.05, 0, 3.35, 100, "out"),
+    tailInk: tween(t, 4.887, 0, 5.05, 100, "out"),
     underline: tween(t, 3.1, 0, 3.6, 100, "io"),
     roll,
     items: INTRO_COPY.s2Roll.map((_, i) => ({ opacity: clamp01(1 - Math.abs(i - f) * 0.9) * 100, blur })),
@@ -116,7 +120,8 @@ export const s03 = (t: number) => {
 
 /* ===== S04 8.2–11.6 기능 아이콘 4종 + 라벨 하이라이트 ===== */
 
-const S4_HIGHLIGHT = [9.2, 9.75, 10.3, 10.85];
+/** 라벨 강조 시각(원래 시각) — 시간 재배치 후 내레이션 "시술기록 저장 / 기록 공유 / AR 미리보기 / 스타일 추천"에 맞음(v16) */
+const S4_HIGHLIGHT = [8.9, 9.686, 10.2, 10.897];
 export const S4_LABEL_Y = baselineY(575, 28);
 
 export const s04 = (t: number) =>
