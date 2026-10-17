@@ -108,30 +108,55 @@ describe("fullpagePlan (전환을 화면 이동 · 화면 고정 구간으로 �
     expect(fullpagePlanPosition(plan, 1)).toBeGreaterThan(section("record").top - H);
   });
 
-  it("도착 구간은 새 화면의 모션을 화면당 시간으로 재생한다(기록 12건 약 2.1초, 최대 3초)", () => {
-    const plan = fullpagePlan(stops[0].scrollY, stops[1].scrollY, sections, H);
-    const enter = plan[plan.length - 1];
-    expect(enter.kind).toBe("enter");
-    expect(enter.durationMs).toBeCloseTo(5 * FULLPAGE.enter.msPerViewport, -1);
-    expect(totalMs(plan)).toBeLessThan(3500);
+  const transition = (fromKey: string, toKey: string) => {
+    const from = stops.find((stop) => stop.key === fromKey);
+    const to = stops.find((stop) => stop.key === toKey);
+    if (!from || !to) throw new Error("stop missing");
+    return fullpagePlan(from.scrollY, to.scrollY, sections, H);
+  };
+
+  it("도착한 뒤 목업 모션은 내용을 읽을 만큼 재생한다(이슈 #84, 예전엔 0.4~0.9초에 지나감)", () => {
+    // [도착 화면, 최소, 최대(ms)] — 모션 양에 맞춘다
+    const expected: [string, string, number, number][] = [
+      ["intro", "record", 3000, 3600], // 기록 12건 쌓임
+      ["record", "report", 1500, 1900], // 상세 화면 스크롤 + 지표 막대 4개
+      ["report", "recommend", 1300, 1700], // 추천 카드 3장 펼침
+      ["recommend", "ar", 3800, 4300], // 박스 확대 → 다크 패널 문구 → AR 폰 · 스타일 전환
+      ["ar", "share", 2800, 3300], // 토글 → QR 모달 → 폰 B → QR 비행 → 공유된 기록
+    ];
+    for (const [from, to, min, max] of expected) {
+      const enter = transition(from, to).at(-1);
+      expect(enter?.kind).toBe("enter");
+      expect(enter?.durationMs).toBeGreaterThanOrEqual(min);
+      expect(enter?.durationMs).toBeLessThanOrEqual(max);
+    }
   });
 
-  it("AR 도착은 다크 패널 문구를 읽을 수 있게 더 천천히(화면당 600ms)", () => {
-    const recommendStop = stops.find((stop) => stop.key === "recommend");
-    const arStop = stops.find((stop) => stop.key === "ar");
-    if (!recommendStop || !arStop) throw new Error("stop missing");
-    const enter = fullpagePlan(recommendStop.scrollY, arStop.scrollY, sections, H).at(-1);
-    expect(enter?.kind).toBe("enter");
-    expect(enter?.durationMs).toBeCloseTo(0.92 * 5 * (FULLPAGE.enter.msPerViewportBySection.ar ?? 0), -1);
-  });
-
-  it("떠나기 구간(지금 화면 모션 마무리)은 짧다 — 화면 이동이 늦게 시작하지 않게", () => {
-    const recommendStop = stops.find((stop) => stop.key === "recommend");
-    const arStop = stops.find((stop) => stop.key === "ar");
-    if (!recommendStop || !arStop) throw new Error("stop missing");
-    const leave = fullpagePlan(recommendStop.scrollY, arStop.scrollY, sections, H)[0];
+  it("떠나기(지금 화면 모션 마무리)도 보이되 화면 이동을 1초 넘게 미루지 않는다", () => {
+    const leave = transition("recommend", "ar")[0];
     expect(leave.kind).toBe("leave");
+    expect(leave.durationMs).toBeGreaterThanOrEqual(700);
     expect(leave.durationMs).toBeLessThanOrEqual(FULLPAGE.leave.maxMs);
+    expect(FULLPAGE.leave.maxMs).toBeLessThanOrEqual(1000);
+  });
+
+  it("기록 진입 회전은 폰이 다 나타난 뒤 시작해 첫 카드 전에 끝나고, 실제로 약 1초 동안 돈다(이슈 #84)", () => {
+    const record = section("record");
+    const [spinStart, spinEnd] = TIMELINE.record.spinVh;
+    expect(spinStart).toBeGreaterThanOrEqual(TIMELINE.stageRevealVh[1]);
+    const bandStartY = record.top + TIMELINE.record.band[0] * (record.height - H);
+    expect(record.top + spinEnd * H).toBeLessThanOrEqual(bandStartY + 1);
+    const plan = transition("intro", "record");
+    const timeAt = (y: number) => {
+      for (let t = 0; t <= 6000; t += 2) if (fullpagePlanPosition(plan, t) >= y) return t;
+      return Infinity;
+    };
+    const spinMs = timeAt(record.top + spinEnd * H) - timeAt(record.top + spinStart * H);
+    expect(spinMs).toBeGreaterThanOrEqual(900);
+  });
+
+  it("화면 이동(0.9초)은 그대로다", () => {
+    expect(FULLPAGE.slide.durationMs).toBe(900);
   });
 
   it("역방향도 같은 규칙: 지금 화면 마무리 → 0.9초 화면 이동 → 이전 화면 도착", () => {
