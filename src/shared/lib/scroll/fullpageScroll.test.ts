@@ -121,8 +121,8 @@ describe("fullpagePlan (전환을 화면 이동 · 화면 고정 구간으로 �
       ["intro", "record", 3000, 3600], // 기록 12건 쌓임
       ["record", "report", 1500, 1900], // 상세 화면 스크롤 + 지표 막대 4개
       ["report", "recommend", 1300, 1700], // 추천 카드 3장 펼침
-      ["recommend", "ar", 3800, 4300], // 박스 확대 → 다크 패널 문구 → AR 폰 · 스타일 전환
-      ["ar", "share", 2800, 3300], // 토글 → QR 모달 → 폰 B → QR 비행 → 공유된 기록
+      ["recommend", "ar", 5800, 6400], // 박스 확대 → 다크 패널 문구 → AR 폰 · 스타일 전환(이슈 #86)
+      ["ar", "share", 5000, 6000], // 토글 → QR 모달 → 폰 B → QR 비행 → 공유된 기록(이슈 #86)
     ];
     for (const [from, to, min, max] of expected) {
       const enter = transition(from, to).at(-1);
@@ -153,6 +153,39 @@ describe("fullpagePlan (전환을 화면 이동 · 화면 고정 구간으로 �
     };
     const spinMs = timeAt(record.top + spinEnd * H) - timeAt(record.top + spinStart * H);
     expect(spinMs).toBeGreaterThanOrEqual(900);
+  });
+
+  it("도착은 앞뒤만 부드럽게 가속·감속하고 가운데는 일정한 속도 — 가운데 장면이 몰려 지나가지 않게(이슈 #86)", () => {
+    // 곡선 자체를 본다 — 섹션 안 느린 구간(slowRanges)이 없는 AR 도착으로
+    const enter = transition("recommend", "ar").at(-1);
+    if (!enter) throw new Error("enter missing");
+    const plan = [enter];
+    const average = (enter.to - enter.from) / enter.durationMs;
+    const speedAt = (t: number) =>
+      (fullpagePlanPosition(plan, t + 5) - fullpagePlanPosition(plan, t - 5)) / 10;
+    for (const f of [0.3, 0.4, 0.5, 0.6, 0.7]) {
+      expect(speedAt(enter.durationMs * f)).toBeLessThanOrEqual(average * 1.3);
+      expect(speedAt(enter.durationMs * f)).toBeGreaterThanOrEqual(average * 1.2);
+    }
+    expect(speedAt(enter.durationMs * 0.02)).toBeLessThan(average * 0.3);
+  });
+
+  it("공유 도착은 QR 모달·QR 비행·공유된 기록 구간만 더 천천히 — QR 비행 1초 이상, 다른 장면은 그대로(이슈 #86)", () => {
+    const share = section("share");
+    const enter = transition("ar", "share").at(-1);
+    if (!enter) throw new Error("enter missing");
+    const plan = [enter];
+    const yAt = (p: number) => share.top + p * (share.height - H);
+    const timeAt = (y: number) => {
+      for (let t = 0; t <= enter.durationMs; t += 2) if (fullpagePlanPosition(plan, t) >= y) return t;
+      return enter.durationMs;
+    };
+    const beat = (p0: number, p1: number) => timeAt(yAt(p1)) - timeAt(yAt(p0));
+    expect(beat(TIMELINE.share.linkTap[0], TIMELINE.share.qrModal[1])).toBeGreaterThanOrEqual(500); // 링크 → QR 모달
+    expect(beat(...TIMELINE.qrFlight)).toBeGreaterThanOrEqual(1000);
+    expect(beat(...TIMELINE.bScanToWebview)).toBeGreaterThanOrEqual(300);
+    expect(beat(0.03, 0.26)).toBeGreaterThanOrEqual(800); // 토글 3개
+    expect(fullpagePlanPosition(plan, enter.durationMs + 1)).toBe(enter.to);
   });
 
   it("화면 이동(0.9초)은 그대로다", () => {

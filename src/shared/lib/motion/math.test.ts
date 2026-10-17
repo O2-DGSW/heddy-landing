@@ -4,6 +4,7 @@ import {
   clamp,
   cubicBezier,
   damp,
+  easePlateau,
   easeInOutCubic,
   easeInOutSine,
   lerp,
@@ -138,5 +139,24 @@ describe("cubicBezier (CSS cubic-bezier)", () => {
   it("직선(0, 0, 1, 1)은 그대로", () => {
     const linear = cubicBezier(0, 0, 1, 1);
     for (const t of [0.1, 0.5, 0.9]) expect(linear(t)).toBeCloseTo(t, 4);
+  });
+});
+
+describe("easePlateau (앞뒤만 가속·감속, 가운데 일정 속도)", () => {
+  const ease = easePlateau(0.2);
+  const slope = (t: number) => (ease(t + 1e-4) - ease(t - 1e-4)) / 2e-4;
+
+  it("끝점이 맞고 계속 증가하며 가운데 대칭", () => {
+    expect(ease(0)).toBe(0);
+    expect(ease(1)).toBe(1);
+    expect(ease(0.5)).toBeCloseTo(0.5);
+    for (let t = 0.05; t <= 1; t += 0.05) expect(ease(t)).toBeGreaterThanOrEqual(ease(t - 0.05));
+    expect(ease(0.3)).toBeCloseTo(1 - ease(0.7));
+  });
+
+  it("가운데 속도는 평균의 1/(1 − ramp)배(ramp 0.2 → 1.25배), 시작·끝은 0에서 오른다", () => {
+    for (const t of [0.25, 0.5, 0.75]) expect(slope(t)).toBeCloseTo(1.25, 2);
+    expect(slope(0.001)).toBeLessThan(0.05);
+    expect(slope(0.999)).toBeLessThan(0.05);
   });
 });

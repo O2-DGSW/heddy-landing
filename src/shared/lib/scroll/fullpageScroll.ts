@@ -1,5 +1,5 @@
 import { FULLPAGE, type SectionKey } from "@/shared/config";
-import { clamp, cubicBezier, easeInOutSine, lerp } from "@/shared/lib/motion";
+import { clamp, cubicBezier, easeInOutSine, easePlateau, lerp } from "@/shared/lib/motion";
 
 import type { SectionFrame } from "./stageLayout";
 
@@ -73,11 +73,17 @@ export type FullpageSegment = {
   from: number;
   to: number;
   durationMs: number;
+  /**
+   * 구간 안 속도 배분 [누적 시간 비율(0~1), scrollY] — 천천히 재생할 구간(`FULLPAGE.enter.slowRanges`)이 있으면
+   * 그 구간에 시간을 더 준다. 없으면 from → to 균등
+   */
+  knots?: readonly (readonly [number, number])[];
 };
 
 const SLIDE_EASE = cubicBezier(...FULLPAGE.slide.bezier);
+const ENTER_EASE = easePlateau(FULLPAGE.enter.ramp);
 const easeOf = (kind: FullpageSegmentKind): ((t: number) => number) =>
-  kind === "slide" ? SLIDE_EASE : easeInOutSine;
+  kind === "slide" ? SLIDE_EASE : kind === "enter" ? ENTER_EASE : easeInOutSine;
 
 /** 화면이 멈춰 있는 sticky 범위 [top, end − 화면 높이] — 이 밖에서는 화면 전체가 움직인다 */
 const stickyRanges = (sections: readonly SectionFrame[], viewportHeight: number) =>
@@ -130,9 +136,21 @@ export const fullpagePlan = (
     const isLast = index === pieces.length - 1;
     const isFirst = index === 0;
     if (isLast) {
-      const { msPerViewport, msPerViewportBySection, minMs, maxMs } = FULLPAGE.enter;
+      const { msPerViewport, msPerViewportBySection, minMs, maxMs, slowRanges } = FULLPAGE.enter;
       const rate = msPerViewportBySection[piece.range.key] ?? msPerViewport;
-      return { kind: "enter", from: segFrom, to: segTo, durationMs: clamp(viewports * rate, minMs, maxMs) };
+      const { knots, weighted } = weightedKnots(
+        segFrom,
+        segTo,
+        piece.range,
+        slowRanges[piece.range.key] ?? [],
+      );
+      return {
+        kind: "enter",
+        from: segFrom,
+        to: segTo,
+        durationMs: clamp((weighted / viewportHeight) * rate, minMs, maxMs),
+        knots,
+      };
     }
     if (isFirst) {
       const { msPerViewport, maxMs } = FULLPAGE.leave;
@@ -147,13 +165,56 @@ export const fullpagePlan = (
   });
 };
 
-/** 경과 시간(ms)의 스크롤 위치 — 0초 구간은 바로 건너뛰고, 구간마다 제 곡선으로 보간한다 */
+/**
+ * 천천히 재생할 구간에 시간을 더 주는 배분표. 구간 [from, to](이동 방향 순)를 slow 경계로 나눠 거리 × 배율을 누적한다.
+ * weighted는 배율을 곱한 거리(px) — 도착 시간 계산에 쓴다.
+ */
+const weightedKnots = (
+  from: number,
+  to: number,
+  range: { start: number; end: number },
+  slow: ReadonlyArray<readonly [number, number, number]>,
+): { knots: [number, number][]; weighted: number } => {
+  const yOf = (p: number) => range.start + p * (range.end - range.start);
+  const lo = Math.min(from, to);
+  const hi = Math.max(from, to);
+  const ys = slow
+    .flatMap(([p0, p1]) => [yOf(p0), yOf(p1)])
+    .filter((y) => y > lo && y < hi)
+    .concat(from, to)
+    .sort((a, b) => (to > from ? a - b : b - a))
+    .filter((y, index, list) => index === 0 || Math.abs(y - list[index - 1]) > 0.5);
+  const weightAt = (y: number) => {
+    const p = (y - range.start) / Math.max(1, range.end - range.start);
+    return slow.find(([p0, p1]) => p > p0 && p < p1)?.[2] ?? 1;
+  };
+  const cumulative = [0];
+  for (let i = 1; i < ys.length; i++) {
+    cumulative.push(cumulative[i - 1] + Math.abs(ys[i] - ys[i - 1]) * weightAt((ys[i] + ys[i - 1]) / 2));
+  }
+  const weighted = cumulative[cumulative.length - 1];
+  return { knots: ys.map((y, i) => [weighted > 0 ? cumulative[i] / weighted : 1, y]), weighted };
+};
+
+/** 배분표에서 시간 비율 u(0~1)의 scrollY */
+const knotPosition = (knots: readonly (readonly [number, number])[], u: number): number => {
+  for (let i = 1; i < knots.length; i++) {
+    const [u0, y0] = knots[i - 1];
+    const [u1, y1] = knots[i];
+    if (u <= u1) return u1 - u0 <= 0 ? y1 : lerp(y0, y1, (u - u0) / (u1 - u0));
+  }
+  return knots[knots.length - 1][1];
+};
+
+/** 경과 시간(ms)의 스크롤 위치 — 0초 구간은 바로 건너뛰고, 구간마다 제 곡선(과 배분표)으로 보간한다 */
 export const fullpagePlanPosition = (plan: readonly FullpageSegment[], elapsedMs: number): number => {
   if (plan.length === 0) return 0;
   let remaining = elapsedMs;
   for (const seg of plan) {
-    if (remaining < seg.durationMs)
-      return lerp(seg.from, seg.to, easeOf(seg.kind)(remaining / seg.durationMs));
+    if (remaining < seg.durationMs) {
+      const u = easeOf(seg.kind)(remaining / seg.durationMs);
+      return seg.knots ? knotPosition(seg.knots, u) : lerp(seg.from, seg.to, u);
+    }
     remaining -= seg.durationMs;
   }
   return plan[plan.length - 1].to;
