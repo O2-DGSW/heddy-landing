@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { clamp, damp, easeInOutCubic, easeInOutSine, lerp, mixRgb, monotoneCubic, progressIn } from "./math";
+import {
+  clamp,
+  cubicBezier,
+  damp,
+  easeInOutCubic,
+  easeInOutSine,
+  lerp,
+  mixRgb,
+  monotoneCubic,
+  progressIn,
+} from "./math";
 
 describe("clamp", () => {
   it("범위 안 값은 그대로 반환한다", () => {
@@ -110,5 +120,23 @@ describe("easeInOutSine", () => {
   });
   it("시작이 easeInOutCubic보다 빨리 반응한다", () => {
     expect(easeInOutSine(0.1)).toBeGreaterThan(easeInOutCubic(0.1));
+  });
+});
+
+describe("cubicBezier (CSS cubic-bezier)", () => {
+  it("배민 화면 이동 곡선(0.4, 0, 0.2, 1): 끝점이 맞고 앞쪽에서 빠르게 가다 길게 감속한다", () => {
+    const ease = cubicBezier(0.4, 0, 0.2, 1);
+    expect(ease(0)).toBe(0);
+    expect(ease(1)).toBe(1);
+    // 배민 측정(0.9초 기준): 35% ≈ 51%, 57% ≈ 82%, 79% ≈ 96%
+    expect(ease(0.35)).toBeGreaterThan(0.45);
+    expect(ease(0.35)).toBeLessThan(0.62);
+    expect(ease(0.57)).toBeGreaterThan(0.78);
+    expect(ease(0.79)).toBeGreaterThan(0.93);
+  });
+
+  it("직선(0, 0, 1, 1)은 그대로", () => {
+    const linear = cubicBezier(0, 0, 1, 1);
+    for (const t of [0.1, 0.5, 0.9]) expect(linear(t)).toBeCloseTo(t, 4);
   });
 });

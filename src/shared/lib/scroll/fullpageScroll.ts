@@ -1,5 +1,5 @@
 import { FULLPAGE, type SectionKey } from "@/shared/config";
-import { clamp, easeInOutSine, lerp } from "@/shared/lib/motion";
+import { clamp, cubicBezier, easeInOutSine, lerp } from "@/shared/lib/motion";
 
 import type { SectionFrame } from "./stageLayout";
 
@@ -66,12 +66,132 @@ export const activeFullpageIndex = (stops: readonly FullpageStop[], scrollY: num
   return nearest;
 };
 
-/** 섹션의 모션용 스크롤 길이에 관계없이 같은 시간에 다음 완성 화면으로 이동한다. */
-export const fullpageDuration = (): number => FULLPAGE.durationMs;
+export type FullpageSegmentKind = "hidden" | "leave" | "slide" | "enter" | "pass";
 
-/** 급격한 중간 가속 없이 완만하게 출발·정지하며 중간 스크롤 모션을 고르게 재생한다. */
-export const fullpagePosition = (from: number, to: number, elapsedMs: number, durationMs: number): number =>
-  durationMs <= 0 ? to : lerp(from, to, easeInOutSine(clamp(elapsedMs / durationMs)));
+export type FullpageSegment = {
+  kind: FullpageSegmentKind;
+  from: number;
+  to: number;
+  durationMs: number;
+};
+
+const SLIDE_EASE = cubicBezier(...FULLPAGE.slide.bezier);
+const easeOf = (kind: FullpageSegmentKind): ((t: number) => number) =>
+  kind === "slide" ? SLIDE_EASE : easeInOutSine;
+
+/** 화면이 멈춰 있는 sticky 범위 [top, end − 화면 높이] — 이 밖에서는 화면 전체가 움직인다 */
+const stickyRanges = (sections: readonly SectionFrame[], viewportHeight: number) =>
+  sections
+    .filter((section) => section.height > viewportHeight)
+    .map((section) => ({ key: section.key, start: section.top, end: section.end - viewportHeight }));
+
+const slideDuration = (distance: number, viewportHeight: number): number => {
+  const ratio = distance / viewportHeight;
+  const { durationMs, shortMinMs } = FULLPAGE.slide;
+  return ratio >= 1 ? durationMs * ratio : Math.max(shortMinMs, durationMs * Math.sqrt(ratio));
+};
+
+/**
+ * 전환 한 번(from → to)을 구간으로 나눈다(이슈 #82, `docs/plans/0023`). 섹션 sticky 범위 안은 화면이 멈춘 채 모션만
+ * 진행하는 구간(떠나기·도착·지나가기, 숨은 섹션은 0초), 밖은 화면 전체가 미끄러지는 구간(배민 0.9초 곡선)이다.
+ * 구간은 이동 방향 순서이고 끝과 시작이 맞닿아 위치가 끊기지 않는다.
+ */
+export const fullpagePlan = (
+  from: number,
+  to: number,
+  sections: readonly SectionFrame[],
+  viewportHeight: number,
+): FullpageSegment[] => {
+  if (Math.abs(to - from) < 0.5) return [];
+  const direction = Math.sign(to - from);
+  const lo = Math.min(from, to);
+  const hi = Math.max(from, to);
+  const ranges = stickyRanges(sections, viewportHeight);
+  const cuts = [lo, hi, ...ranges.flatMap((range) => [range.start, range.end])]
+    .filter((y) => y >= lo && y <= hi)
+    .sort((a, b) => a - b)
+    .filter((y, index, list) => index === 0 || y - list[index - 1] > 0.5);
+  const pieces = cuts.slice(1).map((end, index) => {
+    const start = cuts[index];
+    const middle = (start + end) / 2;
+    const range = ranges.find((candidate) => middle > candidate.start && middle < candidate.end);
+    return { start, end, range };
+  });
+  if (direction < 0) pieces.reverse();
+
+  return pieces.map((piece, index): FullpageSegment => {
+    const [segFrom, segTo] = direction > 0 ? [piece.start, piece.end] : [piece.end, piece.start];
+    const distance = piece.end - piece.start;
+    const viewports = distance / viewportHeight;
+    if (!piece.range)
+      return { kind: "slide", from: segFrom, to: segTo, durationMs: slideDuration(distance, viewportHeight) };
+    if (FULLPAGE.hiddenSections.includes(piece.range.key))
+      return { kind: "hidden", from: segFrom, to: segTo, durationMs: 0 };
+    const isLast = index === pieces.length - 1;
+    const isFirst = index === 0;
+    if (isLast) {
+      const { msPerViewport, msPerViewportBySection, minMs, maxMs } = FULLPAGE.enter;
+      const rate = msPerViewportBySection[piece.range.key] ?? msPerViewport;
+      return { kind: "enter", from: segFrom, to: segTo, durationMs: clamp(viewports * rate, minMs, maxMs) };
+    }
+    if (isFirst) {
+      const { msPerViewport, maxMs } = FULLPAGE.leave;
+      return {
+        kind: "leave",
+        from: segFrom,
+        to: segTo,
+        durationMs: Math.min(maxMs, viewports * msPerViewport),
+      };
+    }
+    return { kind: "pass", from: segFrom, to: segTo, durationMs: viewports * FULLPAGE.pass.msPerViewport };
+  });
+};
+
+/** 경과 시간(ms)의 스크롤 위치 — 0초 구간은 바로 건너뛰고, 구간마다 제 곡선으로 보간한다 */
+export const fullpagePlanPosition = (plan: readonly FullpageSegment[], elapsedMs: number): number => {
+  if (plan.length === 0) return 0;
+  let remaining = elapsedMs;
+  for (const seg of plan) {
+    if (remaining < seg.durationMs)
+      return lerp(seg.from, seg.to, easeOf(seg.kind)(remaining / seg.durationMs));
+    remaining -= seg.durationMs;
+  }
+  return plan[plan.length - 1].to;
+};
+
+/** 경과 시간에 진행 중인 구간 종류(끝났으면 null) — 화면 이동(slide) 중에만 입력을 막는다 */
+export const fullpagePlanKind = (
+  plan: readonly FullpageSegment[],
+  elapsedMs: number,
+): FullpageSegmentKind | null => {
+  let remaining = elapsedMs;
+  for (const seg of plan) {
+    if (remaining < seg.durationMs) return seg.kind;
+    remaining -= seg.durationMs;
+  }
+  return null;
+};
+
+/** 전체 시간(ms) */
+export const fullpagePlanDuration = (plan: readonly FullpageSegment[]): number =>
+  plan.reduce((sum, seg) => sum + seg.durationMs, 0);
+
+/**
+ * 도착·떠나기 중 끼어든 입력의 목표: 같은 방향이면 진행 중인 목표의 다음 화면(지금 목표를 다시 잡으면 넘어가지 않으므로),
+ * 반대 방향이거나 진행 중인 목표가 없으면 지금 위치 기준으로 방향에 있는 첫 화면.
+ */
+export const interruptedTarget = (
+  stops: readonly FullpageStop[],
+  scrollY: number,
+  currentTarget: number | null,
+  direction: number,
+): number => {
+  if (currentTarget == null) return nextFullpageIndex(stops, scrollY, direction);
+  const isAhead =
+    direction > 0 ? stops[currentTarget]?.scrollY > scrollY : stops[currentTarget]?.scrollY < scrollY;
+  if (!isAhead) return nextFullpageIndex(stops, scrollY, direction);
+  return clamp(currentTarget + direction, 0, stops.length - 1);
+};
 
 /** 관성 꼬리는 같은 제스처로 소비한다. 애니메이션 중 입력을 다음 이동으로 쌓지 않는다. */
 export const consumeFullpageWheel = (
