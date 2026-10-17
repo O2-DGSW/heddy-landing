@@ -26,7 +26,6 @@ describe("computeRecordAside", () => {
     expect(aside.date).toBe("2026.01");
     expect(aside.prevDate).toBeNull();
     expect(aside.dateColor).toEqual([214, 208, 196]);
-    expect(aside.railScale).toBeCloseTo(0.08);
   });
 
   it("폰에 카드 k가 들어오는 동안 날짜가 k-1 → k로 굴러 올라간다", () => {
@@ -39,16 +38,14 @@ describe("computeRecordAside", () => {
     expect(computeRecordAside(atP(pAtStep(4, 0.8)), RECORD_CARDS).roll).toBe(1);
   });
 
-  it("끝에서 마지막 카드 날짜가 거의 검정색이고 레일이 꽉 찬다", () => {
+  it("끝에서 마지막 카드 날짜가 거의 검정색이다", () => {
     const aside = computeRecordAside(atP(1), RECORD_CARDS);
     expect(aside.date).toBe("2026.09");
     expect(aside.dateColor).toEqual([13, 13, 13]);
-    expect(aside.railScale).toBeCloseTo(1);
   });
 
   it("reduced motion이면 최종 상태다", () => {
     const aside = computeRecordAside(atP(0, true), RECORD_CARDS);
     expect(aside.date).toBe("2026.09");
-    expect(aside.railScale).toBe(1);
   });
 });
