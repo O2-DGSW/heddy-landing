@@ -176,7 +176,7 @@ export const TIMELINE = {
   // --- 폰 A/B 자세 (§3) ---
   /**
    * record.top 기준 뷰포트 높이 배수: 인트로 뒤에 숨어 있던 3D 폰 레이어가 나타나는 구간(이슈 #71) — 폰이 회전하며
-   * 기울기 시작할 무렵(`record.spinVh` 시작 -0.6)
+   * 기울기 시작하기 전(`record.spinVh` 시작 -0.3에 다 나타남)
    */
   stageRevealVh: [-0.6, -0.3] as Range,
   /** ar 진행도: 폰 A 재등장 y (yOffset) */
@@ -204,7 +204,11 @@ export const TIMELINE = {
     /** record 진행도: 기록 12건이 한 건씩 추가되는 구간 (`docs/plans/0004`) */
     band: [0.06, 0.94] as Range,
     /** record.top 기준 뷰포트 높이 배수: 폰이 한 바퀴 돌며 기울어지는 구간 */
-    spinVh: [-0.6, 0.15] as Range,
+    /**
+     * 원본 [-0.6, 0.15]는 화면 이동(0.9초) 안에서 한 바퀴를 약 0.6초에 돌았다(이슈 #84) — 폰이 다 나타난 뒤(-0.3)
+     * 시작해 첫 카드(band 시작 0.3화면) 전에 끝나게 옮겨 화면 이동 끝과 도착 시작에 걸쳐 약 1초 돈다
+     */
+    spinVh: [-0.3, 0.3] as Range,
     /** 한 건 추가 스텝(0~1) 중 밀림·등장·튀어나옴이 끝나는 지점. 나머지는 멈춰서 읽는 시간 */
     stepEnter: 0.45,
     /** record 진행도: 마지막 카드가 내려앉고 폰이 정면으로 돌아오는 구간 */
@@ -564,12 +568,20 @@ export const FULLPAGE = {
    * - hiddenSections: sticky 동안 화면 변화가 없는 섹션(인트로: 폰 숨김·합체) — 0초로 건너뛴다
    */
   slide: { durationMs: 900, bezier: [0.4, 0, 0.2, 1] as const, shortMinMs: 450 },
-  leave: { msPerViewport: 240, maxMs: 700 },
+  /** 화면당 650ms, 최대 0.9초 — 추천 카드 복귀처럼 마무리 모션이 보이되 화면 이동을 오래 미루지 않게 */
+  leave: { msPerViewport: 650, maxMs: 900 },
+  /**
+   * 도착 모션 시간 = 섹션 스크롤 길이(화면) × 화면당 시간. 스크롤 길이가 짧아도 모션이 많은 섹션은 화면당 시간을 늘린다
+   * (이슈 #84: 420ms 일괄이면 리포트 0.48초·추천 0.42초·공유 0.85초에 지나갔다). 결과: 기록 3.2초 · 리포트 1.7초 ·
+   * 추천 1.4초 · AR 4.0초 · 공유 2.9초
+   */
   enter: {
-    msPerViewport: 420,
-    msPerViewportBySection: { ar: 600 } as Partial<Record<SectionKey, number>>,
-    minMs: 400,
-    maxMs: 3000,
+    msPerViewport: 700,
+    msPerViewportBySection: { record: 640, report: 1450, recommend: 1450, ar: 870, share: 1450 } as Partial<
+      Record<SectionKey, number>
+    >,
+    minMs: 1200,
+    maxMs: 4300,
   },
   pass: { msPerViewport: 160 },
   hiddenSections: ["intro"] as readonly SectionKey[],
