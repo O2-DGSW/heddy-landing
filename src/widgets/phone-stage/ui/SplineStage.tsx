@@ -8,7 +8,7 @@ import type { Application, SPEObject } from "@splinetool/runtime";
 
 import { RECORD_CARD_IMAGE_COUNT, RECORD_CARDS, recordCardNo } from "@/entities/record";
 import { RECORD_STACK } from "@/shared/config";
-import { useSceneFrame, useSmoothSceneFrame } from "@/shared/lib/scroll";
+import { useAfterSceneFrame, useSceneFrame, useSmoothSceneFrame } from "@/shared/lib/scroll";
 
 import { computeRecordStack, type RecordStackScene } from "../model/recordStack";
 import { computeStageReveal } from "../model/scene";
@@ -19,7 +19,7 @@ import {
   fitShareRigB,
 } from "../model/scene3d";
 
-const Spline = dynamic(() => import("@splinetool/react-spline"), { ssr: false });
+const Spline = dynamic(() => import("./SplineCanvas"), { ssr: false });
 
 /** 이 시간 안에 씬이 안 뜨면 CSS 폰으로 되돌린다(ms) */
 const LOAD_TIMEOUT_MS = 10_000;
@@ -46,6 +46,7 @@ type SplineInternals = {
  * 시각은 이 프레임 rAF 시각을 써서 루프와 dt가 어긋나지 않게 한다. 그린 뒤엔 루프가 같은 장면을 다시 그리지 않는다.
  */
 const renderNow = (app: Application): void => {
+  app.requestRender();
   const { render } = app as unknown as SplineInternals;
   if (typeof render !== "function") return;
   const time = document.timeline.currentTime;
@@ -190,8 +191,7 @@ export const SplineStage = ({ sceneUrl, isStarted, onLoad, onFail }: SplineStage
   const shareObjectsRef = useRef<ShareObjects | null>(null);
   const isFailedRef = useRef(false);
 
-  // 씬 파일(~0.7MB)은 시작할 때 받는다 — 첫 화면은 히어로 포스터가 맡으므로 이미지·폰트와 대역폭을 다투지 않게
-  // 미리 받지 않고 연결만 열어 둔다
+  // PhoneStage가 첫 화면 이후 유휴 시간에 마운트한다. 씬 다운로드 전에 연결을 준비한다.
   preconnect(new URL(sceneUrl).origin);
 
   const handleFail = () => {
@@ -269,7 +269,6 @@ export const SplineStage = ({ sceneUrl, isStarted, onLoad, onFail }: SplineStage
       setIfChanged(rigB.scale, "y", rig.scale);
       setIfChanged(rigB.scale, "z", rig.scale);
     }
-    if (appRef.current && canvasOpacity > 0 && computeStageReveal(frame) > 0) renderNow(appRef.current);
   });
 
   // 기록 스택은 부드럽게 따라가는 스크롤로 움직인다 — 빠르게 내려도 카드가 건너뛰지 않는다.
@@ -277,8 +276,12 @@ export const SplineStage = ({ sceneUrl, isStarted, onLoad, onFail }: SplineStage
   useSmoothSceneFrame((frame) => {
     if (!recordObjectsRef.current || isFailedRef.current || computeStageReveal(frame) === 0) return;
     applyRecordStack(recordObjectsRef.current, computeRecordStack(frame, RECORD_CARDS.length));
-    if (appRef.current) renderNow(appRef.current);
   }, RECORD_STACK.smoothHalfLifeMs);
+
+  useAfterSceneFrame((frame) => {
+    if (!appRef.current || isFailedRef.current || computeStageReveal(frame) === 0) return;
+    if (computeSplineHandoff(frame).canvasOpacity > 0) renderNow(appRef.current);
+  });
 
   return (
     <div ref={containerRef} className="pointer-events-none absolute left-0 top-0 opacity-0">
@@ -286,7 +289,7 @@ export const SplineStage = ({ sceneUrl, isStarted, onLoad, onFail }: SplineStage
       <div ref={fadeRef} className="h-full w-full opacity-0 transition-opacity duration-500">
         {isStarted && (
           <SplineErrorBoundary onError={handleFail}>
-            <Spline scene={sceneUrl} onLoad={handleLoad} />
+            <Spline scene={sceneUrl} onLoad={handleLoad} onError={handleFail} />
           </SplineErrorBoundary>
         )}
       </div>
