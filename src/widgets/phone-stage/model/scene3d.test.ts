@@ -9,6 +9,7 @@ import {
   computeScreenOverlayB,
   computeShareRigs,
   computeSplineHandoff,
+  cssPhoneOpacity,
   computeSplineViewport,
   fitShareRigB,
   heroPosterCss,
@@ -354,5 +355,24 @@ describe("computeScreenOverlay", () => {
       expect(overlay.opacity).toBeCloseTo(1);
       expect(overlay.tabSwitch.slide).toBe(1);
     }
+  });
+});
+
+describe("cssPhoneOpacity (3D 준비 중 대체용 폰, 이슈 #88)", () => {
+  const base = { hasScene: true, isFailed: false, isLoaded: false, isReducedMotion: false };
+
+  it("3D를 불러오는 중엔 대체용 폰을 숨긴다 — 대체용 → 3D로 바뀌는 깜빡임이 없게", () => {
+    expect(cssPhoneOpacity(base, 0)).toBe(0);
+  });
+
+  it("3D가 준비되면 넘겨받기 값(handoff)을 따른다", () => {
+    expect(cssPhoneOpacity({ ...base, isLoaded: true }, 0)).toBe(0);
+    expect(cssPhoneOpacity({ ...base, isLoaded: true }, 1)).toBe(1);
+  });
+
+  it("실패·시간 초과·씬 없음·동작 줄이기면 대체용 폰을 보인다", () => {
+    expect(cssPhoneOpacity({ ...base, isFailed: true }, 0)).toBe(1);
+    expect(cssPhoneOpacity({ ...base, hasScene: false }, 0)).toBe(1);
+    expect(cssPhoneOpacity({ ...base, isReducedMotion: true }, 0)).toBe(1);
   });
 });
