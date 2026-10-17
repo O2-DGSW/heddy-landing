@@ -269,3 +269,21 @@ export const computeScreenOverlayB = (frame: SceneFrame): ScreenOverlayB => {
     opacity: b.isVisible ? canvasOpacity : 0,
   };
 };
+
+export type SplineLoadState = {
+  /** 3D 씬 주소가 있는지 */
+  hasScene: boolean;
+  isFailed: boolean;
+  isLoaded: boolean;
+  isReducedMotion: boolean;
+};
+
+/**
+ * 대체용(CSS) 폰에 곱할 불투명도(이슈 #88). 3D를 불러오는 중엔 숨긴다 — 대체용 폰이 보였다가 3D로 바뀌는 깜빡임을
+ * 없애고, 3D가 준비되면 캔버스가 페이드로 나타난다. 실패·시간 초과·씬 없음·동작 줄이기에서만 대체용 폰을 보인다.
+ */
+export const cssPhoneOpacity = (state: SplineLoadState, handoffCssOpacity: number): number => {
+  const isSplineActive = state.hasScene && !state.isFailed && !state.isReducedMotion;
+  if (!isSplineActive) return 1;
+  return state.isLoaded ? handoffCssOpacity : 0;
+};

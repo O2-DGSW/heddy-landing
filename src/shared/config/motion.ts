@@ -61,8 +61,11 @@ export const STAGE_LAYOUT = {
  * 캔버스 중심을 CSS 폰 A 중심에 두고 높이를 맞추면 넘겨받을 때 이음새가 없다.
  */
 export const PHONE_3D = {
-  /** 첫 화면 이후 유휴 준비를 시작할 최대 대기 시간(ms). 스크롤 접근 시에는 즉시 준비한다. */
-  warmupTimeoutMs: 1000,
+  /**
+   * 첫 화면 이후 폰 레이어를 붙이기까지 유휴 대기 최대 시간(ms). 씬 파일·런타임 받기는 기다리지 않고 바로 시작한다
+   * (이슈 #88, 1000 → 300). 스크롤 접근 시에는 즉시 준비한다.
+   */
+  warmupTimeoutMs: 300,
   /** Spline 씬 카메라: 정면(0,0,distance), 세로 시야각(도, Spline 기본값 45). 씬과 같은 값이어야 한다 */
   camera: { fovDeg: 45, distance: 1700 },
   /**

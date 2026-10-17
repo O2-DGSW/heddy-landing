@@ -11,7 +11,7 @@ import { PhoneFrame } from "@/shared/ui";
 
 import { computePhones, computeScreens, computeStageReveal } from "../model/scene";
 import type { PhoneAScreenKey, PhoneBScreenKey, PhonePose } from "../model/scene";
-import { computeSplineHandoff } from "../model/scene3d";
+import { computeSplineHandoff, cssPhoneOpacity } from "../model/scene3d";
 import { RecommendScreen } from "./RecommendScreen";
 import { ScreenOverlay, ScreenOverlayB } from "./ScreenOverlay";
 import { ScanScreen, ShareScreen, SharedRecordScreen } from "./ShareScreens";
@@ -69,11 +69,17 @@ const PhoneStageContent = () => {
     if (stageRef.current) stageRef.current.style.opacity = String(computeStageReveal(frame));
     const { a, b, qrFlight } = computePhones(frame);
     const screens = computeScreens(frame);
-    // 3D 로딩 중·실패·동작 줄이기에서는 CSS 폰을 현재 위치에 표시한다.
-    const isSplineActive = Boolean(SPLINE_HERO_SCENE) && !isSplineFailedRef.current && !frame.isReducedMotion;
+    // 3D를 불러오는 중엔 대체용(CSS) 폰을 숨겨 대체용 → 3D 깜빡임을 없앤다. 실패·동작 줄이기에서만 보인다(이슈 #88)
     const handoff = computeSplineHandoff(frame);
-    const isSplineShown = isSplineActive && isSplineLoadedRef.current;
-    const cssOpacity = isSplineShown ? handoff.cssOpacity : 1;
+    const cssOpacity = cssPhoneOpacity(
+      {
+        hasScene: Boolean(SPLINE_HERO_SCENE),
+        isFailed: isSplineFailedRef.current,
+        isLoaded: isSplineLoadedRef.current,
+        isReducedMotion: frame.isReducedMotion,
+      },
+      handoff.cssOpacity,
+    );
     // 캔버스와 화면 오버레이를 한 장으로 묶어 페이드한다 — 따로 반투명해지면 오버레이 아래 3D 화면(기록)이 비친다
     if (stage3dRef.current) stage3dRef.current.style.opacity = String(handoff.canvasOpacity);
 
