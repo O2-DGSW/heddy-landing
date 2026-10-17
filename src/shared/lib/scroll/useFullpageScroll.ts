@@ -15,6 +15,7 @@ import {
   type FullpageSegment,
   type FullpageWheelGesture,
 } from "./fullpageScroll";
+import { getSeenScrollY } from "./seenScroll";
 import { wheelDeltaPx } from "./smoothScroll";
 
 let navigateToStop: ((index: number) => void) | null = null;
@@ -98,8 +99,9 @@ export const useFullpageScroll = (): void => {
         window.scrollTo({ top: to, behavior: "instant" });
         return;
       }
-      // 화면 이동(0.9초)·떠나기·도착 구간으로 나눈 시간표 — 숨은 구간은 0초라 휠 직후 바로 움직인다(이슈 #82)
-      plan = fullpagePlan(from, to, measureSections(), window.innerHeight);
+      // 화면 이동(0.9초)·떠나기·도착 구간으로 나눈 시간표 — 숨은 구간은 0초라 휠 직후 바로 움직인다(이슈 #82).
+      // 이미 본 구간도 0초 — 결과가 남아 있어 다시 재생하지 않는다(이슈 #89)
+      plan = fullpagePlan(from, to, measureSections(), window.innerHeight, getSeenScrollY());
       const duration = fullpagePlanDuration(plan);
       targetIndex = index;
       startTime = performance.now();

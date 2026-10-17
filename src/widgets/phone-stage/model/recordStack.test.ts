@@ -32,6 +32,17 @@ const pAtStep = (k: number, u: number): number => {
 const normalize = (deg: number) => ((deg % 360) + 360) % 360;
 
 describe("computeRecordStack — 폰 자세(RecordRig)", () => {
+  it("이미 다 본 record로 다시 내려올 땐 스핀을 다시 돌지 않고 정면 결과 그대로다(이슈 #89)", () => {
+    const { record } = viewport();
+    const sections = stackSections({}, 900);
+    const layout = computeStageLayout(1440, 900);
+    const [start, end] = TIMELINE.record.spinVh;
+    const midSpin = record.top + ((start + end) / 2) * 900;
+    const { rig } = computeRecordStack(createFrame(midSpin, layout, sections, false, record.end), COUNT);
+    expect(normalize(rig.rotY) % 360).toBeCloseTo(0);
+    expect(rig.rotX).toBeCloseTo(0);
+  });
+
   it("record 스핀 전에는 정면 그대로이고 홈 화면이다", () => {
     const { at, record } = viewport();
     const { rig, cards, veil } = computeRecordStack(at(record.top - 0.9 * 900), COUNT);

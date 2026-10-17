@@ -29,4 +29,10 @@ describe("isHeaderOverDarkPanel", () => {
   it("AR 섹션이 다 지나가면(share) 아니다", () => {
     expect(isHeaderOverDarkPanel(createFrame(ar.end + 1, layout, sections, false))).toBe(false);
   });
+
+  it("이미 본 AR로 다시 내려오는 중(섹션이 아래에서 올라오는 동안)엔 아직 아니다(이슈 #89)", () => {
+    const seen = ar.end;
+    expect(isHeaderOverDarkPanel(createFrame(ar.top - 10, layout, sections, false, seen))).toBe(false);
+    expect(isHeaderOverDarkPanel(createFrame(ar.top, layout, sections, false, seen))).toBe(true);
+  });
 });

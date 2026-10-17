@@ -43,7 +43,7 @@ const normalizeDeg = (deg: number): number => {
 
 /**
  * record 진입 때 폰이 한 바퀴(360 + tiltY) 돌며 이미지 2 각도로 기울고,
- * 12건이 다 쌓이면(settle) 정면(360)으로 돌아온다.
+ * 12건이 다 쌓이면(settle) 정면(360)으로 돌아온다. 이미 본 스핀은 다시 돌지 않는다(이슈 #89).
  */
 export const computeRecordRig = (frame: SceneFrame, settle: number): RecordRig => {
   if (frame.isReducedMotion) return { rotX: 0, rotY: 0, rotZ: 0, isRecordScreen: true };
@@ -52,7 +52,7 @@ export const computeRecordRig = (frame: SceneFrame, settle: number): RecordRig =
   const vh = frame.layout.viewportHeight;
   const top = getRecordTop(frame);
   const [spinStart, spinEnd] = TIMELINE.record.spinVh;
-  const spin = easeInOutCubic(progressIn(frame.scrollY, [top + spinStart * vh, top + spinEnd * vh]));
+  const spin = easeInOutCubic(progressIn(frame.sceneY("record"), [top + spinStart * vh, top + spinEnd * vh]));
   const turn = 360 + tiltPose.rotY;
   const tilt = spin * (1 - settle);
   const rotY = spin * turn + settle * (360 - turn);
@@ -103,7 +103,10 @@ const layoutRecordCards = (
  */
 /** 화면 맨 위(slot 0)에 보이는 카드 인덱스 */
 export const topCardIndex = (cards: readonly RecordCardPose[]): number =>
-  cards.reduce((best, card, index) => (card.isVisible && card.y < cards[best].y ? index : best), cards.length - 1);
+  cards.reduce(
+    (best, card, index) => (card.isVisible && card.y < cards[best].y ? index : best),
+    cards.length - 1,
+  );
 
 export const computeRecordStack = (frame: SceneFrame, count: number): RecordStackScene => {
   const steps = computeRecordSteps(frame, count);

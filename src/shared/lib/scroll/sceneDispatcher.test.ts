@@ -42,3 +42,30 @@ describe("공통 프레임 처리", () => {
     expect(dispatcher.emit(frameAt(2000), 32)).toBe(false);
   });
 });
+
+describe("부드럽게 따라가는 프레임의 본 결과 유지(이슈 #89)", () => {
+  it("처음 내려갈 땐 보간 위치 기준이라 앞서 간 실제 위치로 건너뛰지 않는다", () => {
+    const dispatcher = createSceneDispatcher();
+    const seen: number[] = [];
+    const ys: number[] = [];
+    dispatcher.subscribeSmooth((frame) => {
+      seen.push(frame.seenScrollY);
+      ys.push(frame.scrollY);
+    }, 90);
+    dispatcher.emit(frameAt(0), 0);
+    dispatcher.emit(createFrame(1000, layout, sections, false, 1000), 16);
+    expect(ys.at(-1)).toBeLessThan(1000);
+    expect(seen.at(-1)).toBe(ys.at(-1));
+  });
+
+  it("다시 올라갈 땐 보간 프레임도 본 가장 아래 위치를 기억한다", () => {
+    const dispatcher = createSceneDispatcher();
+    const seen: number[] = [];
+    dispatcher.subscribeSmooth((frame) => seen.push(frame.seenScrollY), 90);
+    dispatcher.emit(frameAt(0), 0);
+    for (let time = 16; time <= 2000; time += 16) dispatcher.emit(frameAt(3000), time);
+    for (let time = 2016; time <= 4000; time += 16)
+      dispatcher.emit(createFrame(500, layout, sections, false, 3000), time);
+    expect(seen.at(-1)).toBe(3000);
+  });
+});
