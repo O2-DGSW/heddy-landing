@@ -5,7 +5,9 @@ export const COPY = {
   header: {
     downloadButton: "앱 다운로드",
     qrPopover: {
-      scanPrompt: "휴대폰으로 스캔하세요",
+      scanPrompt: "QR코드를 스캔하면",
+      installPrompt: "헤디 앱을 설치할 수 있어요",
+      closeLabel: "다운로드 안내 닫기",
     },
   },
   sections: {
