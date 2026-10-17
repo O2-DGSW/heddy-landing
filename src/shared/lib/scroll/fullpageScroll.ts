@@ -1,5 +1,5 @@
 import { FULLPAGE, type SectionKey } from "@/shared/config";
-import { clamp, easeInOutCubic, lerp } from "@/shared/lib/motion";
+import { clamp, easeInOutSine, lerp } from "@/shared/lib/motion";
 
 import type { SectionFrame } from "./stageLayout";
 
@@ -69,9 +69,9 @@ export const activeFullpageIndex = (stops: readonly FullpageStop[], scrollY: num
 /** 섹션의 모션용 스크롤 길이에 관계없이 같은 시간에 다음 완성 화면으로 이동한다. */
 export const fullpageDuration = (): number => FULLPAGE.durationMs;
 
-/** 프레임 간격과 무관하게 정해진 시간에 도착하며 중간 스크롤 모션도 재생한다. */
+/** 급격한 중간 가속 없이 완만하게 출발·정지하며 중간 스크롤 모션을 고르게 재생한다. */
 export const fullpagePosition = (from: number, to: number, elapsedMs: number, durationMs: number): number =>
-  durationMs <= 0 ? to : lerp(from, to, easeInOutCubic(clamp(elapsedMs / durationMs)));
+  durationMs <= 0 ? to : lerp(from, to, easeInOutSine(clamp(elapsedMs / durationMs)));
 
 /** 관성 꼬리는 같은 제스처로 소비한다. 애니메이션 중 입력을 다음 이동으로 쌓지 않는다. */
 export const consumeFullpageWheel = (

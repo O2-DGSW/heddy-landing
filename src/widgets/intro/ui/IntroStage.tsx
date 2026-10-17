@@ -160,12 +160,12 @@ export const IntroStage = ({ children, className = "h-svh" }: IntroStageProps) =
         </div>
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-0 hidden h-40 bg-gradient-to-t from-neutral-950/60 to-transparent lg:block"
+          className="pointer-events-none absolute inset-x-0 bottom-0 hidden h-24 bg-gradient-to-t from-neutral-950/60 to-transparent lg:block"
         />
         <button
           type="button"
           onClick={handleExplore}
-          className="text-14 absolute bottom-7 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center gap-2 rounded-lg bg-neutral-950/25 px-5 py-2 font-medium text-white drop-shadow-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white lg:flex"
+          className="text-14 absolute bottom-7 left-1/2 z-10 hidden min-h-11 -translate-x-1/2 cursor-pointer flex-col items-center gap-1 px-3 font-medium text-white drop-shadow-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white lg:flex"
         >
           {INTRO_COPY.scrollHint}
           <svg
@@ -176,6 +176,8 @@ export const IntroStage = ({ children, className = "h-svh" }: IntroStageProps) =
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
             <path d="m6 9 6 6 6-6" />
           </svg>

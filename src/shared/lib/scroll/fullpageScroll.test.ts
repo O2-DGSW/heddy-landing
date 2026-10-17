@@ -80,12 +80,22 @@ describe("fullpage navigation", () => {
 });
 
 describe("fullpage animation", () => {
-  it("작은 휠로 시작한 이동도 섹션 길이와 무관하게 1.8초에 도착한다", () => {
+  it("초반 지연과 중간 급가속 없이 일정한 속도 변화로 이동한다", () => {
     const duration = fullpageDuration();
-    expect(duration).toBe(1800);
+    expect(fullpagePosition(0, 1000, duration * 0.2, duration)).toBeCloseTo(95.49, 1);
+    const beforeMiddle = fullpagePosition(0, 1000, duration * 0.4, duration);
+    const afterMiddle = fullpagePosition(0, 1000, duration * 0.6, duration);
+    expect(afterMiddle - beforeMiddle).toBeLessThan(320);
+    expect(fullpagePosition(0, 1000, duration * 0.8, duration)).toBeCloseTo(904.51, 1);
+  });
+
+  it("작은 휠로 시작한 이동도 중간 모션을 보여 주며 5초에 도착한다", () => {
+    const duration = fullpageDuration();
+    expect(duration).toBe(5000);
     for (const distance of [H, H * 3, H * 100]) {
       expect(fullpagePosition(0, distance, duration, duration)).toBe(distance);
       expect(fullpagePosition(0, distance, duration / 2, duration)).toBeCloseTo(distance / 2);
+      expect(fullpagePosition(0, distance, 1800, duration)).toBeLessThan(distance / 2);
     }
   });
 

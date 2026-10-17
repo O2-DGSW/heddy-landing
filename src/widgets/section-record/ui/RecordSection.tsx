@@ -10,11 +10,10 @@ import { SectionShell } from "@/shared/ui";
 import { computeRecordAside } from "../model/recordAside";
 
 /**
- * 좌측 레일 + 큰 연·월(`docs/plans/0004`). 폰의 기록 카드 스택(phone-stage)과 같은 스텝으로
+ * 큰 연·월(`docs/plans/0004`). 폰의 기록 카드 스택(phone-stage)과 같은 스텝으로
  * 움직인다. 프레임마다 ref로만 쓴다.
  */
 export const RecordSection = () => {
-  const railRef = useRef<HTMLDivElement>(null);
   const dateRef = useRef<HTMLSpanElement>(null);
   const prevDateRef = useRef<HTMLSpanElement>(null);
   const dateBoxRef = useRef<HTMLParagraphElement>(null);
@@ -22,7 +21,6 @@ export const RecordSection = () => {
   useSmoothSceneFrame((frame) => {
     const aside = computeRecordAside(frame, RECORD_CARDS);
 
-    if (railRef.current) railRef.current.style.transform = `scaleY(${aside.railScale})`;
     if (dateBoxRef.current) dateBoxRef.current.style.color = `rgb(${aside.dateColor.join(",")})`;
 
     // 직전 날짜는 위로 빠지고 새 날짜가 아래에서 올라온다(폰 카드가 돌며 들어오는 것과 같은 진행도)
@@ -59,13 +57,6 @@ export const RecordSection = () => {
           </span>
         </p>
       }
-    >
-      <div
-        aria-hidden="true"
-        className="absolute bottom-[18vh] left-6 top-[18vh] hidden w-px bg-neutral-200 lg:left-8 lg:block"
-      >
-        <div ref={railRef} className="h-full w-full origin-top bg-neutral-900" />
-      </div>
-    </SectionShell>
+    />
   );
 };

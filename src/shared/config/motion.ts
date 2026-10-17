@@ -61,6 +61,8 @@ export const STAGE_LAYOUT = {
  * 캔버스 중심을 CSS 폰 A 중심에 두고 높이를 맞추면 넘겨받을 때 이음새가 없다.
  */
 export const PHONE_3D = {
+  /** 첫 화면 이후 유휴 준비를 시작할 최대 대기 시간(ms). 스크롤 접근 시에는 즉시 준비한다. */
+  warmupTimeoutMs: 1000,
   /** Spline 씬 카메라: 정면(0,0,distance), 세로 시야각(도, Spline 기본값 45). 씬과 같은 값이어야 한다 */
   camera: { fovDeg: 45, distance: 1700 },
   /**
@@ -551,8 +553,8 @@ export const FULLPAGE = {
     ["share", 0.92],
     ["closing", 0],
   ] as ReadonlyArray<readonly [SectionKey, number]>,
-  /** 배민식 한 화면 넘김: 가상 스크롤 거리와 무관하게 일정한 시간에 도착한다. */
-  durationMs: 1800,
+  /** 한 입력에 한 화면 이동하되 기록 쌓임·카드·AR·공유의 중간 모션을 읽을 수 있게 천천히 전환한다. */
+  durationMs: 5000,
   /** 휠이 이만큼(ms) 끊겼다 다시 오면 새 동작 — 트랙패드 관성·연속 휠은 한 화면만 넘긴다 */
   gestureGapMs: 360,
 } as const;
