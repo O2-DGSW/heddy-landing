@@ -19,6 +19,13 @@ const PRETENDARD_CSS =
 
 const LOAD_FONT_CSS = `(function(){var l=document.getElementById("pretendard-css");if(!l)return;var on=function(){l.media="all"};if(l.sheet)on();else l.addEventListener("load",on)})();`;
 
+/**
+ * 새로고침하면 항상 처음 화면(인트로)에서 시작한다(이슈 #92). 브라우저 스크롤 복원을 React보다 먼저 꺼서
+ * 이전 위치로 돌아갔다가 튀는 일이 없게 한다. 이전 페이지가 복원을 켠 채 저장된 경우(배포 직후 첫 새로고침 등)엔
+ * 브라우저가 load 무렵 다시 복원하므로, 그때까지 사용자가 직접 움직이지 않았으면 한 번 더 맨 위로 보낸다.
+ */
+const SCROLL_TO_TOP = `(function(){history.scrollRestoration="manual";window.scrollTo(0,0);var moved=false,ev=["wheel","touchstart","keydown","pointerdown"],mark=function(){moved=true};ev.forEach(function(t){addEventListener(t,mark,{once:true,passive:true})});addEventListener("load",function(){ev.forEach(function(t){removeEventListener(t,mark)});if(!moved)window.scrollTo(0,0)},{once:true})})();`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ko" className="h-full antialiased lg:[scrollbar-width:none] lg:[&::-webkit-scrollbar]:hidden">
@@ -33,6 +40,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           crossOrigin="anonymous"
           suppressHydrationWarning
         />
+        <script dangerouslySetInnerHTML={{ __html: SCROLL_TO_TOP }} />
         <script dangerouslySetInnerHTML={{ __html: LOAD_FONT_CSS }} />
         <noscript>
           <link rel="stylesheet" href={PRETENDARD_CSS} />
