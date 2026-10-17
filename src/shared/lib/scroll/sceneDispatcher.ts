@@ -6,6 +6,8 @@ type Listener = (frame: SceneFrame) => void;
 type SmoothGroup = {
   listeners: Set<Listener>;
   scrollY: number | null;
+  /** 이 그룹이 보간해 지나온 가장 아래 위치 — 실제 위치로 앞질러 가지 않게 그룹마다 따로 기억한다 */
+  seenScrollY: number;
   lastTime: number | null;
 };
 
@@ -27,13 +29,24 @@ export const createSceneDispatcher = () => {
   const subscribeSmooth = (listener: Listener, halfLifeMs: number) => {
     let group = smoothGroups.get(halfLifeMs);
     if (!group) {
-      group = { listeners: new Set(), scrollY: latest?.scrollY ?? null, lastTime: null };
+      group = {
+        listeners: new Set(),
+        scrollY: latest?.scrollY ?? null,
+        seenScrollY: latest?.seenScrollY ?? 0,
+        lastTime: null,
+      };
       smoothGroups.set(halfLifeMs, group);
     }
     group.listeners.add(listener);
     if (latest)
       listener(
-        createFrame(group.scrollY ?? latest.scrollY, latest.layout, latest.sections, latest.isReducedMotion),
+        createFrame(
+          group.scrollY ?? latest.scrollY,
+          latest.layout,
+          latest.sections,
+          latest.isReducedMotion,
+          group.seenScrollY,
+        ),
       );
     return () => {
       group.listeners.delete(listener);
@@ -60,9 +73,16 @@ export const createSceneDispatcher = () => {
           : damp(group.scrollY, frame.scrollY, dt, halfLifeMs);
       if (Math.abs(frame.scrollY - scrollY) < 0.5) scrollY = frame.scrollY;
       group.scrollY = scrollY;
+      group.seenScrollY = Math.max(group.seenScrollY, scrollY);
       group.lastTime = scrollY === frame.scrollY ? null : time;
       needsFrame ||= scrollY !== frame.scrollY;
-      const smoothFrame = createFrame(scrollY, frame.layout, frame.sections, frame.isReducedMotion);
+      const smoothFrame = createFrame(
+        scrollY,
+        frame.layout,
+        frame.sections,
+        frame.isReducedMotion,
+        group.seenScrollY,
+      );
       group.listeners.forEach((listener) => listener(smoothFrame));
     });
     afterListeners.forEach((listener) => listener(frame));

@@ -39,7 +39,12 @@ const FullpageNavigation = () => {
     const ar = frame.sections.find((section) => section.key === "ar");
     if (navRef.current) {
       const isDark = String(
-        Boolean(ar && frame.scrollY < ar.end && frame.progress("ar") > TIMELINE.ar.pillMorph[1]),
+        Boolean(
+          ar &&
+          frame.scrollY >= ar.top &&
+          frame.scrollY < ar.end &&
+          frame.progress("ar") > TIMELINE.ar.pillMorph[1],
+        ),
       );
       if (navRef.current.dataset.dark !== isDark) navRef.current.dataset.dark = isDark;
     }

@@ -10,6 +10,7 @@ import { computeStageLayout } from "./stageLayout";
 import { useSmoothWheelScroll } from "./useSmoothWheelScroll";
 import { useFullpageScroll } from "./useFullpageScroll";
 import { createSceneDispatcher } from "./sceneDispatcher";
+import { noteSeenScrollY } from "./seenScroll";
 import type { SectionFrame } from "./stageLayout";
 
 type FrameListener = (frame: SceneFrame) => void;
@@ -73,7 +74,8 @@ export const ScrollSceneProvider = ({ children }: ScrollSceneProviderProps) => {
     const emit = (time: number) => {
       rafIdRef.current = null;
       if (!layout) return;
-      const frame = createFrame(window.scrollY, layout, sectionsRef.current, reducedMotion.matches);
+      const seen = noteSeenScrollY(window.scrollY);
+      const frame = createFrame(window.scrollY, layout, sectionsRef.current, reducedMotion.matches, seen);
       if (dispatcher.emit(frame, time)) schedule();
     };
 

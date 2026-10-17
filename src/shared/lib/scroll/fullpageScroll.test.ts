@@ -192,9 +192,10 @@ describe("fullpagePlan (전환을 화면 이동 · 화면 고정 구간으로 �
     expect(FULLPAGE.slide.durationMs).toBe(900);
   });
 
-  it("역방향도 같은 규칙: 지금 화면 마무리 → 0.9초 화면 이동 → 이전 화면 도착", () => {
+  it("역방향은 이미 본 구간이라 역재생 없이(0초) 0.9초 화면 이동만 한다(이슈 #89)", () => {
     const plan = fullpagePlan(stops[2].scrollY, stops[1].scrollY, sections, H);
-    expect(plan.map((seg) => seg.kind)).toEqual(["leave", "slide"]);
+    expect(plan.map((seg) => seg.kind)).toEqual(["seen", "slide"]);
+    expect(plan[0].durationMs).toBe(0);
     expect(plan[1].durationMs).toBe(FULLPAGE.slide.durationMs);
     expect(fullpagePlanPosition(plan, totalMs(plan) + 10)).toBe(stops[1].scrollY);
   });
@@ -227,6 +228,30 @@ describe("fullpagePlan (전환을 화면 이동 · 화면 고정 구간으로 �
     expect(fullpagePlanKind(plan, 10)).toBe("slide");
     expect(fullpagePlanKind(plan, FULLPAGE.slide.durationMs + 50)).toBe("enter");
     expect(fullpagePlanKind(plan, 1e9)).toBeNull();
+  });
+});
+
+describe("이미 본 구간(이슈 #89)", () => {
+  it("다시 올라갈 땐 역재생할 구간이 없어 0.9초 화면 이동만 한다", () => {
+    for (let i = stops.length - 2; i >= 1; i--) {
+      const plan = fullpagePlan(stops[i + 1].scrollY, stops[i].scrollY, sections, H, maxScroll);
+      const timed = plan.filter((seg) => seg.durationMs > 0);
+      expect(timed.map((seg) => seg.kind)).toEqual(["slide"]);
+      // 마지막(푸터 → closing)은 한 화면보다 짧은 이동이라 더 짧다
+      expect(timed[0].durationMs).toBeLessThanOrEqual(FULLPAGE.slide.durationMs);
+      expect(fullpagePlanPosition(plan, FULLPAGE.slide.durationMs + 1)).toBe(stops[i].scrollY);
+    }
+  });
+
+  it("이미 끝까지 본 뒤 다시 내려갈 때도 도착 모션을 기다리지 않는다", () => {
+    const plan = fullpagePlan(stops[0].scrollY, stops[1].scrollY, sections, H, maxScroll);
+    expect(plan.filter((seg) => seg.durationMs > 0).map((seg) => seg.kind)).toEqual(["slide"]);
+  });
+
+  it("처음 보는 구간은 그대로 재생한다(본 위치가 지금 위치)", () => {
+    const plan = fullpagePlan(stops[0].scrollY, stops[1].scrollY, sections, H, stops[0].scrollY);
+    expect(plan.at(-1)?.kind).toBe("enter");
+    expect(plan.at(-1)?.durationMs).toBeGreaterThan(0);
   });
 });
 

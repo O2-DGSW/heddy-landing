@@ -66,7 +66,7 @@ export const activeFullpageIndex = (stops: readonly FullpageStop[], scrollY: num
   return nearest;
 };
 
-export type FullpageSegmentKind = "hidden" | "leave" | "slide" | "enter" | "pass";
+export type FullpageSegmentKind = "hidden" | "seen" | "leave" | "slide" | "enter" | "pass";
 
 export type FullpageSegment = {
   kind: FullpageSegmentKind;
@@ -101,19 +101,22 @@ const slideDuration = (distance: number, viewportHeight: number): number => {
  * 전환 한 번(from → to)을 구간으로 나눈다(이슈 #82, `docs/plans/0023`). 섹션 sticky 범위 안은 화면이 멈춘 채 모션만
  * 진행하는 구간(떠나기·도착·지나가기, 숨은 섹션은 0초), 밖은 화면 전체가 미끄러지는 구간(배민 0.9초 곡선)이다.
  * 구간은 이동 방향 순서이고 끝과 시작이 맞닿아 위치가 끊기지 않는다.
+ * 이미 본 위치(seenScrollY)까지의 sticky 구간은 결과가 남아 있으니 0초로 건너뛴다 — 다시 올라가거나 다시 내려와도
+ * 역재생·재생 없이 화면 이동만 한다(이슈 #89).
  */
 export const fullpagePlan = (
   from: number,
   to: number,
   sections: readonly SectionFrame[],
   viewportHeight: number,
+  seenScrollY: number = from,
 ): FullpageSegment[] => {
   if (Math.abs(to - from) < 0.5) return [];
   const direction = Math.sign(to - from);
   const lo = Math.min(from, to);
   const hi = Math.max(from, to);
   const ranges = stickyRanges(sections, viewportHeight);
-  const cuts = [lo, hi, ...ranges.flatMap((range) => [range.start, range.end])]
+  const cuts = [lo, hi, seenScrollY, ...ranges.flatMap((range) => [range.start, range.end])]
     .filter((y) => y >= lo && y <= hi)
     .sort((a, b) => a - b)
     .filter((y, index, list) => index === 0 || y - list[index - 1] > 0.5);
@@ -133,6 +136,7 @@ export const fullpagePlan = (
       return { kind: "slide", from: segFrom, to: segTo, durationMs: slideDuration(distance, viewportHeight) };
     if (FULLPAGE.hiddenSections.includes(piece.range.key))
       return { kind: "hidden", from: segFrom, to: segTo, durationMs: 0 };
+    if (piece.end <= seenScrollY + 0.5) return { kind: "seen", from: segFrom, to: segTo, durationMs: 0 };
     const isLast = index === pieces.length - 1;
     const isFirst = index === 0;
     if (isLast) {
