@@ -21,7 +21,7 @@ const LOAD_FONT_CSS = `(function(){var l=document.getElementById("pretendard-css
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ko" className="h-full antialiased">
+    <html lang="ko" className="h-full antialiased lg:[scrollbar-width:none] lg:[&::-webkit-scrollbar]:hidden">
       <head>
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
         {/* media는 아래 스크립트가 React보다 먼저 print → all로 바꾸므로(의도) 이 속성 불일치 경고는 끈다 */}
