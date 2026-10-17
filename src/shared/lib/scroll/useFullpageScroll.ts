@@ -22,6 +22,11 @@ let navigateToStop: ((index: number) => void) | null = null;
 /** 점 내비게이션도 휠·키보드와 같은 컨트롤러로 이동한다. 모바일에서는 동작하지 않는다. */
 export const scrollToFullpageStop = (index: number): void => navigateToStop?.(index);
 
+let readSliding: (() => boolean) | null = null;
+
+/** 지금 화면 전체가 미끄러지는 중인지 — 무거운 작업(3D 초기화)을 이 동안 미루는 데 쓴다(이슈 #88) */
+export const isFullpageSliding = (): boolean => readSliding?.() ?? false;
+
 /** 안쪽 스크롤·열린 팝오버·입력 요소의 기본 조작을 보존한다. */
 const keepsNativeInput = (target: EventTarget | null, deltaY: number): boolean => {
   let node = target instanceof Element ? target : null;
@@ -169,6 +174,7 @@ export const useFullpageScroll = (): void => {
     };
 
     navigateToStop = moveTo;
+    readSliding = isSliding;
     window.addEventListener("wheel", handleWheel, { passive: false, capture: true });
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("pointerdown", handlePointerDown, { passive: true });
@@ -179,6 +185,7 @@ export const useFullpageScroll = (): void => {
     return () => {
       stop();
       if (navigateToStop === moveTo) navigateToStop = null;
+      if (readSliding === isSliding) readSliding = null;
       window.removeEventListener("wheel", handleWheel, { capture: true });
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("pointerdown", handlePointerDown);
