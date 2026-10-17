@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, type ReactNode } from "react";
 
 import { INTRO, INTRO_COPY } from "@/shared/config";
 import { scrollToFullpageStop } from "@/shared/lib/scroll";
@@ -19,17 +19,15 @@ interface IntroStageProps {
 /**
  * 인트로 무대(이슈 #70): 1920×1080 장면을 데스크톱에서는 화면에 꽉 채우고(cover), 모바일에서는
  * 전체가 보이도록(contain) 가운데 둔다. 시계 하나로
- * 모든 장면을 돌린다. 음소거로 자동 재생하고 끝나면 반복한다. 소리를 켜면 오디오(최종 믹스)를 처음부터 틀고
- * 시계를 오디오 재생 시각에 맞춘다. 화면 밖이면 멈추고, 동작 줄이기면 마지막 문구 장면에서 멈춘다.
+ * 모든 장면을 돌린다. 소리 없이 자동 재생하고 끝나면 반복한다(이슈 #94). 화면 밖이면 멈추고, 동작 줄이기면
+ * 마지막 문구 장면에서 멈춘다.
  * `?intro-t=초`로 시각을 고정할 수 있다(장면 확인용).
  */
 export const IntroStage = ({ children, className = "h-svh" }: IntroStageProps) => {
   const rootRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
   const listenersRef = useRef(new Set<FrameListener>());
   const timeRef = useRef<number>(INTRO.initialTime);
-  const [isSoundOn, setIsSoundOn] = useState(false);
 
   const clock = useMemo(
     () => ({
@@ -84,34 +82,19 @@ export const IntroStage = ({ children, className = "h-svh" }: IntroStageProps) =
     let elapsed: number = INTRO.initialTime;
     let last: number | null = null;
     let isIntersecting = false;
-    let shouldResumeAudio = false;
     const tick = (now: number) => {
-      const audio = audioRef.current;
-      if (audio && !audio.paused) {
-        elapsed = audio.currentTime;
-      } else {
-        elapsed += last == null ? 0 : Math.min(now - last, 100) / 1000;
-      }
+      elapsed += last == null ? 0 : Math.min(now - last, 100) / 1000;
       last = now;
       emit(loopTime(elapsed));
       rafId = requestAnimationFrame(tick);
     };
     const start = () => {
-      if (shouldResumeAudio && audioRef.current) {
-        void audioRef.current.play().catch(() => setIsSoundOn(false));
-        shouldResumeAudio = false;
-      }
       if (rafId == null) rafId = requestAnimationFrame(tick);
     };
     const stop = () => {
       if (rafId != null) cancelAnimationFrame(rafId);
       rafId = null;
       last = null;
-      const audio = audioRef.current;
-      if (audio && !audio.paused) {
-        shouldResumeAudio = true;
-        audio.pause();
-      }
     };
     const syncPlayback = () => (isIntersecting && !document.hidden ? start() : stop());
     const observer = new IntersectionObserver(([entry]) => {
@@ -126,22 +109,6 @@ export const IntroStage = ({ children, className = "h-svh" }: IntroStageProps) =
       stop();
     };
   }, []);
-
-  const handleToggleSound = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (isSoundOn) {
-      audio.pause();
-      setIsSoundOn(false);
-      return;
-    }
-    audio.currentTime = 0;
-    audio.muted = false;
-    void audio
-      .play()
-      .then(() => setIsSoundOn(true))
-      .catch(() => setIsSoundOn(false));
-  };
 
   const handleExplore = () => scrollToFullpageStop(1);
 
@@ -182,42 +149,7 @@ export const IntroStage = ({ children, className = "h-svh" }: IntroStageProps) =
             <path d="m6 9 6 6 6-6" />
           </svg>
         </button>
-        <audio ref={audioRef} src="/intro/heddy-intro.m4a" preload="none" loop />
-        <button
-          type="button"
-          onClick={handleToggleSound}
-          aria-pressed={isSoundOn}
-          aria-label={isSoundOn ? INTRO_COPY.soundOff : INTRO_COPY.soundOn}
-          className="text-12 absolute bottom-3 right-3 z-10 flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 font-medium text-white backdrop-blur-md transition-colors hover:bg-black/70 lg:text-14 lg:bottom-6 lg:right-6 lg:gap-2 lg:px-4 lg:py-2"
-        >
-          <SoundIcon isOn={isSoundOn} />
-          {isSoundOn ? INTRO_COPY.soundOff : INTRO_COPY.soundOn}
-        </button>
       </section>
     </IntroClockContext.Provider>
   );
 };
-
-interface SoundIconProps {
-  isOn: boolean;
-}
-
-/** 스피커 아이콘(켜짐: 음파, 꺼짐: X) */
-const SoundIcon = ({ isOn }: SoundIconProps) => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    aria-hidden="true"
-  >
-    <path d="M11 5 6 9H3v6h3l5 4V5Z" fill="currentColor" />
-    {isOn ? (
-      <path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" strokeLinecap="round" />
-    ) : (
-      <path d="m16 9 6 6m0-6-6 6" strokeLinecap="round" />
-    )}
-  </svg>
-);

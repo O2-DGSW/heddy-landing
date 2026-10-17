@@ -237,8 +237,6 @@ export const INTRO_COPY = {
   s15url: "heddy.site",
   /** S07 카운트 슬롯(카드 착지마다 다음 단어) — 마지막은 s7n */
   s7Count: ["한", "두", "세", "네", "다섯", "여섯", "일곱", "여덟", "아홉", "열", "열한"],
-  soundOn: "소리 켜기",
-  soundOff: "소리 끄기",
   scrollHint: "스크롤하여 둘러보기",
 } as const;
 
