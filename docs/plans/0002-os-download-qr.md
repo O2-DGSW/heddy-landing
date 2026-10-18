@@ -43,11 +43,33 @@ QR = https://<도메인>/download?src=<유입경로>      ← QR에 박히는 �
 - 앞으로 **store 없는 `/download`는 명함 QR 전용**이다. 새 QR·링크를 만들 때는 반드시 `store`를 붙인다.
 - 확인(프로덕션 빌드, 환경변수에 예시 스토어 주소):
 
-| 요청 | 아이폰 | 안드로이드 | PC |
-|---|---|---|---|
-| `/download?src=header` | 307 → `/` | 307 → `/` | 307 → `/` |
+| 요청                              | 아이폰          | 안드로이드     | PC            |
+| --------------------------------- | --------------- | -------------- | ------------- |
+| `/download?src=header`            | 307 → `/`       | 307 → `/`      | 307 → `/`     |
 | `/download?src=header&store=auto` | 307 → App Store | 307 → 원스토어 | 200 QR 페이지 |
-| `store=appstore` / `onestore` | 지정 스토어 | 지정 스토어 | 지정 스토어 |
+| `store=appstore` / `onestore`     | 지정 스토어     | 지정 스토어    | 지정 스토어   |
+
+## 변경: 스토어 출시 전엔 모바일 웹으로 (2026-10-19, 이슈 #98)
+
+아직 스토어에 올라간 앱이 없어 다운로드를 누르면 "출시 준비 중"에서 막혔다. 출시 전까지는 바로 쓸 수 있는 모바일 웹(`/mobile`, heddy-app 프록시 `docs/plans/0006`)으로 보낸다. QR·버튼 주소는 그대로이고 `/download` 판정만 바꿨다.
+
+```
+/download?src=…                         (store 없음 = 명함 QR) → 307 → /  (그대로)
+store 있음 · 스토어 링크 있음                                   → 307 → 그 스토어 (그대로)
+store 있음 · 링크 없음 · 휴대폰                                 → 307 → /mobile   (전: 200 "출시 준비 중")
+store 있음 · 링크 없음 · PC                                     → 200 QR 페이지   (전: 스토어 지정이면 "출시 준비 중")
+```
+
+- 판정은 `resolveDownloadDestination`(`features/download-app/lib/resolveDownloadEntry.ts`) + 명세 테스트. "출시 준비 중" 화면과 `DOWNLOAD_COPY.comingSoon`은 쓰는 곳이 없어 지웠다.
+- iPad(데스크톱 UA)는 QR 페이지에서 `ipadDownloadHref`로 간다. App Store 링크가 없으면 `/mobile` — `store=appstore`로 보내면 다시 QR 페이지가 나와 무한 반복되기 때문.
+- 스토어 링크 환경변수를 넣으면 코드 수정 없이 그 OS만 스토어로 바뀐다(한쪽만 출시돼도 다른 쪽은 계속 `/mobile`).
+- 확인(개발 서버, 스토어 링크 없음):
+
+| 요청                          | 아이폰          | 안드로이드      | PC            |
+| ----------------------------- | --------------- | --------------- | ------------- |
+| `/download?src=header`        | 307 → `/`       | 307 → `/`       | 307 → `/`     |
+| `store=auto`                  | 307 → `/mobile` | 307 → `/mobile` | 200 QR 페이지 |
+| `store=appstore` / `onestore` | 307 → `/mobile` | 307 → `/mobile` | 200 QR 페이지 |
 
 ## 할 일
 
@@ -77,7 +99,7 @@ QR = https://<도메인>/download?src=<유입경로>      ← QR에 박히는 �
 - [x] `shared/ui/StoreButtons` — Props에 `source` 추가, 버튼 두 개 "App Store" → `downloadPath(source, "appstore")`, "원스토어" → `downloadPath(source, "onestore")`. Google Play 버튼 제거. 사용처(헤더 팝오버 `header`, closing `closing`)에 source 전달.
 - [x] `DownloadButton` — `handleClick`: `matchMedia("(pointer: coarse)")`면 `location.href = downloadPath("header")`, 아니면 팝오버 토글. 팝오버에 `<DownloadQr source="header" />`.
 - [x] `features/download-app/ui/IpadStoreRedirect.tsx`(client): `Macintosh` UA + `maxTouchPoints > 1`이면 `location.replace(downloadPath("ipad", "appstore"))`.
-- [x] `copy.ts`의 `DOWNLOAD_COPY`에 `comingSoon` 추가 (문구는 사람에게 확인. 임시: "헤디는 출시 준비 중이에요").
+- [x] `copy.ts`의 `DOWNLOAD_COPY`에 `comingSoon` 추가 (문구는 사람에게 확인. 임시: "헤디는 출시 준비 중이에요"). — #98에서 `/mobile`로 바꾸며 제거
 - [x] `src/pages/download/ui/DownloadPage.tsx`(async 서버 컴포넌트, `interface DownloadPageProps { searchParams: Promise<{ store?: string }> }`)
   - `resolveStoreUrl(detectPlatform(UA), store, { APP_STORE_URL: process.env.APP_STORE_URL, ONE_STORE_URL: process.env.ONE_STORE_URL })`
   - 결과가 있으면 `redirect(target)` (307)
