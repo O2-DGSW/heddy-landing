@@ -13,8 +13,9 @@ export const isLandingEntry = (store: string | null | undefined): boolean => !st
 export type DownloadDestination = { kind: "redirect"; url: string } | { kind: "qr" };
 
 /**
- * `/download` 목적지(이슈 #98): 명함 QR → 랜딩, 스토어 링크 있음 → 스토어, 없으면 휴대폰은 모바일 웹,
- * PC는 QR 페이지(휴대폰으로 찍으면 모바일 웹). 스토어 링크 환경변수만 넣으면 코드 수정 없이 스토어로 바뀐다.
+ * `/download` 목적지(이슈 #98): 명함 QR → 랜딩, 스토어 링크 있음 → 스토어. 링크가 없으면 휴대폰과
+ * App Store·원스토어 버튼(PC 포함)은 모바일 웹, PC의 사이트 QR 주소(`store=auto`)만 QR 페이지(휴대폰으로 찍으면
+ * 모바일 웹). 스토어 링크 환경변수만 넣으면 코드 수정 없이 스토어로 바뀐다.
  */
 export const resolveDownloadDestination = (
   platform: Platform,
@@ -24,7 +25,7 @@ export const resolveDownloadDestination = (
   if (isLandingEntry(store)) return { kind: "redirect", url: "/" };
   const storeUrl = resolveStoreUrl(platform, store, env);
   if (storeUrl) return { kind: "redirect", url: storeUrl };
-  if (platform !== "desktop") return { kind: "redirect", url: MOBILE_WEB_PATH };
+  if (platform !== "desktop" || store !== "auto") return { kind: "redirect", url: MOBILE_WEB_PATH };
   return { kind: "qr" };
 };
 

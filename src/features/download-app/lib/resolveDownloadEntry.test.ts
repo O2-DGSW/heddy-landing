@@ -50,9 +50,19 @@ describe("다운로드 목적지(스토어 출시 전엔 모바일 웹, 이슈 #
     expect(MOBILE_WEB_PATH).toBe("/mobile");
   });
 
-  it("스토어 링크가 없으면 PC는 QR 페이지(휴대폰으로 찍으면 모바일 웹)", () => {
+  it("스토어 링크가 없으면 PC에서 누른 App Store·원스토어 버튼도 모바일 웹으로", () => {
+    expect(resolveDownloadDestination("desktop", "appstore", NONE)).toEqual({
+      kind: "redirect",
+      url: MOBILE_WEB_PATH,
+    });
+    expect(resolveDownloadDestination("desktop", "onestore", NONE)).toEqual({
+      kind: "redirect",
+      url: MOBILE_WEB_PATH,
+    });
+  });
+
+  it("PC의 사이트 QR 주소(store=auto)는 QR 페이지(휴대폰으로 찍으면 모바일 웹)", () => {
     expect(resolveDownloadDestination("desktop", "auto", NONE)).toEqual({ kind: "qr" });
-    expect(resolveDownloadDestination("desktop", "appstore", NONE)).toEqual({ kind: "qr" });
   });
 
   it("링크가 생기면 코드 수정 없이 스토어로 간다", () => {
