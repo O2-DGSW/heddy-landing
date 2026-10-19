@@ -5,11 +5,10 @@ import { redirect } from "next/navigation";
 import {
   detectPlatform,
   DownloadQr,
+  ipadDownloadHref,
   IpadStoreRedirect,
-  isLandingEntry,
-  resolveStoreUrl,
+  resolveDownloadDestination,
 } from "@/features/download-app";
-import { DOWNLOAD_COPY } from "@/shared/config";
 import { StoreButtons } from "@/shared/ui";
 
 export interface DownloadPageProps {
@@ -23,35 +22,19 @@ const Logo = () => (
 );
 
 /**
- * `/download` — store가 없으면(명함에 인쇄된 QR) 랜딩페이지로, `store=auto`(사이트 QR)면 아이폰은 App Store,
- * 안드로이드는 원스토어로 보낸다(이슈 #48).
+ * `/download` — store가 없으면(명함에 인쇄된 QR) 랜딩페이지로, 스토어 링크가 있으면 그 스토어로 보낸다(이슈 #48).
+ * 아직 링크가 없으면 휴대폰은 모바일 웹(`/mobile`), PC는 QR 페이지를 보여 준다(이슈 #98).
  * 스토어 링크는 서버 환경변수(`APP_STORE_URL`/`ONE_STORE_URL`)에만 있다 (`docs/plans/0002`).
+ * 리다이렉트는 모두 307이라 나중에 링크가 생겨도 폰 브라우저가 예전 목적지를 캐시하지 않는다.
  */
 export const DownloadPage = async ({ searchParams }: DownloadPageProps) => {
   const { store } = await searchParams;
-  // 명함 QR(인쇄됨): 서비스 소개부터 — 307이라 나중에 바꿔도 폰 브라우저가 캐시하지 않는다
-  if (isLandingEntry(store)) redirect("/");
   const headerList = await headers();
   const platform = detectPlatform(headerList.get("user-agent"));
+  const env = { APP_STORE_URL: process.env.APP_STORE_URL, ONE_STORE_URL: process.env.ONE_STORE_URL };
 
-  const target = resolveStoreUrl(platform, store ?? null, {
-    APP_STORE_URL: process.env.APP_STORE_URL,
-    ONE_STORE_URL: process.env.ONE_STORE_URL,
-  });
-
-  if (target) redirect(target);
-
-  // PC는 스토어를 직접 고른 경우(appstore·onestore)만 "출시 준비 중", auto(사이트 QR)면 QR 페이지
-  const isComingSoon = platform !== "desktop" || (Boolean(store) && store !== "auto");
-
-  if (isComingSoon) {
-    return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-4">
-        <Logo />
-        <p className="text-16">{DOWNLOAD_COPY.comingSoon}</p>
-      </main>
-    );
-  }
+  const destination = resolveDownloadDestination(platform, store, env);
+  if (destination.kind === "redirect") redirect(destination.url);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6">
@@ -59,7 +42,7 @@ export const DownloadPage = async ({ searchParams }: DownloadPageProps) => {
       <DownloadQr source="download-page" size={220} />
       {/* TODO: 안내 문구 확정 필요 (docs/plans/0002) — 지어내지 않음 */}
       <StoreButtons source="download-page" />
-      <IpadStoreRedirect />
+      <IpadStoreRedirect href={ipadDownloadHref(env)} />
     </main>
   );
 };

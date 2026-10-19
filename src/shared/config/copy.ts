@@ -239,11 +239,3 @@ export const INTRO_COPY = {
   s7Count: ["한", "두", "세", "네", "다섯", "여섯", "일곱", "여덟", "아홉", "열", "열한"],
   scrollHint: "스크롤하여 둘러보기",
 } as const;
-
-/**
- * `/download` 페이지 카피. `comingSoon`은 임시 문구 — 확정 전 사람 확인 필요
- * (`docs/plans/0002-os-download-qr.md`).
- */
-export const DOWNLOAD_COPY = {
-  comingSoon: "Heddy는 출시 준비 중이에요",
-} as const;
