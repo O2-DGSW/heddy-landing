@@ -2,4 +2,5 @@
 export const SOCIAL_LINKS = [
   { key: "instagram", label: "Instagram", href: "https://www.instagram.com/heddy.o2/" },
   { key: "github", label: "GitHub", href: "https://github.com/O2-DGSW" },
+  { key: "youtube", label: "YouTube", href: "https://www.youtube.com/@Heddy.O2" },
 ] as const;
