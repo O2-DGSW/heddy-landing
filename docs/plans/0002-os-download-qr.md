@@ -57,19 +57,20 @@ QR = https://<도메인>/download?src=<유입경로>      ← QR에 박히는 �
 /download?src=…                         (store 없음 = 명함 QR) → 307 → /  (그대로)
 store 있음 · 스토어 링크 있음                                   → 307 → 그 스토어 (그대로)
 store 있음 · 링크 없음 · 휴대폰                                 → 307 → /mobile   (전: 200 "출시 준비 중")
-store 있음 · 링크 없음 · PC                                     → 200 QR 페이지   (전: 스토어 지정이면 "출시 준비 중")
+store=appstore|onestore · 링크 없음 · PC (하단 스토어 버튼)     → 307 → /mobile   (전: "출시 준비 중")
+store=auto · 링크 없음 · PC                                     → 200 QR 페이지   (그대로)
 ```
 
 - 판정은 `resolveDownloadDestination`(`features/download-app/lib/resolveDownloadEntry.ts`) + 명세 테스트. "출시 준비 중" 화면과 `DOWNLOAD_COPY.comingSoon`은 쓰는 곳이 없어 지웠다.
-- iPad(데스크톱 UA)는 QR 페이지에서 `ipadDownloadHref`로 간다. App Store 링크가 없으면 `/mobile` — `store=appstore`로 보내면 다시 QR 페이지가 나와 무한 반복되기 때문.
+- iPad(데스크톱 UA)는 QR 페이지에서 `ipadDownloadHref`로 간다. App Store 링크가 없으면 `/mobile`로 바로 보낸다.
 - 스토어 링크 환경변수를 넣으면 코드 수정 없이 그 OS만 스토어로 바뀐다(한쪽만 출시돼도 다른 쪽은 계속 `/mobile`).
 - 확인(개발 서버, 스토어 링크 없음):
 
-| 요청                          | 아이폰          | 안드로이드      | PC            |
-| ----------------------------- | --------------- | --------------- | ------------- |
-| `/download?src=header`        | 307 → `/`       | 307 → `/`       | 307 → `/`     |
-| `store=auto`                  | 307 → `/mobile` | 307 → `/mobile` | 200 QR 페이지 |
-| `store=appstore` / `onestore` | 307 → `/mobile` | 307 → `/mobile` | 200 QR 페이지 |
+| 요청                          | 아이폰          | 안드로이드      | PC              |
+| ----------------------------- | --------------- | --------------- | --------------- |
+| `/download?src=header`        | 307 → `/`       | 307 → `/`       | 307 → `/`       |
+| `store=auto`                  | 307 → `/mobile` | 307 → `/mobile` | 200 QR 페이지   |
+| `store=appstore` / `onestore` | 307 → `/mobile` | 307 → `/mobile` | 307 → `/mobile` |
 
 ## 할 일
 
